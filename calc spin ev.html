@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Odds Advantage Calculator | Pro Strategy Suite</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root{--primary:#007BFF;--success:#28a745;--danger:#dc3545;--warning:#ffc107;--bg:#f4f7f9;--card-bg:#ffffff;--text:#2d3436;--prize-color:#ffc107;--other:#6c757d;--ai-glow:#7c3aed;--border:#e1e8ed;--color-spc:#0ea5e9;--color-etb:#a855f7;--color-upc:#f97316;--color-ex:#0d9488;--color-warriors:#ca8a04;--color-tusk:#991b1b;--color-energy:#94a3b8;--color-ah-etb:#10b981;--color-ah-pc:#6366f1}
+        .inventory-grid-config{display:grid;grid-template-columns:35px 1.3fr 65px 110px 25px;gap:8px;align-items:center}
+        *{box-sizing:border-box}
+        html,body{height:auto;min-height:100vh;overflow-y:auto;overflow-x:auto}
+        body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.4;display:flex;flex-direction:column;align-items:center;user-select:none}
+        input,.ev-value,.history-item,.card span,.card td,.card th,.card b,.mini-value,.mini-label,.header-ai-tip{user-select:text}
+        body.is-spinning-lock .card{pointer-events:none!important}
+        body.dragging-active,body.dragging-active *{cursor:grabbing!important}
+        .app-container{max-width:1900px;width:100%;padding:16px;flex-shrink:0}
+        .app-header{display:grid;grid-template-columns:auto 1fr 150px;align-items:center;margin:8px 0 24px;width:100%;gap:12px}
+        .app-header h1{grid-column:2;text-align:center;font-size:1.8rem;font-weight:800;color:#1e293b;margin:0;letter-spacing:-0.03em}
+        .btn-reset-ui{width:fit-content;padding:6px 14px;font-size:0.7rem;font-weight:800;background:#fff;border:1.5px solid #cbd5e1;color:#64748b;border-radius:8px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+        .btn-reset-ui:hover{border-color:var(--primary);color:var(--primary);background:#f8fafc;transform:translateY(-1px)}
+        body.wheel-resizing,body.wheel-resizing *{cursor:col-resize!important}
+        .dashboard{display:flex;flex-direction:row;align-items:stretch;gap:16px;width:100%;min-height:calc(100vh - 100px)}
+        .dashboard-col{display:flex;flex-direction:column;gap:16px;flex:1 1 0;min-width:280px;min-height:100px;padding-bottom:60px;transition:flex 0.2s ease}
+        @media(max-width:800px){.dashboard{flex-wrap:wrap}.dashboard-col{flex:1 1 100%}}
+        .card{background:var(--card-bg);padding:16px 20px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border:1px solid var(--border);position:relative;transition:border-color 0.2s,box-shadow 0.2s;cursor:grab;width:100%;flex:0 0 auto}
+        .card:hover{border-color:#cbd5e1}
+        .card span,.card td,.card th,.card b,.mini-value,.mini-label,.ev-value,.header-ai-tip{cursor:text}
+        
+        .card.dragging-active-card{opacity:1!important;box-shadow:0 25px 50px -12px rgba(0,0,0,0.3)!important;z-index:999999!important;cursor:grabbing!important; transform:scale(1.02) rotate(1deg);}
+        .card.placeholder{background-color:#f1f5f9;border:2px dashed #cbd5e1;opacity:0.5;box-shadow:none;pointer-events:none;visibility:visible!important;}
+        
+        .col-left .resizable-card,.col-right .resizable-card{width:100%!important;height:auto!important;aspect-ratio:1}
+        .col-left .resize-handle,.col-right .resize-handle{display:none!important}
+        .section-title{font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;cursor:inherit}
+        .sub-text{font-size:0.5rem;opacity:0.6;text-transform:lowercase;font-weight:600}
+        .card-controls{display:flex;gap:4px;align-items:center}
+        .card-btn{background:none;border:none;color:#94a3b8;font-weight:bold;cursor:pointer;font-size:1.1rem;padding:0 4px;line-height:0.8;transition:color 0.2s}
+        .card-btn:hover{color:#1e293b}
+        .card-btn.close:hover{color:var(--danger)}
+        .card.minimized{height:auto!important;min-height:0!important;padding-bottom:16px}
+        .card.minimized>*:not(.section-title){display:none!important}
+        .vis-content{aspect-ratio:1;width:100%;height:auto;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;padding:10px;position:relative;overflow:hidden}
+        .vis-canvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:default}
+        #wheelCanvas{cursor:grab}#wheelCanvas:active{cursor:grabbing}#gachaCanvas{cursor:grab}#gachaCanvas:active{cursor:grabbing}
+        .resize-handle{position:absolute;bottom:4px;right:4px;width:32px;height:32px;background:radial-gradient(circle at center,#94a3b8 2.5px,transparent 2.5px);background-size:8px 8px;z-index:10;pointer-events:auto;opacity:0.4;transition:opacity 0.2s;cursor:ew-resize}
+        .resize-handle:hover{opacity:1}
+        .wheel-pointer{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:24px;color:var(--primary);z-index:10;text-shadow:-1px 0 white,0 1px white,1px 0 white,0 -1px white}
+        .prob-bar-wrapper{width:100%;height:24px;border-radius:6px;overflow:hidden;display:flex;background:#e2e8f0;border:1px solid rgba(0,0,0,0.05)}
+        .prob-segment{height:100%;transition:width 0.4s cubic-bezier(0.4,0,0.2,1);border-right:1px solid rgba(255,255,255,0.2);position:relative}
+        .prob-segment:hover{filter:brightness(1.1);cursor:help}
+        .scroller-wrapper{position:relative;width:100%;border-radius:10px;border:1px solid var(--border);background:#f8fafc;overflow:hidden}
+        .scroller-window{width:100%;overflow-x:auto;overflow-y:hidden;padding:10px 0;scrollbar-width:none;cursor:grab}
+        .scroller-window::-webkit-scrollbar { display: none; }
+        .scroller-window:active{cursor:grabbing}
+        .scroller-pointer{position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:var(--primary);z-index:10;border-radius:2px;box-shadow:0 0 5px rgba(0,0,0,0.3);pointer-events:none}
+        .scroller-track{display:flex;gap:6px;width:max-content}
+        .scroller-item{flex:0 0 160px;height:85px;border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:bold;text-align:center;padding:8px;line-height:1.2;background:white;color:#475569;word-break:break-word;user-select:none}
+        .scroller-item.prized{background:linear-gradient(135deg,#fef08a,#facc15);color:#856404;border-color:#eab308;font-size:0.65rem}
+        .slot-row{padding:6px 10px;border-radius:8px;background:#f8fafc;border:1px solid #f1f5f9}
+        .btn-template{border:1px solid rgba(0,0,0,0.1);padding:6px;border-radius:6px;font-size:0.65rem;font-weight:700;transition:all 0.2s;color:white;cursor:pointer}
+        .btn-template:hover{filter:brightness(1.1);transform:translateY(-1px)}
+        .btn-template.spc{background:var(--color-spc)}.btn-template.etb{background:var(--color-etb)}.btn-template.upc{background:var(--color-upc)}.btn-template.ex{background:var(--color-ex)}.btn-template.warriors{background:var(--color-warriors)}.btn-template.tusk{background:var(--color-tusk)}.btn-template.ah-etb{background:var(--color-ah-etb)}.btn-template.ah-pc{background:var(--color-ah-pc)}.btn-template.energy{background:var(--color-energy);grid-column:span 2}
+        .btn-add{background:#f1f5f9;color:var(--primary);padding:8px;width:100%;border-radius:8px;margin-top:12px;margin-bottom:8px;font-weight:800;border:1px dashed #cbd5e1;font-size:0.65rem;text-transform:uppercase;cursor:pointer}
+        input{padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.85rem;width:100%;cursor:text;font-family:inherit}
+        .qty-stepper{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:2px}
+        .step-btn{width:24px;height:24px;border-radius:4px;border:none;background:#f1f5f9;color:#475569;font-weight:800;font-size:1rem;cursor:pointer;user-select:none}
+        .step-btn:active{background:#e2e8f0}
+        .btn-init{background:#1e293b;color:white;width:100%;padding:10px;font-size:0.75rem;font-weight:800;border-radius:8px;text-transform:uppercase;border:none;margin-top:4px;cursor:pointer}
+        .prominent-ev-card{background:linear-gradient(135deg,#fff9e6 0%,#fffbeb 100%);border:1.5px solid var(--prize-color)}
+        .ev-value{font-size:2.2rem;font-weight:900;color:#1a1a1a;display:block;line-height:1;letter-spacing:-0.02em;margin-bottom:4px}
+        .header-ai-box{background:rgba(255,255,255,0.7);border:1px solid #ddd6fe;border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px;flex-grow:1;max-width:420px;position:relative;cursor:default}
+        .header-ai-label{font-size:0.55rem;color:var(--ai-glow);font-weight:900;text-transform:uppercase}
+        .header-ai-tip{font-size:0.75rem;font-style:italic;color:#475569;line-height:1.3;max-height:2.6em;overflow:hidden}
+        .hit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:8px}
+        .hit-group{background:#fff;border:1px solid var(--border);padding:6px;border-radius:8px;text-align:center}
+        .btn-hit-me{background:var(--primary);color:white;width:100%;padding:4px;margin-top:6px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer}
+        .btn-hit-other{background:#94a3b8;color:white;width:100%;padding:4px;margin-top:3px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer}
+        .stats-sub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+        .mini-stat{padding:12px 14px;border-radius:12px;border:1px solid rgba(0,0,0,0.03)}
+        .mini-label{font-size:0.58rem;display:block;text-transform:uppercase;font-weight:700;margin-bottom:4px;letter-spacing:0.05em;color:#64748b}
+        .mini-value{font-size:1.3rem;font-weight:800;line-height:1}
+        .theme-blue{background:#f0f9ff;color:#0369a1}.theme-slate{background:#f8fafc;color:#475569}.theme-amber{background:#fffbeb;color:#b45309}.theme-indigo{background:#f5f3ff;color:#4338ca}
+        .summary-banner{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+        .summary-box{background:#f8fafc;border:1px solid var(--border);padding:8px;border-radius:8px;text-align:center}
+        .heatmap-container{max-height:350px;overflow-y:auto;scrollbar-width:thin}
+        .heatmap-grid-layout{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:4px;align-items:center}
+        .heatmap-row{cursor:pointer;border-radius:8px;margin-bottom:4px;transition:all 0.1s;border:1px solid transparent}
+        .heatmap-row:hover{filter:brightness(0.96);border-color:rgba(0,0,0,0.05)}
+        #save-status{font-size:0.55rem;font-weight:900;color:var(--success);transition:opacity 0.3s;opacity:0;margin-right:8px}
+        .chart-container{height:120px;margin-top:6px}
+        .history-list{list-style:none;padding:0;margin:0;max-height:180px;overflow-y:auto}
+        .history-item{padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:0.75rem;color:#475569}
+        #ai-verbose-status{font-size:0.52rem;color:var(--ai-glow);font-weight:800;text-align:right;line-height:1.4;margin-top:auto;min-height:3rem;width:100%}
+        .loading-spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(0,0,0,0.1);border-radius:50%;border-top-color:var(--ai-glow);animation:spin 0.6s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="app-header">
+        <div style="display: flex; gap: 8px; grid-column: 1;">
+            <button class="btn-reset-ui" onclick="resetUIDefaults()">RESET UI / GRID</button>
+            <button class="btn-reset-ui" onclick="restoreCards()">RESTORE CARDS</button>
+        </div>
+        <h1>Odds Advantage Calculator</h1>
+        <div></div> 
+    </div>
+    
+    <div class="dashboard" id="main-dashboard">
+        
+        <!-- COLUMN 1 -->
+        <div class="dashboard-col drop-zone" id="col-1">
+            <div class="card" id="card-setup">
+                <div class="section-title">
+                    <span>1. Setup Inventory</span>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span id="save-status">SAVED</span>
+                        <button onclick="saveLayout()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">SAVE</button>
+                        <button onclick="loadLayout()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">LOAD</button>
+                        <button onclick="resetLayoutDefault()" style="background:#f8d7da; color:#721c24; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">RESET</button>
+                        <div class="card-controls" style="margin-left: 8px;">
+                            <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                            <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="template-area">
+                    <button onclick="quickAdd('Prismatic SPC', 220)" class="btn-template spc">Prismatic SPC</button>
+                    <button onclick="quickAdd('Prismatic ETB', 125)" class="btn-template etb">Prismatic ETB</button>
+                    <button onclick="quickAdd('Charizard X UPC', 140)" class="btn-template upc">Charizard UPC (£140)</button>
+                    <button onclick="quickAdd('Prismatic Lucario EX', 160)" class="btn-template ex">Lucario EX (£160)</button>
+                    <button onclick="quickAdd('Legendary Warriors', 120)" class="btn-template warriors">Warriors (£120)</button>
+                    <button onclick="quickAdd('Great Tusk Ex', 140)" class="btn-template tusk">Great Tusk (£140)</button>
+                    <button onclick="quickAdd('Ascended Heroes ETB', 80)" class="btn-template ah-etb">Ascended ETB (£80)</button>
+                    <button onclick="quickAdd('Ascended Heroes PC ETB', 150)" class="btn-template ah-pc">Ascended PC ETB (£150)</button>
+                    <button onclick="quickAdd('Energy', 0)" class="btn-template energy">Energy (£0)</button>
+                </div>
+                <button id="add-row-btn" class="btn-add" onclick="addSlotRow()">+ Add Slot</button>
+                <div class="inventory-grid-config" style="padding: 0 8px 4px; font-size: 0.55rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;">
+                    <span>Prize</span><span>Name/Label</span><span>Val</span><span>Qty</span><span></span>
+                </div>
+                <div id="outcomes-container"></div>
+                <button id="init-btn" class="btn-init" onclick="initializeSession()">Initialise New Session</button>
+            </div>
+
+            <div class="card" id="card-heatmap">
+                <div class="section-title">
+                    <span>ROI Strategy Heatmap</span>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <div class="heatmap-grid-layout" style="border-bottom: 1.5px solid #f1f5f9; padding-bottom: 4px; margin-bottom: 4px;">
+                    <div class="heatmap-header" style="text-align:center; font-size:0.55rem; color:#94a3b8; font-weight:800;">Price</div>
+                    <div class="heatmap-header" style="text-align:center; font-size:0.55rem; color:#94a3b8; font-weight:800;">ROI %</div>
+                    <div class="heatmap-header" style="text-align:center; font-size:0.55rem; color:#94a3b8; font-weight:800;">Profit</div>
+                </div>
+                <div class="heatmap-container">
+                    <div id="heatmap-grid" class="heatmap-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 2 -->
+        <div class="dashboard-col drop-zone" id="col-2">
+            <div class="card prominent-ev-card" id="card-ev">
+                <div class="section-title" style="margin-bottom: 8px;">
+                    <span>Expected Value Analysis</span>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: stretch; gap: 16px; flex-wrap: wrap;">
+                    <div class="ev-main-data">
+                        <span class="ev-label" style="font-size:0.65rem; color:#856404; font-weight:800; text-transform:uppercase;">Fair Expected Value</span>
+                        <span id="stat-ev" class="ev-value">£0.00</span>
+                        <span id="setup-total-slots-info" style="font-size: 0.55rem; color: #a16207; font-weight: 700; margin-top: 4px; display: block;">Total Slots: 0</span>
+                    </div>
+                    <div class="header-ai-box">
+                        <div style="display:flex; justify-content: space-between; align-items: center;">
+                            <span class="header-ai-label">Gemini Advisor</span>
+                            <div style="display:flex; gap:8px;">
+                                <button id="btn-listen" class="btn-tts" onclick="speakAdvice()" title="Listen to advice" style="cursor:pointer; border:1px solid #ddd6fe; border-radius:4px; padding:2px; background:white; width:24px; height:24px;">🔊</button>
+                                <button class="btn-ai" onclick="getAIGuidance()" style="background:var(--ai-glow); color:white; padding:4px 8px; border-radius:4px; font-weight:800; border:none; font-size:0.65rem; cursor:pointer;">✨ GET ADVICE</button>
+                            </div>
+                        </div>
+                        <div id="ai-coaching" class="header-ai-tip">Ready for strategy advice...</div>
+                        <div id="ai-verbose-status"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="card-analytics">
+                <div class="section-title">
+                    <span>Analytics Dashboard</span>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <div class="stats-sub-grid">
+                    <div class="mini-stat theme-blue"><span class="mini-label">Prize Chance</span><span id="stat-prize-prob" class="mini-value">0%</span></div>
+                    <div class="mini-stat theme-slate"><span class="mini-label">Slots Left</span><span id="stat-slots" class="mini-value">0</span></div>
+                    <div class="mini-stat theme-amber"><span class="mini-label">Avg Prize</span><span id="stat-avg-prize" class="mini-value">£0.00</span></div>
+                    <div class="mini-stat theme-indigo"><span class="mini-label">Cost/Prize</span><span id="stat-implied-per-prize" class="mini-value">£0.00</span></div>
+                </div>
+            </div>
+
+            <div class="card" id="card-bid">
+                <div class="section-title">
+                    <span>2. Active Bid Control</span>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button onmousedown="startAdjust(event, this, -1, document.getElementById('bid-input'))" ontouchstart="startAdjust(event, this, -1, document.getElementById('bid-input'))" class="step-btn" style="width:34px; height:34px; font-size:1.2rem;">-</button>
+                        <input type="number" id="bid-input" value="10" style="width:75px; height:34px; text-align:center; font-weight:800; border-radius:8px;" oninput="syncAndUI()">
+                        <button onmousedown="startAdjust(event, this, 1, document.getElementById('bid-input'))" ontouchstart="startAdjust(event, this, 1, document.getElementById('bid-input'))" class="step-btn" style="width:34px; height:34px; font-size:1.2rem;">+</button>
+                    </div>
+                    <div style="text-align: right;"><span class="mini-label">Bid ROI</span><span id="stat-diff-perc" style="font-weight:900; color:var(--primary); font-size: 1.2rem;">0.00%</span></div>
+                </div>
+            </div>
+            
+            <div class="card" id="card-spin">
+                <div class="section-title">
+                    <span>Record Manual Spin</span>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <div id="spin-buttons" class="hit-grid"></div>
+                <div style="margin-top: 12px; display: flex; gap: 8px; justify-content: flex-end;">
+                    <button onclick="undoLastSpin()" id="btn-undo" style="display:none; color:var(--primary); background:none; font-size:0.6rem; border:1.5px solid var(--primary); padding:3px 10px; border-radius:6px; font-weight:800; cursor:pointer;">UNDO LAST</button>
+                    <button onclick="exportCSV()" style="background:none; color:#94a3b8; font-size:0.6rem; font-weight:800; border: none; cursor:pointer;">CSV LOG</button>
+                </div>
+            </div>
+
+            <div class="card" id="card-sim-controls">
+                <div class="section-title">
+                    <div style="display:flex; align-items:center; gap: 8px;">
+                        <span>Auto-Simulate Spin</span>
+                    </div>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: space-between;">
+                    <button onclick="simulateResult()" style="flex: 1; background: var(--ai-glow); color: white; border: none; padding: 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: filter 0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">SIMULATE NEXT</button>
+                    <button onclick="rerollSimulation()" style="flex: 1; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">REROLL</button>
+                    <button onclick="undoLastSpin()" style="flex: 0.5; background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; padding: 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">UNDO</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 3 -->
+        <div class="dashboard-col drop-zone" id="col-3">
+            <div class="card resizable-card" id="wheel-module">
+                <div class="section-title">
+                    <div style="display:flex; align-items:center; gap: 8px;">
+                        <span>Wheel Visualizer</span> 
+                        <span class="vis-slots-count sub-text"></span>
+                    </div>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <div class="vis-content">
+                    <canvas id="wheelCanvas" class="vis-canvas"></canvas>
+                    <div class="wheel-pointer">◀</div>
+                    <div class="resize-handle" id="wheel-resize-handle"></div>
+                </div>
+            </div>
+
+            <div class="card resizable-card" id="gacha-module">
+                <div class="section-title">
+                    <div style="display:flex; align-items:center; gap: 8px;">
+                        <span>Gacha Machine</span> 
+                        <span class="vis-slots-count sub-text"></span>
+                    </div>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <div class="vis-content">
+                    <canvas id="gachaCanvas" class="vis-canvas"></canvas>
+                    <div class="resize-handle" id="gacha-resize-handle"></div>
+                </div>
+            </div>
+
+            <div class="card" id="card-scroller">
+                <div class="section-title">
+                    <div style="display:flex; align-items:center; gap: 8px;">
+                        <span>Slot Track Scroller</span>
+                        <span id="scroller-warn" class="sub-text" style="color:var(--warning)"></span>
+                    </div>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <div class="scroller-wrapper">
+                    <div class="scroller-pointer"></div>
+                    <div class="scroller-window" id="scroller-window">
+                        <div class="scroller-track" id="scroller-track"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="card-prob">
+                <div class="section-title">
+                    <div style="display:flex; align-items:center; gap: 8px;">
+                        <span>Probability Bar</span>
+                        <span class="vis-slots-count sub-text"></span>
+                    </div>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <div class="prob-bar-wrapper" id="prob-bar-container"></div>
+            </div>
+
+            <div class="card" id="card-odds">
+                <div class="section-title">
+                    <span>Odds Distribution</span>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+                    <thead><tr style="text-align: left; color: #94a3b8; font-size: 0.6rem; border-bottom: 1.5px solid #f1f5f9;"><th>RESULT</th><th>QTY</th><th>PROB</th></tr></thead>
+                    <tbody id="odds-body"></tbody>
+                </table>
+            </div>
+            
+            <div class="card" id="card-summary">
+                <div class="section-title">
+                    <span>Session Summary</span>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <div class="summary-banner">
+                    <div class="summary-box"><span class="mini-label">Spent</span><span id="total-spent" style="font-weight: 800; font-size:0.9rem;">£0.00</span></div>
+                    <div class="summary-box"><span class="mini-label">Won</span><span id="total-won" style="font-weight: 800; font-size:0.85rem;">£0.00</span></div>
+                    <div class="summary-box"><span class="mini-label">Net</span><span id="total-net" style="font-weight: 800; font-size:0.9rem;">£0.00</span></div>
+                </div>
+            </div>
+
+            <div class="card" id="card-history">
+                <div class="section-title">
+                    <span>Spin Outcome History</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button onclick="clearHistory()" style="background:#fef2f2; border:1px solid #fca5a5; color:#dc2626; font-size:0.48rem; border-radius:4px; cursor:pointer; padding:2px 6px; font-weight:800;">CLEAR</button>
+                        <div class="card-controls">
+                            <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                            <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                        </div>
+                    </div>
+                </div>
+                <ul id="history-list" class="history-list"></ul>
+            </div>
+
+            <div class="card" id="card-chart">
+                <div class="section-title">
+                    <span>Trend Graph</span>
+                    <div class="card-controls">
+                        <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
+                        <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
+                    </div>
+                </div>
+                <div class="chart-container"><canvas id="roiChart"></canvas></div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<script>
+    // System mandated API Setup
+    const apiKey = ""; 
+
+    // --- GLOBAL STATE ---
+    let inventory = [];
+    let history = [];
+    let sessionStats = { spent: 0, won: 0 };
+    let roiChart = null;
+    let lastAdvice = "";
+    
+    let holdAdjustTimer = null;
+    let holdAdjustInterval = null;
+
+    let hoveredSegmentIndex = -1;
+    let isSpinning = false;
+    let wheelSpinAngle = 0;
+    
+    let dispensingBall = null;
+    let lastDispensedBall = null; 
+    let gachaState = {
+        draggedBall: null,
+        isTrayBall: false,
+        isMachineGrabbed: false,
+        isKnobGrabbed: false,
+        machineX: 0,
+        machineY: 0,
+        knobAngle: 0,
+        lastKnobAngle: 0,
+        manualTurnAccumulator: 0,
+        knobTarget: null,
+        knobV: 0,
+        lastMouse: { x: 0, y: 0, time: 0 },
+        awake: false,
+        idleFrames: 0,
+        lastCx: 0,
+        lastDomeCy: 0,
+        spinStartTime: 0,
+        hasDropped: false,
+        targetItem: null,
+        sparkles: [],
+        prizeDropTime: null
+    };
+
+    let lastHapticSeg = -1;
+    let lastHapticScroll = -1;
+
+    // --- GLOBAL UTILITIES ---
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+            if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
+            this.beginPath(); this.moveTo(x + r, y);
+            this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r);
+            this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r);
+            this.closePath(); return this;
+        }
+    }
+
+    function triggerHaptic() {
+        try { if (navigator.vibrate) navigator.vibrate(15); } catch(e) {}
+    }
+
+    function checkWheelHaptic() {
+        const slotsCount = inventory.reduce((a, b) => a + b.remaining, 0);
+        if(slotsCount === 0) return;
+        const step = (Math.PI * 2) / slotsCount;
+        let seg = Math.floor(Math.abs(wheelSpinAngle) / step);
+        if (seg !== lastHapticSeg) { triggerHaptic(); lastHapticSeg = seg; }
+    }
+
+    function checkScrollerHaptic() {
+        const slider = document.getElementById('scroller-window'); if(!slider) return;
+        let idx = Math.floor(slider.scrollLeft / 166);
+        if (idx !== lastHapticScroll) { triggerHaptic(); lastHapticScroll = idx; }
+    }
+
+    function getDistributedSlots() {
+        let expanded = [];
+        inventory.forEach((item, id) => { for(let n=0; n<item.remaining; n++) expanded.push({...item, id}); });
+        let phi = 0.618033988749895;
+        let mapped = expanded.map((item, i) => ({ item, val: (i * phi) % 1 }));
+        mapped.sort((a, b) => a.val - b.val);
+        return mapped.map(m => m.item);
+    }
+
+    function shuffleArray(array) {
+        let cur = array.length, rand;
+        while (cur != 0) { rand = Math.floor(Math.random() * cur); cur--; [array[cur], array[rand]] = [array[rand], array[cur]]; }
+        return array;
+    }
+
+    // --- INITIALIZATION ---
+    window.onload = () => {
+        const ctx = document.getElementById('roiChart').getContext('2d');
+        roiChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ data: [], borderColor: '#7c3aed', borderWidth: 2, fill: true, backgroundColor: 'rgba(124, 58, 237, 0.05)', tension: 0.4, pointRadius: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        initCustomCardDrag(); 
+        initColumnResizer('wheel-module', 'wheel-resize-handle', drawWheel);
+        initColumnResizer('gacha-module', 'gacha-resize-handle', drawGacha);
+        initWheelDrag(); 
+        initWheelHover();
+        initGachaInteraction();
+        initScrollerDrag();
+
+        const observer = new ResizeObserver(() => {
+            if(!document.body.classList.contains('wheel-resizing')) {
+                requestAnimationFrame(drawWheel);
+                requestAnimationFrame(drawGacha);
+            }
+        });
+        document.querySelectorAll('.vis-content').forEach(c => observer.observe(c));
+
+        const saved = localStorage.getItem('wheel_session');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                inventory = data.inventory || [];
+                history = data.history || [];
+                sessionStats = data.sessionStats || { spent: 0, won: 0 };
+                if (inventory.length > 0) rebuildDOMFromInventory();
+                else loadDefaults();
+            } catch (e) { loadDefaults(); }
+        } else { loadDefaults(); }
+        syncAndUI();
+    };
+
+    function loadDefaults() {
+        inventory = [
+            { label: "Charizard X UPC", value: 140, remaining: 1, prized: true },
+            { label: "Energy", value: 0, remaining: 9, prized: false }
+        ];
+        rebuildDOMFromInventory();
+        syncAndUI();
+    }
+
+    function startAdjust(e, btn, delta, inputElem) {
+        e.preventDefault();
+        const action = () => { inputElem.value = Math.max(0, parseInt(inputElem.value || 0) + delta); syncAndUI(); };
+        action(); holdAdjustTimer = setTimeout(() => { holdAdjustInterval = setInterval(action, 80); }, 300);
+    }
+    function stopAdjust() { clearTimeout(holdAdjustTimer); clearInterval(holdAdjustInterval); }
+    function toggleCard(btn) { const card = btn.closest('.card'); card.classList.toggle('minimized'); btn.innerText = card.classList.contains('minimized') ? '+' : '-'; }
+    function closeCard(btn) { btn.closest('.card').style.display = 'none'; }
+    function restoreCards() {
+        document.querySelectorAll('.card').forEach(c => {
+            c.style.display = ''; c.classList.remove('minimized');
+            const btn = c.querySelector('.card-btn'); if(btn && btn.innerText === '+') btn.innerText = '-';
+        });
+        requestAnimationFrame(drawWheel); requestAnimationFrame(drawGacha);
+    }
+
+    function initColumnResizer(cardId, handleId, drawCallback) {
+        const handle = document.getElementById(handleId); const card = document.getElementById(cardId);
+        if(!handle || !card) return;
+        let startX, startW;
+        const startDrag = (e) => {
+            document.body.classList.add('wheel-resizing'); startX = e.clientX;
+            startW = card.closest('.dashboard-col').offsetWidth;
+            e.stopPropagation(); e.preventDefault();
+        };
+        handle.addEventListener('mousedown', startDrag);
+        const onMouseMove = (e) => {
+            if (startX === undefined) return;
+            const dx = e.clientX - startX; const newW = Math.max(280, startW + dx);
+            const col = card.closest('.dashboard-col');
+            if (col) col.style.flex = `0 0 ${newW}px`;
+            if (drawCallback) requestAnimationFrame(drawCallback);
+        };
+        const onMouseUp = () => {
+            if (startX !== undefined) { startX = undefined; document.body.classList.remove('wheel-resizing'); if (drawCallback) requestAnimationFrame(drawCallback); }
+        };
+        document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
+    }
+
+    function resetUIDefaults() {
+        const c1 = document.getElementById('col-1'); const c2 = document.getElementById('col-2'); const c3 = document.getElementById('col-3');
+        ['col-1','col-2','col-3'].forEach(id => document.getElementById(id).style.flex = '');
+        c1.appendChild(document.getElementById('card-setup')); c1.appendChild(document.getElementById('card-heatmap'));
+        c2.appendChild(document.getElementById('card-ev')); c2.appendChild(document.getElementById('card-analytics'));
+        c2.appendChild(document.getElementById('card-bid')); c2.appendChild(document.getElementById('card-spin')); c2.appendChild(document.getElementById('card-sim-controls'));
+        c3.appendChild(document.getElementById('wheel-module')); c3.appendChild(document.getElementById('gacha-module'));
+        c3.appendChild(document.getElementById('card-scroller')); c3.appendChild(document.getElementById('card-prob'));
+        c3.appendChild(document.getElementById('card-odds')); c3.appendChild(document.getElementById('card-summary'));
+        c3.appendChild(document.getElementById('card-history')); c3.appendChild(document.getElementById('card-chart'));
+        restoreCards(); showStatus("UI / GRID RESET", "var(--primary)");
+    }
+
+    function initScrollerDrag() {
+        const slider = document.getElementById('scroller-window'); if (!slider) return;
+        let isDown = false, startX, scrollLeft, velX = 0, momentumID, lastTime = 0, lastX = 0;
+        let timestamps = [], positions = [];
+
+        const startDrag = (pageX) => {
+            if (isSpinning) return;
+            isDown = true; slider.style.cursor = 'grabbing';
+            startX = pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft;
+            velX = 0; timestamps = [performance.now()]; positions = [pageX];
+            cancelAnimationFrame(momentumID);
+        };
+        const stopDrag = () => {
+            if (!isDown) return;
+            isDown = false; slider.style.cursor = 'grab';
+            
+            // Calculate flick velocity based on recent interaction history
+            if (timestamps.length > 1) {
+                let dt = performance.now() - timestamps[timestamps.length - 1];
+                if (dt < 100) {
+                    let moveDt = timestamps[timestamps.length - 1] - timestamps[0];
+                    let moveDx = positions[positions.length - 1] - positions[0];
+                    velX = moveDt > 0 ? -(moveDx / moveDt) * 16 : 0;
+                } else velX = 0;
+            }
+            beginMomentum();
+        };
+        const moveDrag = (pageX) => {
+            if (!isDown || isSpinning) return;
+            const x = pageX - slider.offsetLeft; const walk = (x - startX); 
+            slider.scrollLeft = scrollLeft - walk;
+            
+            let now = performance.now(); timestamps.push(now); positions.push(pageX);
+            if (timestamps.length > 5) { timestamps.shift(); positions.shift(); }
+            checkScrollerHaptic();
+        };
+
+        slider.addEventListener('mousedown', (e) => startDrag(e.pageX));
+        slider.addEventListener('mouseleave', stopDrag); slider.addEventListener('mouseup', stopDrag);
+        slider.addEventListener('mousemove', (e) => { e.preventDefault(); moveDrag(e.pageX); });
+        slider.addEventListener('touchstart', (e) => startDrag(e.touches[0].pageX), {passive: true});
+        slider.addEventListener('touchend', stopDrag); slider.addEventListener('touchcancel', stopDrag);
+        slider.addEventListener('touchmove', (e) => { moveDrag(e.touches[0].pageX); }, {passive: true});
+
+        function beginMomentum() {
+            function loop() {
+                // INFINITE SCROLLER LOOP: Jump back to center blocks if scrolling too far
+                const setWidth = 16600; // 100 items * 166px width
+                if (slider.scrollLeft < setWidth * 1.5) slider.scrollLeft += setWidth;
+                if (slider.scrollLeft > setWidth * 3.5) slider.scrollLeft -= setWidth;
+
+                if (!isDown && Math.abs(velX) > 0.5 && !isSpinning) {
+                    slider.scrollLeft += velX; velX *= 0.95; 
+                    checkScrollerHaptic(); momentumID = requestAnimationFrame(loop);
+                }
+            }
+            momentumID = requestAnimationFrame(loop);
+        }
+    }
+
+    function simulateResult() {
+        if (isSpinning) return;
+        const slots = []; inventory.forEach((item, index) => { for(let n=0; n<item.remaining; n++) slots.push(index); });
+        if (slots.length === 0) return;
+        const randomIndex = Math.floor(Math.random() * slots.length);
+        recordSpin(slots[randomIndex], true);
+    }
+    function rerollSimulation() {
+        if (isSpinning || history.length === 0) return;
+        undoLastSpin(); setTimeout(() => { simulateResult(); }, 50);
+    }
+
+    function wakeUpGacha() {
+        if (!gachaState.awake) { gachaState.awake = true; gachaState.idleFrames = 0; requestAnimationFrame(gachaLoop); }
+    }
+
+    function initGachaInteraction() {
+        const canvas = document.getElementById('gachaCanvas'); if (!canvas) return;
+        
+        canvas.addEventListener('mousedown', e => {
+            if (isSpinning) return;
+            const rect = canvas.getBoundingClientRect(); const ratio = window.devicePixelRatio || 1;
+            let scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX, mouseY = (e.clientY - rect.top) * scaleY;
+            const sizePx = canvas.width / ratio; const R = sizePx / 3.2; 
+            const cx = sizePx / 2, domeCy = sizePx * 0.35, knobY = domeCy + R * 1.1; 
+            const drawMouseX = mouseX / ratio, drawMouseY = mouseY / ratio;
+
+            if (Math.hypot(drawMouseX - cx, drawMouseY - knobY) < R * 0.4) {
+                gachaState.isKnobGrabbed = true;
+                gachaState.lastKnobAngle = Math.atan2(drawMouseY - knobY, drawMouseX - cx);
+                gachaState.manualTurnAccumulator = 0;
+                gachaState.knobV = 0; 
+                gachaState.knobTarget = null; 
+                wakeUpGacha(); return;
+            }
+
+            let foundBall = null, isTray = false;
+            let trayBall = lastDispensedBall || dispensingBall;
+            if (trayBall && window.cachedGacha && window.cachedGacha[0]) {
+                let bR = window.cachedGacha[0].r;
+                if (Math.hypot(drawMouseX - trayBall.x, drawMouseY - trayBall.y) <= bR) { foundBall = trayBall; isTray = true; }
+            }
+            if (!foundBall && window.cachedGacha) {
+                let relX = drawMouseX - cx - gachaState.machineX; let relY = drawMouseY - domeCy - gachaState.machineY;
+                for (let i = window.cachedGacha.length - 1; i >= 0; i--) {
+                    let b = window.cachedGacha[i];
+                    if (Math.hypot(relX - b.x, relY - b.y) <= b.r) { foundBall = b; break; }
+                }
+            }
+
+            if (foundBall) {
+                gachaState.draggedBall = foundBall; gachaState.isTrayBall = isTray;
+                gachaState.lastMouse = { x: drawMouseX, y: drawMouseY, time: performance.now() }; wakeUpGacha();
+            } else {
+                gachaState.isMachineGrabbed = true;
+                gachaState.lastMouse = { x: e.clientX, y: e.clientY, time: performance.now() }; wakeUpGacha();
+            }
+        });
+
+        window.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect(); const ratio = window.devicePixelRatio || 1;
+            let scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+            const drawMouseX = ((e.clientX - rect.left) * scaleX) / ratio;
+            const drawMouseY = ((e.clientY - rect.top) * scaleY) / ratio;
+            const sizePx = canvas.width / ratio; const R = sizePx / 3.2; 
+            const cx = sizePx / 2, domeCy = sizePx * 0.35, knobY = domeCy + R * 1.1;
+
+            if (Math.hypot(drawMouseX - cx, drawMouseY - knobY) < R * 0.4 && !isSpinning && !gachaState.isMachineGrabbed && !gachaState.draggedBall) {
+                canvas.style.cursor = 'pointer';
+            } else if (!gachaState.isMachineGrabbed && !gachaState.draggedBall && !gachaState.isKnobGrabbed) {
+                canvas.style.cursor = 'grab';
+            }
+
+            if (gachaState.isKnobGrabbed && !isSpinning) {
+                canvas.style.cursor = 'grabbing';
+                const now = performance.now(); 
+                
+                let currentAngle = Math.atan2(drawMouseY - knobY, drawMouseX - cx);
+                let diff = currentAngle - gachaState.lastKnobAngle;
+                
+                // Wrap-around angle calculation logic for full 360 circle tracking
+                if (diff > Math.PI) diff -= Math.PI * 2;
+                if (diff < -Math.PI) diff += Math.PI * 2;
+                
+                gachaState.knobAngle += diff;
+                
+                let dt = Math.max(1, now - gachaState.lastMouse.time);
+                gachaState.knobV = diff / dt * 16;
+                
+                gachaState.lastKnobAngle = currentAngle;
+                gachaState.lastMouse = { x: drawMouseX, y: drawMouseY, time: now };
+                
+                gachaState.manualTurnAccumulator = (gachaState.manualTurnAccumulator || 0) + diff;
+                if (gachaState.manualTurnAccumulator < 0) gachaState.manualTurnAccumulator = 0; 
+                
+                // Trigger an auto-simulated spin if knob turned ~360 degrees manually
+                if (gachaState.manualTurnAccumulator > Math.PI * 1.85) {
+                    gachaState.isKnobGrabbed = false;
+                    simulateResult();
+                }
+                
+                wakeUpGacha(); return;
+            }
+
+            if (gachaState.isMachineGrabbed && !isSpinning) {
+                canvas.style.cursor = 'grabbing';
+                let dx = e.clientX - gachaState.lastMouse.x, dy = e.clientY - gachaState.lastMouse.y;
+                gachaState.machineX += dx * 0.6; gachaState.machineY += dy * 0.6;
+                if (window.cachedGacha && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
+                    window.cachedGacha.forEach(b => { b.vx -= dx * 0.25; b.vy -= dy * 0.25; }); 
+                }
+                gachaState.lastMouse = { x: e.clientX, y: e.clientY, time: performance.now() }; wakeUpGacha(); return;
+            }
+
+            if (!gachaState.draggedBall) return;
+            canvas.style.cursor = 'grabbing';
+            const mouseX = drawMouseX, mouseY = drawMouseY, trayY = domeCy + R * 2.1;
+            const now = performance.now(); const dt = Math.max(1, now - gachaState.lastMouse.time);
+            
+            let vx = (mouseX - gachaState.lastMouse.x) / dt * 7, vy = (mouseY - gachaState.lastMouse.y) / dt * 7;
+            let speedSq = vx*vx + vy*vy; if (speedSq > 900) { let mult = 30 / Math.sqrt(speedSq); vx *= mult; vy *= mult; }
+            gachaState.lastMouse = { x: mouseX, y: mouseY, time: now };
+            gachaState.draggedBall.vx = vx; gachaState.draggedBall.vy = vy;
+
+            if (gachaState.isTrayBall) {
+                gachaState.draggedBall.x = mouseX;
+                gachaState.draggedBall.y = mouseY;
+                const bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5;
+                const maxTrayX = sizePx - bR, minTrayX = bR; // Use entire Canvas square bounds
+                if (gachaState.draggedBall.x > maxTrayX) gachaState.draggedBall.x = maxTrayX;
+                if (gachaState.draggedBall.x < minTrayX) gachaState.draggedBall.x = minTrayX;
+                if (gachaState.draggedBall.y > trayY - bR) gachaState.draggedBall.y = trayY - bR;
+                if (gachaState.draggedBall.y < bR) gachaState.draggedBall.y = bR; // Ceiling bounce 
+            } else {
+                let relX = mouseX - cx - gachaState.machineX; let relY = mouseY - domeCy - gachaState.machineY;
+                let innerR = R - gachaState.draggedBall.r - 2; let dist = Math.sqrt(relX*relX + relY*relY);
+                if (dist > innerR) { relX = (relX / dist) * innerR; relY = (relY / dist) * innerR; }
+                gachaState.draggedBall.x = relX;
+                gachaState.draggedBall.y = relY;
+                gachaState.draggedBall.z = 0; gachaState.draggedBall.vz = 0;
+            }
+            wakeUpGacha(); 
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (gachaState.isKnobGrabbed) {
+                if (Math.abs(gachaState.knobV) > 0.2 && !isSpinning) simulateResult();
+                gachaState.isKnobGrabbed = false;
+            }
+            if (gachaState.draggedBall) { gachaState.draggedBall = null; wakeUpGacha(); }
+            gachaState.isMachineGrabbed = false;
+        });
+    }
+
+    function updateGachaPhysics(R, phase) {
+        const balls = window.cachedGacha; if (!balls || balls.length === 0) return;
+        const bR = balls[0].r; const innerR = R - bR - 2;
+
+        balls.forEach(b => {
+            if (b === gachaState.draggedBall) return; 
+            if (phase === "chaos") {
+                if (b.y > innerR * 0.4 && Math.random() < 0.2) { b.vy -= Math.random() * 2.5 + 0.5; b.vx += (Math.random() - 0.5) * 1.5; b.vz += (Math.random() - 0.5) * 2.5; }
+                b.vy += 0.25; let drag = 0.95; b.vx *= drag; b.vy *= drag; b.vz *= drag;
+            } else {
+                b.vy += 0.4; let drag = 0.85; b.vx *= drag; b.vy *= drag; // Higher gravity & stronger drag
+                b.rotation = 0; 
+                if (b.prized && (Math.abs(b.vx) > 0 || Math.abs(b.vy) > 0)) b.starRotation = (b.starRotation || 0) + 0.01;
+                let targetZ = b.prized ? 10 : 0; b.vz += (targetZ - (b.z || 0)) * 0.05; b.vz *= 0.8;
+                
+                // Forcibly stop micro-vibrations
+                if (Math.abs(b.vx) < 0.15) b.vx = 0;
+                if (Math.abs(b.vy) < 0.15) b.vy = 0;
+            }
+            b.x += b.vx; b.y += b.vy; b.z = (b.z || 0) + (b.vz || 0);
+            if(phase === "chaos") b.rotation = (b.rotation || 0) + (Math.abs(b.vx) + Math.abs(b.vy)) * 0.05 * (b.vx > 0 ? 1 : -1);
+            
+            let maxZ = R * 0.6; if (b.z > maxZ) { b.z = maxZ; b.vz *= -0.5; } if (b.z < -maxZ) { b.z = -maxZ; b.vz *= -0.5; }
+            let currentDist = Math.sqrt(b.x*b.x + b.y*b.y);
+            if (currentDist > innerR && currentDist > 0) {
+                let nx = b.x / currentDist, ny = b.y / currentDist;
+                b.x = nx * innerR; b.y = ny * innerR;
+                let dot = b.vx * nx + b.vy * ny;
+                if (dot > 0) { b.vx -= 1.1 * dot * nx; b.vy -= 1.1 * dot * ny; } 
+            }
+        });
+
+        for (let iter = 0; iter < 3; iter++) {
+            for(let i=0; i<balls.length; i++) {
+                for(let j=i+1; j<balls.length; j++) {
+                    let b1 = balls[i], b2 = balls[j];
+                    let dx = b2.x - b1.x, dy = b2.y - b1.y, dz = (b2.z || 0) - (b1.z || 0);
+                    let distSq = dx*dx + dy*dy + dz*dz; let minDistSq = (b1.r + b2.r) * (b1.r + b2.r);
+                    if (distSq < minDistSq && distSq > 0.0001) {
+                        let dist = Math.sqrt(distSq); let overlap = ((b1.r + b2.r) - dist) * 0.5; let nx = dx/dist, ny = dy/dist, nz = dz/dist;
+                        if (overlap > 0.1) {
+                            if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap; b1.y -= ny * overlap; b1.z -= nz * overlap; }
+                            if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap; b2.y += ny * overlap; b2.z += nz * overlap; }
+                        }
+                        if (iter === 0) {
+                            let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy, rvz = (b2.vz || 0) - (b1.vz || 0);
+                            let velAlongNormal = rvx * nx + rvy * ny + rvz * nz;
+                            if (velAlongNormal < -0.5) { // Stricter collision threshold to avoid endless chain-reactions
+                                let impulse = -(1 + 0.05) * velAlongNormal / 2; // Drastically reduced restitution
+                                if (b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; b1.vz -= nz * impulse; }
+                                if (b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; b2.vz += nz * impulse; }
+                            }
+                        }
+                    }
+                }
+            }
+            balls.forEach(b => {
+                if (b === gachaState.draggedBall) return;
+                let currentDist = Math.sqrt(b.x*b.x + b.y*b.y);
+                if (currentDist > innerR && currentDist > 0) { b.x = (b.x / currentDist) * innerR; b.y = (b.y / currentDist) * innerR; }
+            });
+        }
+    }
+
+    function gachaLoop() {
+        if (!document.getElementById('gachaCanvas')) return;
+        let now = performance.now(); const canvas = document.getElementById('gachaCanvas');
+        const ratio = window.devicePixelRatio || 1; const sizePx = canvas.width / ratio;
+        if (sizePx <= 0) return;
+        
+        const R = sizePx / 3.2, cx = sizePx / 2, domeCy = sizePx * 0.35, chuteY = domeCy + R * 1.5, trayY = domeCy + R * 2.1;
+
+        if (!gachaState.isMachineGrabbed && (Math.abs(gachaState.machineX) > 0.1 || Math.abs(gachaState.machineY) > 0.1)) {
+            gachaState.machineX *= 0.8; gachaState.machineY *= 0.8; 
+        }
+
+        if (isSpinning) {
+            if (gachaState.knobTarget !== null && !gachaState.isKnobGrabbed) {
+                if (gachaState.knobAngle < gachaState.knobTarget) { gachaState.knobV = 0.25; } 
+                else { gachaState.knobAngle = gachaState.knobTarget; gachaState.knobTarget = null; gachaState.knobV = 0; }
+            }
+
+            const elapsed = now - gachaState.spinStartTime; const dropTimeMs = 2800; 
+            if (elapsed < dropTimeMs) { updateGachaPhysics(R, "chaos"); } 
+            else {
+                updateGachaPhysics(R, "settle");
+                if (!gachaState.hasDropped) {
+                    gachaState.hasDropped = true;
+                    if (window.cachedGacha) {
+                        let dBallIdx = window.cachedGacha.findIndex(b => b.isDispensing);
+                        if (dBallIdx > -1) window.cachedGacha.splice(dBallIdx, 1);
+                    }
+                    dispensingBall = {
+                        prized: gachaState.targetItem.prized, x: cx, y: chuteY, 
+                        vx: (Math.random() - 0.5) * 2, vy: R * 0.01, targetY: trayY, rotation: 0, scale: 1 
+                    };
+                    
+                    // Trigger Glow & Sparkles for prized drops
+                    if (gachaState.targetItem.prized) {
+                        gachaState.prizeDropTime = performance.now();
+                        gachaState.sparkles = [];
+                        for(let i = 0; i < 40; i++) {
+                            let angle = Math.random() * Math.PI * 2;
+                            let dist = Math.random() * R * 1.1;
+                            gachaState.sparkles.push({
+                                x: cx + Math.cos(angle)*dist,
+                                y: domeCy + Math.sin(angle)*dist,
+                                vx: Math.cos(angle) * (Math.random()*4 + 1),
+                                vy: Math.sin(angle) * (Math.random()*4 + 1) - 1,
+                                life: 1.0,
+                                decay: 0.01 + Math.random()*0.02
+                            });
+                        }
+                    }
+                }
+            }
+        } else {
+            updateGachaPhysics(R, "settle");
+        }
+
+        gachaState.knobAngle += gachaState.knobV;
+        gachaState.knobV *= 0.8; // Knob friction
+
+        let activeBall = dispensingBall || lastDispensedBall;
+        let activeBallSpeed = 0;
+        
+        if (activeBall && activeBall !== gachaState.draggedBall) {
+            let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5;
+            let floorY = trayY - bR; 
+
+            if (Math.abs(activeBall.vy) < 0.05 && Math.abs(activeBall.vx) < 0.05 && activeBall.y >= floorY - 1) {
+                activeBall.vy = 0; activeBall.vx = 0; activeBall.y = floorY;
+            } else {
+                activeBall.vy += R * 0.0015; activeBall.x += activeBall.vx; activeBall.y += activeBall.vy;
+                activeBall.rotation += activeBall.vx * 0.08; 
+                if (activeBall.y > floorY) {
+                    activeBall.y = floorY; activeBall.vy *= -0.5; 
+                    if (Math.abs(activeBall.vy) < R * 0.002) activeBall.vy = 0; 
+                    activeBall.vx *= 0.92; 
+                }
+                const maxTrayX = sizePx - bR, minTrayX = bR;
+                if (activeBall.x > maxTrayX) { activeBall.x = maxTrayX; activeBall.vx *= -0.5; }
+                if (activeBall.x < minTrayX) { activeBall.x = minTrayX; activeBall.vx *= -0.5; }
+                if (activeBall.y < bR) { activeBall.y = bR; activeBall.vy *= -0.5; }
+            }
+            
+            activeBallSpeed = Math.abs(activeBall.vx) + Math.abs(activeBall.vy);
+            
+            // Continuous sparkles while the prized ball is rolling
+            if (activeBall.prized && activeBallSpeed > 0.5) {
+                if (!gachaState.sparkles) gachaState.sparkles = [];
+                if (Math.random() < 0.5) {
+                    gachaState.sparkles.push({
+                        x: activeBall.x, y: activeBall.y,
+                        vx: (Math.random() - 0.5) * 2 - (activeBall.vx * 0.5),
+                        vy: (Math.random() - 0.5) * 2 - (activeBall.vy * 0.5),
+                        life: 1.0, decay: 0.03 + Math.random()*0.02
+                    });
+                }
+            }
+        }
+
+        drawGacha();
+
+        let maxSpeed = 0;
+        if (window.cachedGacha) {
+            window.cachedGacha.forEach(b => {
+                let speed = Math.abs(b.vx) + Math.abs(b.vy);
+                if (speed > maxSpeed) maxSpeed = speed;
+            });
+        }
+
+        let hasSparkles = gachaState.sparkles && gachaState.sparkles.length > 0;
+
+        if (maxSpeed < 0.8 && activeBallSpeed < 0.5 && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasSparkles) {
+            gachaState.idleFrames++;
+            if (gachaState.idleFrames > 20) {
+                if (window.cachedGacha) { window.cachedGacha.forEach(b => { b.vx = 0; b.vy = 0; b.vz = 0; }); }
+                gachaState.awake = false; 
+                return;
+            }
+        } else { gachaState.idleFrames = 0; }
+        
+        if (gachaState.awake || isSpinning || Math.abs(gachaState.machineX) > 0.5 || Math.abs(gachaState.knobV) > 0.01 || hasSparkles) { requestAnimationFrame(gachaLoop); }
+    }
+
+    function drawGacha() {
+        const canvas = document.getElementById('gachaCanvas'); if (!canvas) return;
+        const ctx = canvas.getContext('2d'); const ratio = window.devicePixelRatio || 1;
+        const content = canvas.parentElement; if (!content) return;
+
+        let boxW = content.clientWidth, boxH = content.clientHeight;
+        if (boxW === 0 || boxH === 0) { boxW = 320; boxH = 320; }
+
+        const padding = 24; const sizePx = Math.floor(Math.max(200, Math.min(boxW, boxH) - padding));
+        if (canvas.style.width !== sizePx + 'px') { canvas.style.width = sizePx + 'px'; canvas.style.height = sizePx + 'px'; }
+        const bufferSize = Math.floor(sizePx * ratio);
+        
+        const R = sizePx / 3.2, cx = sizePx / 2, domeCy = sizePx * 0.35, chuteY = domeCy + R * 1.5, trayY = domeCy + R * 2.1;
+
+        if (canvas.width !== bufferSize) { 
+            canvas.width = bufferSize; canvas.height = bufferSize; 
+            let scale = 1;
+            if (window.cachedGacha && window.cachedGacha.R && Math.abs(window.cachedGacha.R - R) > 0.01) {
+                scale = R / window.cachedGacha.R;
+                window.cachedGacha.forEach(b => { b.x *= scale; b.y *= scale; b.z = (b.z||0) * scale; b.r *= scale; });
+                window.cachedGacha.R = R;
+            }
+            let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5;
+            if (lastDispensedBall && gachaState.lastCx) {
+                let relX = lastDispensedBall.x - gachaState.lastCx;
+                lastDispensedBall.x = cx + (relX * scale); lastDispensedBall.y = trayY - bR; 
+                lastDispensedBall.targetY = lastDispensedBall.y; lastDispensedBall.vx = 0; lastDispensedBall.vy = 0;
+            }
+            if (dispensingBall && !isSpinning && gachaState.lastCx) {
+                let relX = dispensingBall.x - gachaState.lastCx;
+                dispensingBall.x = cx + (relX * scale); dispensingBall.y = trayY - bR;
+                dispensingBall.targetY = dispensingBall.y; dispensingBall.vy = 0;
+            }
+        }
+        gachaState.lastCx = cx; gachaState.lastDomeCy = domeCy;
+
+        ctx.resetTransform(); ctx.scale(ratio, ratio); ctx.clearRect(0, 0, sizePx, sizePx);
+
+        ctx.save();
+        ctx.translate(gachaState.machineX || 0, gachaState.machineY || 0);
+
+        // AURA GLOW
+        if (gachaState.prizeDropTime) {
+            let elapsed = performance.now() - gachaState.prizeDropTime;
+            if (elapsed < 3000) {
+                let intensity = Math.max(0, 1 - (elapsed / 3000));
+                let pulse = 1 + Math.sin(elapsed * 0.015) * 0.1;
+                let aura = ctx.createRadialGradient(cx, domeCy, R*0.5, cx, domeCy, R*1.6 * pulse);
+                aura.addColorStop(0, `rgba(250, 204, 21, ${intensity * 0.7})`);
+                aura.addColorStop(1, 'rgba(250, 204, 21, 0)');
+                ctx.fillStyle = aura;
+                ctx.beginPath(); ctx.arc(cx, domeCy, R*1.6 * pulse, 0, Math.PI*2); ctx.fill();
+            }
+        }
+
+        const slots = getDistributedSlots();
+        const MAX_BALLS = 200; const expectedCap = Math.min(slots.length, MAX_BALLS);
+        const invHash = inventory.map(i=>i.remaining).join('-');
+        
+        if (slots.length > 0) {
+            if (!isSpinning && (!window.cachedGacha || window.cachedGacha.hash !== invHash)) {
+                let sample = shuffleArray([...slots]).slice(0, expectedCap);
+                let r = R * Math.sqrt(0.65 / expectedCap); r = Math.max(4, Math.min(r, R/5)); 
+                let pos = []; let innerR = R - r - 2; let py = innerR - 1; let rowIdx = 0;
+                while (py > -innerR && pos.length < expectedCap) {
+                    let halfWidth = Math.sqrt(innerR*innerR - py*py); let startX = -halfWidth + 0.1;
+                    if (rowIdx % 2 === 1) startX += r;
+                    for (let x = startX; x <= halfWidth; x += r * 2.05) { if (pos.length < expectedCap) pos.push({x, y: py}); }
+                    py -= r * 1.732; rowIdx++;
+                }
+                pos.sort((a,b) => b.y - a.y); 
+                window.cachedGacha = []; window.cachedGacha.R = R; window.cachedGacha.r = r; window.cachedGacha.hash = invHash;
+                for(let i=0; i<Math.min(pos.length, sample.length); i++) {
+                    window.cachedGacha.push({ x: pos[i].x, y: pos[i].y, z: 0, vx: 0, vy: 0, vz: 0, r: r, prized: sample[i].prized, isDispensing: false, rotation: Math.random() * Math.PI * 2, starRotation: Math.random() * Math.PI * 2 });
+                }
+            }
+        }
+
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(cx - R*0.75, domeCy + R*0.5, R*1.5, R*1.8, R*0.2);
+        else ctx.fillRect(cx - R*0.75, domeCy + R*0.5, R*1.5, R*1.8);
+        ctx.fill();
+        ctx.strokeStyle = '#b91c1c'; ctx.lineWidth = 4; ctx.stroke();
+
+        ctx.fillStyle = '#e2e8f0';
+        ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(cx - R*0.4, domeCy + R*0.8, R*0.8, R*1.0, R*0.1);
+        else ctx.fillRect(cx - R*0.4, domeCy + R*0.8, R*0.8, R*1.0);
+        ctx.fill();
+        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2; ctx.stroke();
+        
+        ctx.fillStyle = '#94a3b8';
+        [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(pos => {
+            ctx.beginPath(); ctx.arc(cx + (pos[0]*R*0.3), domeCy + R*1.3 + (pos[1]*R*0.4), R*0.04, 0, Math.PI*2); ctx.fill();
+        });
+
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(cx - R*0.2, domeCy + R*1.45, R*0.4, R*0.25, R*0.05);
+        else ctx.fillRect(cx - R*0.2, domeCy + R*1.45, R*0.4, R*0.25);
+        ctx.fill();
+
+        let trayGrad = ctx.createLinearGradient(cx, trayY, cx, trayY + R*0.2);
+        trayGrad.addColorStop(0, '#94a3b8'); trayGrad.addColorStop(1, '#475569');
+        ctx.fillStyle = trayGrad; 
+        ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(cx - R*0.8, trayY, R*1.6, R*0.15, R*0.05);
+        else ctx.fillRect(cx - R*0.8, trayY, R*1.6, R*0.15);
+        ctx.fill(); ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1; ctx.stroke();
+
+        ctx.save();
+        ctx.translate(cx, domeCy + R * 1.1);
+        ctx.rotate(gachaState.knobAngle || 0);
+        ctx.fillStyle = '#64748b'; 
+        ctx.beginPath(); ctx.arc(0, 0, R*0.3, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#ef4444'; 
+        ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(-R*0.35, -R*0.1, R*0.7, R*0.2, R*0.08);
+        else ctx.fillRect(-R*0.35, -R*0.1, R*0.7, R*0.2);
+        ctx.fill();
+        ctx.fillStyle = '#1e293b'; 
+        ctx.beginPath(); ctx.arc(0, 0, R*0.08, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+
+        ctx.beginPath(); ctx.arc(cx, domeCy, R, 0, Math.PI * 2);
+        ctx.fillStyle = '#e2e8f0'; ctx.fill();
+        let innerShadow = ctx.createRadialGradient(cx, domeCy, R*0.8, cx, domeCy, R);
+        innerShadow.addColorStop(0, 'rgba(0,0,0,0)'); innerShadow.addColorStop(1, 'rgba(0,0,0,0.3)');
+        ctx.fillStyle = innerShadow; ctx.fill();
+
+        if (window.cachedGacha) {
+            let renderList = [...window.cachedGacha].sort((a,b) => (a.z || 0) - (b.z || 0));
+            renderList.forEach(b => {
+                let drawR = b.r; 
+                ctx.save(); ctx.translate(cx + b.x, domeCy + b.y);
+                
+                ctx.save(); ctx.rotate(b.rotation || 0);
+                let grad = ctx.createRadialGradient(0, 0, drawR*0.1, 0, 0, drawR);
+                if (b.prized) {
+                    grad.addColorStop(0, '#fef08a'); grad.addColorStop(0.3, '#facc15'); grad.addColorStop(1, '#a16207');
+                } else {
+                    grad.addColorStop(0, '#f1f5f9'); grad.addColorStop(0.3, '#94a3b8'); grad.addColorStop(1, '#334155');
+                }
+                ctx.beginPath(); ctx.arc(0, 0, drawR, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
+                
+                if (b.prized) {
+                    ctx.save(); ctx.rotate(b.starRotation || 0);
+                    ctx.fillStyle = '#713f12'; ctx.font = `bold ${Math.floor(drawR * 1.2)}px Arial`;
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('★', 0, 1);
+                    ctx.restore();
+                }
+                ctx.restore(); 
+
+                ctx.beginPath(); ctx.arc(-drawR*0.25, -drawR*0.35, drawR*0.25, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        ctx.beginPath(); ctx.arc(cx, domeCy, R, 0, Math.PI * 2);
+        
+        // Edge Glow for Prize Drop
+        if (gachaState.prizeDropTime) {
+            let elapsed = performance.now() - gachaState.prizeDropTime;
+            if (elapsed < 3000) {
+                let intensity = Math.max(0, 1 - (elapsed / 3000));
+                ctx.shadowBlur = 15 * intensity;
+                ctx.shadowColor = `rgba(250, 204, 21, ${intensity})`;
+                ctx.strokeStyle = `rgba(254, 240, 138, ${intensity})`;
+                ctx.lineWidth = 2 + (2 * intensity);
+            } else {
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1; 
+                ctx.shadowBlur = 0;
+            }
+        } else {
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1; 
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0; // reset shadow
+        
+        ctx.beginPath(); ctx.arc(cx, domeCy, R, Math.PI * 1.1, Math.PI * 1.9, false);
+        ctx.arc(cx, domeCy - R*0.2, R*0.8, Math.PI * 1.9, Math.PI * 1.1, true);
+        ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fill();
+
+        // Flush Lid
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(cx, domeCy, R + 2, Math.PI * 1.333, Math.PI * 1.666);
+        ctx.lineTo(cx + R*0.35, domeCy - R*1.15);
+        ctx.lineTo(cx - R*0.35, domeCy - R*1.15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#b91c1c'; ctx.lineWidth = 3; ctx.stroke();
+
+        // Lock / top nub
+        ctx.fillStyle = '#cbd5e1';
+        ctx.beginPath();
+        if (ctx.ellipse) {
+            ctx.ellipse(cx, domeCy - R*1.15, R*0.15, R*0.06, 0, 0, Math.PI*2);
+        } else {
+            ctx.arc(cx, domeCy - R*1.15, R*0.1, 0, Math.PI*2);
+        }
+        ctx.fill();
+        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; ctx.stroke();
+        
+        // SPARKLES
+        if (gachaState.sparkles && gachaState.sparkles.length > 0) {
+            ctx.save();
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#facc15';
+            for (let i = gachaState.sparkles.length - 1; i >= 0; i--) {
+                let s = gachaState.sparkles[i];
+                s.x += s.vx; s.y += s.vy; s.life -= s.decay;
+                if (s.life <= 0) {
+                    gachaState.sparkles.splice(i, 1);
+                    continue;
+                }
+                ctx.globalAlpha = s.life;
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, Math.max(0.1, 3 * s.life), 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+        
+        ctx.restore(); // END MACHINE TRANSLATION
+
+        let ballToDraw = dispensingBall || lastDispensedBall;
+        if (ballToDraw) {
+            ctx.save(); ctx.translate(ballToDraw.x, ballToDraw.y);
+            let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5; 
+            
+            if (ballToDraw.prized) {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#facc15';
+            }
+            
+            ctx.save(); ctx.rotate(ballToDraw.rotation || 0);
+            let bGrad = ctx.createRadialGradient(0, 0, bR*0.1, 0, 0, bR);
+            if (ballToDraw.prized) {
+                bGrad.addColorStop(0, '#fef08a'); bGrad.addColorStop(0.3, '#facc15'); bGrad.addColorStop(1, '#a16207');
+            } else {
+                bGrad.addColorStop(0, '#f1f5f9'); bGrad.addColorStop(0.3, '#94a3b8'); bGrad.addColorStop(1, '#334155');
+            }
+            ctx.beginPath(); ctx.arc(0, 0, bR, 0, Math.PI*2); ctx.fillStyle = bGrad; ctx.fill();
+            if (ballToDraw.prized) {
+                ctx.fillStyle = '#713f12'; ctx.font = `bold ${Math.floor(bR * 1.2)}px Arial`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('★', 0, 1);
+            }
+            ctx.restore();
+            ctx.shadowBlur = 0; // Prevent highlight from bleeding into the specular glare
+            ctx.beginPath(); ctx.arc(-bR*0.25, -bR*0.35, bR*0.25, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    function drawWheel() {
+        const canvas = document.getElementById('wheelCanvas'); if (!canvas) return;
+        const ctx = canvas.getContext('2d'); const ratio = window.devicePixelRatio || 1;
+        const content = canvas.parentElement; if (!content) return;
+
+        let boxW = content.clientWidth, boxH = content.clientHeight;
+        if (boxW === 0 || boxH === 0) { boxW = 320; boxH = 320; }
+        const padding = 24; const sizePx = Math.floor(Math.max(200, Math.min(boxW, boxH) - padding));
+        if (canvas.style.width !== sizePx + 'px') { canvas.style.width = sizePx + 'px'; canvas.style.height = sizePx + 'px'; }
+        const bufferSize = Math.floor(sizePx * ratio);
+        if (canvas.width !== bufferSize) { canvas.width = bufferSize; canvas.height = bufferSize; }
+
+        ctx.resetTransform(); ctx.scale(ratio, ratio);
+        const cx = sizePx / 2, cy = sizePx / 2, r = (sizePx / 2) - 4;
+        ctx.clearRect(0, 0, sizePx, sizePx);
+        
+        const slots = getDistributedSlots();
+        if (slots.length === 0) {
+            ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.closePath();
+            ctx.fillStyle = "#f8fafc"; ctx.fill(); ctx.strokeStyle = "#cbd5e1"; ctx.lineWidth = 1; ctx.stroke();
+            ctx.font = `bold ${Math.floor(sizePx / 15)}px Inter, sans-serif`; ctx.fillStyle = "#94a3b8"; ctx.textAlign = "center";
+            ctx.fillText("NO ITEMS", cx, cy + 5);
+            ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2); ctx.fillStyle = "#1e293b"; ctx.fill();
+            ctx.strokeStyle = "white"; ctx.lineWidth = 2.5; ctx.stroke();
+            return;
+        }
+
+        const step = (Math.PI * 2) / Math.max(1, slots.length);
+        let targetIndex = slots.findIndex(s => s.prized); if (targetIndex === -1) targetIndex = 0;
+        const baseOffset = -(targetIndex * step + step / 2);
+        if (isNaN(wheelSpinAngle)) wheelSpinAngle = 0;
+        const currentRotationOffset = baseOffset + wheelSpinAngle;
+        
+        slots.forEach((s, i) => {
+            const isHovered = (i === hoveredSegmentIndex) && !isSpinning;
+            const startAngle = i * step + currentRotationOffset; const endAngle = (i + 1) * step + currentRotationOffset;
+            
+            ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, startAngle, endAngle); ctx.closePath();
+            ctx.fillStyle = isHovered ? "#3b82f6" : (s.prized ? "#ffc107" : (i % 2 === 0 ? "#f1f5f9" : "#ffffff"));
+            ctx.fill(); ctx.strokeStyle = isHovered ? "#1d4ed8" : "#cbd5e1"; ctx.lineWidth = isHovered ? 2 : 1; ctx.stroke();
+            ctx.save(); ctx.translate(cx, cy); 
+            
+            const textAngle = slots.length === 1 ? 0 : (i * step + step / 2 + currentRotationOffset);
+            ctx.rotate(textAngle);
+            const fontSize = Math.floor(Math.max(8, Math.min(18, sizePx / 22)));
+            ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+            ctx.fillStyle = isHovered ? "#ffffff" : (s.prized ? "#856404" : "#64748b");
+            
+            let normAngle = textAngle % (Math.PI * 2); if (normAngle < 0) normAngle += Math.PI * 2;
+            const textToDraw = isHovered ? `£${s.value.toFixed(0)}` : s.label.substring(0, 15);
+            if (slots.length < 50 || isHovered) {
+                if (normAngle > Math.PI / 2 && normAngle < 3 * Math.PI / 2 && slots.length > 1) {
+                    ctx.rotate(Math.PI); ctx.textAlign = "left"; ctx.fillText(textToDraw, -(r - 12), fontSize / 3.5);
+                } else { ctx.textAlign = "right"; ctx.fillText(textToDraw, r - 12, fontSize / 3.5); }
+            }
+            ctx.restore();
+        });
+        ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2); ctx.fillStyle = "#1e293b"; ctx.fill();
+        ctx.strokeStyle = "white"; ctx.lineWidth = 2.5; ctx.stroke();
+    }
+
+    function initWheelDrag() {
+        const canvas = document.getElementById('wheelCanvas'); if (!canvas) return;
+        let isDown = false, lastAngle = 0, vAngle = 0, momentumID, lastTime = 0;
+
+        const getAngle = (e) => {
+            const rect = canvas.getBoundingClientRect(); const ratio = window.devicePixelRatio || 1;
+            let cx = (canvas.width / ratio) / 2, cy = (canvas.height / ratio) / 2; let x, y;
+            if(e.touches) { x = e.touches[0].clientX - rect.left; y = e.touches[0].clientY - rect.top; }
+            else { x = e.clientX - rect.left; y = e.clientY - rect.top; }
+            return Math.atan2(y - cy, x - cx);
+        };
+
+        const startDrag = (e) => {
+            if (isSpinning) return;
+            isDown = true; canvas.style.cursor = 'grabbing';
+            lastAngle = getAngle(e); vAngle = 0; lastTime = performance.now();
+            cancelAnimationFrame(momentumID); hoveredSegmentIndex = -1; 
+        };
+
+        const moveDrag = (e) => {
+            if (!isDown || isSpinning) return;
+            e.preventDefault();
+            let currentAngle = getAngle(e); let diff = currentAngle - lastAngle;
+            if (diff > Math.PI) diff -= Math.PI * 2; if (diff < -Math.PI) diff += Math.PI * 2;
+            wheelSpinAngle += diff; lastAngle = currentAngle;
+            let now = performance.now(); let dt = Math.max(1, now - lastTime);
+            vAngle = diff / dt * 25; lastTime = now; 
+            checkWheelHaptic(); requestAnimationFrame(drawWheel);
+        };
+
+        const stopDrag = () => { if (!isDown) return; isDown = false; canvas.style.cursor = 'grab'; beginMomentum(); };
+
+        canvas.addEventListener('mousedown', startDrag); canvas.addEventListener('mousemove', moveDrag);
+        canvas.addEventListener('mouseup', stopDrag); canvas.addEventListener('mouseleave', stopDrag);
+        canvas.addEventListener('touchstart', startDrag, {passive: true}); canvas.addEventListener('touchmove', moveDrag, {passive: false});
+        canvas.addEventListener('touchend', stopDrag); canvas.addEventListener('touchcancel', stopDrag);
+
+        function beginMomentum() {
+            function loop() {
+                if (!isDown && Math.abs(vAngle) > 0.001 && !isSpinning) {
+                    wheelSpinAngle += vAngle; vAngle *= 0.985; 
+                    checkWheelHaptic(); requestAnimationFrame(drawWheel); momentumID = requestAnimationFrame(loop);
+                }
+            }
+            momentumID = requestAnimationFrame(loop);
+        }
+    }
+
+    function initWheelHover() {
+        const canvas = document.getElementById('wheelCanvas'); if (!canvas) return;
+        canvas.addEventListener('mousemove', (e) => {
+            if (isSpinning) return;
+            const rect = canvas.getBoundingClientRect(); const ratio = window.devicePixelRatio || 1;
+            const cx = canvas.width / ratio / 2, cy = canvas.height / ratio / 2;
+            const dx = (e.clientX - rect.left) - cx, dy = (e.clientY - rect.top) - cy;
+            const distance = Math.sqrt(dx*dx + dy*dy); const wheelRadius = cx - 10;
+            
+            if (distance < wheelRadius) {
+                const slots = getDistributedSlots();
+                if (slots.length > 0) {
+                    const step = (Math.PI * 2) / Math.max(1, slots.length);
+                    let targetIndex = slots.findIndex(s => s.prized); if (targetIndex === -1) targetIndex = 0;
+                    const baseOffset = -(targetIndex * step + step / 2);
+                    let offsetAngle = Math.atan2(dy, dx) - (baseOffset + wheelSpinAngle);
+                    while (offsetAngle < 0) offsetAngle += Math.PI * 2;
+                    while (offsetAngle >= Math.PI * 2) offsetAngle -= Math.PI * 2;
+                    const index = Math.floor(offsetAngle / step);
+                    if (index !== hoveredSegmentIndex) { hoveredSegmentIndex = index; requestAnimationFrame(drawWheel); }
+                }
+            } else if (hoveredSegmentIndex !== -1) { hoveredSegmentIndex = -1; requestAnimationFrame(drawWheel); }
+        });
+        canvas.addEventListener('mouseleave', () => { hoveredSegmentIndex = -1; requestAnimationFrame(drawWheel); });
+    }
+
+    function prepareScrollerSpin(targetItem) {
+        const track = document.getElementById('scroller-track'); const windowEl = document.getElementById('scroller-window');
+        if (!track || !windowEl) return;
+        const slots = getDistributedSlots();
+        let html = ''; const totalItems = 500; 
+        
+        const currentScroll = windowEl.scrollLeft;
+        const startIndex = Math.floor(currentScroll / 166);
+        const targetPos = startIndex + 40 + Math.floor(Math.random() * 20); 
+        
+        for(let i=0; i<totalItems; i++) {
+            const isTarget = (i === targetPos);
+            const item = isTarget ? targetItem : slots[Math.floor(Math.random() * slots.length)];
+            html += `<div class="scroller-item ${item.prized ? 'prized' : ''}">${item.prized ? '★ ' : ''}${item.label}</div>`;
+        }
+        track.innerHTML = html; windowEl.scrollLeft = currentScroll;
+        
+        const itemWidth = 166; const centerOffset = windowEl.clientWidth / 2;
+        const targetX = (targetPos * itemWidth) + (160 / 2); const targetScroll = targetX - centerOffset;
+        
+        const startScroll = windowEl.scrollLeft; const distance = targetScroll - startScroll; const duration = 4000; let startTime = null;
+
+        function animateScroll(time) {
+            if (!isSpinning) return;
+            if (!startTime) startTime = time;
+            let t = (time - startTime) / duration; if (t > 1) t = 1;
+            const ease = 1 - Math.pow(1 - t, 4); 
+            windowEl.scrollLeft = startScroll + distance * ease;
+            checkScrollerHaptic();
+            if (t < 1) requestAnimationFrame(animateScroll);
+        }
+        requestAnimationFrame(animateScroll);
+    }
+
+    function prepareGachaSpin(targetItem) {
+        if (!document.getElementById('gachaCanvas')) return;
+        dispensingBall = null; lastDispensedBall = null; 
+
+        if (window.cachedGacha && window.cachedGacha.length > 0) {
+            window.cachedGacha.forEach(b => {
+                b.vx = (Math.random() - 0.5) * 4; b.vy = (Math.random() - 0.5) * 4;
+                if (b.vz !== undefined) b.vz = (Math.random() - 0.5) * 4;
+            });
+            let chosenIndex = window.cachedGacha.findIndex(b => b.prized === targetItem.prized && !b.isDispensing);
+            if (chosenIndex === -1) chosenIndex = window.cachedGacha.findIndex(b => !b.isDispensing);
+            if (chosenIndex > -1) window.cachedGacha[chosenIndex].isDispensing = true;
+        }
+
+        gachaState.knobTarget = gachaState.knobAngle + (Math.PI * 4); // Turn 720 degrees
+        gachaState.spinStartTime = performance.now(); gachaState.hasDropped = false; gachaState.targetItem = targetItem;
+        wakeUpGacha();
+    }
+
+    function prepareWheelSpin(targetItem) {
+        const slots = getDistributedSlots(); const targetIndices = [];
+        slots.forEach((s, idx) => { if(s.id === targetItem.id) targetIndices.push(idx); });
+        const actualTargetIndex = targetIndices.length > 0 ? targetIndices[Math.floor(Math.random() * targetIndices.length)] : 0;
+        const step = (Math.PI * 2) / Math.max(1, slots.length);
+        let baseRotIndex = slots.findIndex(s => s.prized); if (baseRotIndex === -1) baseRotIndex = 0;
+        
+        const dist = (actualTargetIndex - baseRotIndex) * step; const spins = Math.PI * 2 * 6; 
+        const startAngle = (isNaN(wheelSpinAngle) ? 0 : wheelSpinAngle) % (Math.PI * 2);
+        const targetAngle = spins - dist; 
+        
+        let startTime = null;
+        function animateWheel(time) {
+            if (!startTime) startTime = time; 
+            let t = (time - startTime) / 4000; if (t > 1) t = 1;
+            const ease = 1 - Math.pow(1 - t, 4); 
+            wheelSpinAngle = startAngle + (targetAngle - startAngle) * ease;
+            checkWheelHaptic(); requestAnimationFrame(drawWheel);
+            if (t < 1 && isSpinning) requestAnimationFrame(animateWheel);
+            if (t >= 1) isSpinning = false;
+        }
+        requestAnimationFrame(animateWheel);
+    }
+
+    async function recordSpin(id, isUser) {
+        if (isSpinning) return;
+        const item = inventory[id];
+        if (!item || item.remaining <= 0) return;
+        
+        isSpinning = true; document.body.classList.add('is-spinning-lock'); hoveredSegmentIndex = -1;
+        
+        try {
+            prepareScrollerSpin(item); prepareGachaSpin(item); prepareWheelSpin(item);
+            await new Promise(r => setTimeout(r, 4000));
+            const bid = parseFloat(document.getElementById('bid-input').value || 0);
+            if (isUser) { sessionStats.spent += bid; sessionStats.won += item.value; }
+            item.remaining--; history.unshift({ label: item.label, hitValue: item.value, bidValue: bid, isUser, time: new Date().toLocaleTimeString() });
+        } finally {
+            isSpinning = false; document.body.classList.remove('is-spinning-lock');
+            lastDispensedBall = dispensingBall; dispensingBall = null; 
+            if (isNaN(wheelSpinAngle)) wheelSpinAngle = 0; wheelSpinAngle = wheelSpinAngle % (Math.PI * 2); 
+            rebuildDOMFromInventory(); syncAndUI();
+        }
+    }
+
+    function initCustomCardDrag() {
+        let dragCard = null, dragPlaceholder = null, startX, startY, initialMouseX, initialMouseY, dragAnimationFrame = null;
+
+        // Attach listeners directly to the cards instead of just the headers
+        document.querySelectorAll('.card').forEach(handle => {
+            handle.addEventListener('mousedown', startCustomDrag);
+            handle.addEventListener('touchstart', startCustomDrag, {passive: false});
+        });
+
+        function startCustomDrag(e) {
+            if (dragCard) return; 
+            
+            // Ignore drag attempts on any interactive elements or text nodes
+            const interactiveSelectors = 'button, input, .card-controls, span, td, th, tr, tbody, table, b, .mini-value, .mini-label, .ev-value, .history-item, canvas, .resize-handle, .scroller-window, .scroller-wrapper';
+            if(e.target.closest(interactiveSelectors)) return; 
+            
+            let clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+            
+            // Prevent default immediately to avoid browser interference (like ghost drag)
+            e.preventDefault(); 
+            // Clear any accidental text selections that interrupt the drag
+            if (window.getSelection) { window.getSelection().removeAllRanges(); }
+
+            const card = e.target.closest('.card'); 
+            const rect = card.getBoundingClientRect();
+            
+            dragCard = card; 
+            initialMouseX = clientX; 
+            initialMouseY = clientY;
+            startX = rect.left; 
+            startY = rect.top;
+
+            dragPlaceholder = document.createElement('div'); dragPlaceholder.className = 'card placeholder';
+            dragPlaceholder.style.width = rect.width + 'px'; dragPlaceholder.style.height = rect.height + 'px';
+            card.parentNode.insertBefore(dragPlaceholder, card);
+
+            card.style.position = 'fixed'; card.style.left = startX + 'px'; card.style.top = startY + 'px';
+            card.style.width = rect.width + 'px'; card.style.height = rect.height + 'px';
+            card.classList.add('dragging-active-card'); document.body.classList.add('dragging-active');
+
+            window.addEventListener('mousemove', dragMove); window.addEventListener('mouseup', dragEnd);
+            window.addEventListener('touchmove', dragMove, {passive: false}); window.addEventListener('touchend', dragEnd);
+        }
+
+        let lastClientX, lastClientY;
+
+        function dragMove(e) {
+            if (!dragCard) return; e.preventDefault();
+            let clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+            
+            if (!dragAnimationFrame) {
+                dragAnimationFrame = requestAnimationFrame(() => {
+                    if (dragCard) {
+                        dragCard.style.left = (startX + (clientX - initialMouseX)) + 'px';
+                        dragCard.style.top = (startY + (clientY - initialMouseY)) + 'px';
+
+                        if (lastClientX !== undefined && (dragCard.id === 'gacha-module' || dragCard.querySelector('#gachaCanvas'))) {
+                            let dx = clientX - lastClientX; let dy = clientY - lastClientY;
+                            if (window.cachedGacha && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
+                                window.cachedGacha.forEach(b => { b.vx -= dx * 0.2; b.vy -= dy * 0.2; });
+                                wakeUpGacha();
+                            }
+                        }
+                        lastClientX = clientX; lastClientY = clientY;
+                    }
+                    dragAnimationFrame = null;
+                });
+            }
+
+            dragCard.style.pointerEvents = 'none';
+            const elemBelow = document.elementFromPoint(clientX, clientY); 
+            dragCard.style.pointerEvents = '';
+            
+            if (!elemBelow) return;
+            const zone = elemBelow.closest('.dashboard-col');
+            if (zone) {
+                const afterElement = getDragAfterElement(zone, clientY);
+                if (afterElement.element == null) zone.appendChild(dragPlaceholder);
+                else zone.insertBefore(dragPlaceholder, afterElement.element);
+            }
+        }
+
+        function dragEnd() {
+            if (!dragCard) return;
+            dragCard.style.position = ''; dragCard.style.left = ''; dragCard.style.top = '';
+            dragCard.style.width = '100%'; dragCard.style.height = 'auto';
+            dragCard.classList.remove('dragging-active-card');
+            
+            if (dragPlaceholder && dragPlaceholder.parentNode) {
+                dragPlaceholder.parentNode.insertBefore(dragCard, dragPlaceholder); dragPlaceholder.remove();
+            }
+            dragCard = null; dragPlaceholder = null; document.body.classList.remove('dragging-active');
+            lastClientX = undefined; lastClientY = undefined;
+            window.removeEventListener('mousemove', dragMove); window.removeEventListener('mouseup', dragEnd);
+            window.removeEventListener('touchmove', dragMove); window.removeEventListener('touchend', dragEnd);
+            requestAnimationFrame(drawWheel); requestAnimationFrame(drawGacha);
+        }
+    }
+
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.card:not(.dragging-active-card):not(.placeholder)')];
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect(); const childCenterY = box.top + box.height / 2;
+            const offset = y - childCenterY;
+            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+            return closest;
+        }, { offset: Number.NEGATIVE_INFINITY });
+    }
+
+    function safeSet(id, val) { const el = document.getElementById(id); if (el) el.innerText = val; }
+    function showStatus(text, color) {
+        const el = document.getElementById('save-status'); if (!el) return;
+        el.innerText = text; el.style.color = color; el.style.opacity = '1';
+        setTimeout(() => { el.style.opacity = '0'; }, 1000);
+    }
+
+    let aiStatusHistory = [];
+    function updateAIStatus(msg) {
+        const statusBox = document.getElementById('ai-verbose-status');
+        if(!statusBox) return;
+        if(msg === "CLEAR") { aiStatusHistory = []; statusBox.innerHTML = ""; return; }
+        const time = new Date().toLocaleTimeString([], {hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit'});
+        aiStatusHistory.push(`[${time}] ${msg}`);
+        if (aiStatusHistory.length > 4) aiStatusHistory.shift();
+        statusBox.innerHTML = aiStatusHistory.join('<br>');
+    }
+
+    async function callGemini(prompt) {
+        let model = "gemini-2.5-flash-preview-09-2025";
+        for (let attempt = 0; attempt < 5; attempt++) {
+            updateAIStatus(`Querying Model... (Attempt ${attempt + 1})`);
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            try {
+                const response = await fetch(url, { 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: "Concise Strategy consultant." }] } }) 
+                });
+                if (response.ok) { 
+                    updateAIStatus(`Success! Reading response...`);
+                    const result = await response.json(); 
+                    return { text: result.candidates?.[0]?.content?.parts?.[0]?.text.trim() }; 
+                } else {
+                    const errStatus = response.status;
+                    updateAIStatus(`Failed (HTTP ${errStatus}).`);
+                    if (errStatus === 400 || errStatus === 403) return { error: `API Key Validation Error (${errStatus}).` };
+                }
+            } catch (e) { updateAIStatus(`Network Error detected. Retrying...`); }
+            
+            const delay = Math.pow(2, attempt); 
+            updateAIStatus(`Retrying in ${delay}s...`); 
+            await new Promise(r => setTimeout(r, delay * 1000));
+        }
+        return { error: "AI Service failed after 5 retries." };
+    }
+
+    async function getAIGuidance() {
+        const box = document.getElementById('ai-coaching');
+        box.innerHTML = `<span class="loading-spinner"></span>`;
+        updateAIStatus("CLEAR"); updateAIStatus("Initializing strategy calculation...");
+        const snap = { ev: document.getElementById('stat-ev').innerText, bid: document.getElementById('bid-input').value, roi: document.getElementById('stat-diff-perc').innerText };
+        const res = await callGemini(`EV: ${snap.ev}, Bid: £${snap.bid}, ROI: ${snap.roi}. Concise tip?`);
+        if (res.error) { box.innerText = res.error; updateAIStatus(res.error); } 
+        else { lastAdvice = res.text; box.innerText = res.text; updateAIStatus("Advice successfully rendered."); setTimeout(() => updateAIStatus("CLEAR"), 6000); }
+    }
+
+    async function speakAdvice() {
+        if (!lastAdvice) {
+            updateAIStatus("No advice to read. Generate advice first.");
+            return;
+        }
+        const btn = document.getElementById('btn-listen');
+        const origText = btn.innerText;
+        btn.innerText = '⏳';
+        updateAIStatus("Generating audio with TTS Model...");
+
+        try {
+            const payload = {
+                contents: [{ parts: [{ text: "Say naturally: " + lastAdvice }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } }
+                },
+                model: "gemini-2.5-flash-preview-tts"
+            };
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            
+            const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
+            if (!res.ok) throw new Error("TTS generation failed");
+            
+            const data = await res.json();
+            const audioBase64 = data.candidates[0].content.parts[0].inlineData.data;
+            const mimeType = data.candidates[0].content.parts[0].inlineData.mimeType;
+            
+            // Extract sample rate from mimetype, or default to 24000
+            const rateMatch = mimeType.match(/rate=(\d+)/);
+            const sampleRate = rateMatch ? parseInt(rateMatch[1]) : 24000;
+            
+            const binaryString = atob(audioBase64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            
+            const wavBytes = pcmToWav(bytes.buffer, sampleRate);
+            const blob = new Blob([wavBytes], { type: 'audio/wav' });
+            const audioUrl = URL.createObjectURL(blob);
+            
+            const audio = new Audio(audioUrl);
+            audio.play();
+            updateAIStatus("Playing audio response...");
+        } catch (e) {
+            updateAIStatus("Audio generation error.");
+        } finally {
+            btn.innerText = origText;
+            setTimeout(() => updateAIStatus("CLEAR"), 4000);
+        }
+    }
+
+    function syncAndUI() {
+        const rows = document.querySelectorAll('.slot-row');
+        inventory = Array.from(rows).map((row, i) => ({
+            id: i, label: row.querySelector('.label-input').value || `Res ${i+1}`,
+            value: parseFloat(row.querySelector('.val-input').value || 0),
+            remaining: parseInt(row.querySelector('.slot-input').value || 0),
+            prized: row.querySelector('.prize-toggle').classList.contains('active')
+        }));
+        
+        let totalSlots = 0, sumValues = 0, prizeVal = 0, prizeQty = 0;
+        const bid = parseFloat(document.getElementById('bid-input').value || 0);
+        const container = document.getElementById('spin-buttons'); container.innerHTML = '';
+        inventory.forEach(item => {
+            totalSlots += item.remaining; sumValues += (item.value * item.remaining);
+            if (item.prized) { prizeQty += item.remaining; prizeVal += (item.value * item.remaining); }
+            if (item.remaining > 0) {
+                const group = document.createElement('div'); group.className = 'hit-group';
+                group.innerHTML = `<b style="font-size:0.75rem">${item.label}</b><br><span style="font-size:0.6rem; color:#64748b">${item.remaining} left</span><button class="btn-hit-me" onclick="recordSpin(${item.id}, true)">I HIT</button><button class="btn-hit-other" onclick="recordSpin(${item.id}, false)">OUT</button>`;
+                container.appendChild(group);
+            }
+        });
+        
+        if (container.innerHTML === '') container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; font-size: 0.75rem; color: #94a3b8; padding: 12px; font-style: italic;">Empty</div>';
+
+        const ev = totalSlots > 0 ? sumValues / totalSlots : 0;
+        safeSet('stat-ev', `£${ev.toFixed(2)}`); safeSet('stat-slots', totalSlots);
+        safeSet('stat-prize-prob', `${totalSlots > 0 ? (prizeQty / totalSlots * 100).toFixed(0) : 0}%`);
+        safeSet('stat-avg-prize', `£${prizeQty > 0 ? (prizeVal / prizeQty).toFixed(2) : '0.00'}`);
+        safeSet('stat-diff-perc', `${bid > 0 ? ((ev - bid) / bid * 100).toFixed(2) : 0}%`);
+        safeSet('setup-total-slots-info', `Total Slots: ${totalSlots}`);
+        const card = document.getElementById('card-ev');
+        if (card) card.style.borderLeft = `10px solid ${ev >= bid * 1.1 ? 'var(--success)' : (ev >= bid ? 'var(--warning)' : 'var(--danger)')}`;
+
+        if(!isSpinning) {
+            const slots = getDistributedSlots();
+            document.querySelectorAll('.vis-slots-count').forEach(el => el.innerText = slots.length > 0 ? `${totalSlots} slots` : '0 slots');
+            
+            const MAX_BALLS = 200; const expectedCap = Math.min(slots.length, MAX_BALLS);
+            const invHash = inventory.map(i=>i.remaining).join('-');
+            if (!window.cachedGacha || window.cachedGacha.hash !== invHash) { window.cachedGacha = null; }
+            
+            const probBar = document.getElementById('prob-bar-container');
+            if (probBar) {
+                probBar.innerHTML = '';
+                if (totalSlots > 0) {
+                    inventory.forEach(item => {
+                        if (item.remaining > 0) {
+                            const perc = (item.remaining / totalSlots) * 100;
+                            const block = document.createElement('div'); block.className = 'prob-segment'; block.style.width = `${perc}%`;
+                            block.style.backgroundColor = item.prized ? 'var(--prize-color)' : '#94a3b8';
+                            block.title = `${item.label}: ${perc.toFixed(1)}%`; probBar.appendChild(block);
+                        }
+                    });
+                }
+            }
+            const track = document.getElementById('scroller-track'); const windowEl = document.getElementById('scroller-window');
+            if (track && windowEl) {
+                let html = ''; let baseItems = [];
+                for(let i=0; i<100; i++) baseItems.push(slots[Math.floor(Math.random() * slots.length)]);
+                baseItems.forEach(item => { html += `<div class="scroller-item ${item.prized ? 'prized' : ''}">${item.prized ? '★ ' : ''}${item.label}</div>`; });
+                track.innerHTML = html.repeat(5); windowEl.scrollLeft = (2 * 100 * 166);
+            }
+            
+            wakeUpGacha(); requestAnimationFrame(drawWheel);
+        }
+
+        updateHistoryUI(); updateOddsTable(); updateHeatmap();
+        localStorage.setItem('wheel_session', JSON.stringify({ inventory, history, sessionStats }));
+    }
+
+    function updateOddsTable() {
+        const b = document.getElementById('odds-body'); b.innerHTML = ''; const total = inventory.reduce((a, b) => a + b.remaining, 0);
+        inventory.filter(i => i.remaining > 0).forEach(i => { b.innerHTML += `<tr><td>${i.label}</td><td>${i.remaining}</td><td>${(i.remaining / total * 100).toFixed(1)}%</td></tr>`; });
+    }
+
+    function updateHeatmap() {
+        const grid = document.getElementById('heatmap-grid'); if (!grid) return;
+        const total = inventory.reduce((a, b) => a + b.remaining, 0), sum = inventory.reduce((a, b) => a + (b.value * b.remaining), 0);
+        const ev = total > 0 ? sum / total : 0; grid.innerHTML = '';
+        for (let price = Math.floor(ev); price > 0; price--) {
+            const roi = ((ev - price) / price * 100); if (roi < 0) continue; 
+            const row = document.createElement('div'); row.className = 'heatmap-row heatmap-grid-layout';
+            row.style.background = roi >= 20 ? '#dcfce7' : (roi >= 10 ? '#f0fdf4' : '#fffbeb');
+            row.onclick = () => { document.getElementById('bid-input').value = price; syncAndUI(); };
+            row.innerHTML = `<div style="text-align:center; font-size:0.7rem; font-weight:800;">£${price}</div><div style="text-align:center; font-size:0.7rem; font-weight:800;">${roi.toFixed(1)}%</div><div style="text-align:center; font-size:0.7rem; font-weight:800;">£${(ev-price).toFixed(2)}</div>`;
+            grid.appendChild(row); if (roi > 28) break;
+        }
+    }
+
+    function adjustBid(n) { const i = document.getElementById('bid-input'); i.value = Math.max(0, parseInt(i.value || 0) + n); syncAndUI(); }
+    function togglePrize(btn) { btn.classList.toggle('active'); syncAndUI(); }
+    function addSlotRow() { document.getElementById('outcomes-container').appendChild(createRowElement()); syncAndUI(); }
+    function quickAdd(label, value) {
+        const cont = document.getElementById('outcomes-container'); const existing = Array.from(cont.querySelectorAll('.slot-row')).find(r => r.querySelector('.label-input').value === label);
+        if (existing) { existing.querySelector('.slot-input').value = parseInt(existing.querySelector('.slot-input').value) + 1; }
+        else { cont.prepend(createRowElement(label, value, 1, label !== 'Energy')); }
+        syncAndUI();
+    }
+    function createRowElement(label = "", val = 0, slots = 1, prized = false) {
+        const div = document.createElement('div'); div.className = 'slot-row inventory-grid-config';
+        div.innerHTML = `<button class="prize-toggle ${prized ? 'active' : ''}" onclick="togglePrize(this)" style="cursor:pointer; border:none; background:transparent;">★</button>
+            <input type="text" class="label-input" value="${label}" oninput="syncAndUI()">
+            <input type="number" class="val-input" value="${val}" oninput="syncAndUI()"> 
+            <div class="qty-stepper"><button class="step-btn" onmousedown="startAdjust(event, this, -1, this.nextElementSibling)" ontouchstart="startAdjust(event, this, -1, this.nextElementSibling)">-</button><input type="number" class="slot-input" value="${slots}" oninput="syncAndUI()"><button class="step-btn" onmousedown="startAdjust(event, this, 1, this.previousElementSibling)" ontouchstart="startAdjust(event, this, 1, this.previousElementSibling)">+</button></div>
+            <button onclick="this.parentElement.remove(); syncAndUI();" style="color:#94a3b8; background:none; border:none; font-size:1.2rem; cursor:pointer;">×</button>`;
+        return div;
+    }
+    function rebuildDOMFromInventory() {
+        const c = document.getElementById('outcomes-container'); c.innerHTML = '';
+        inventory.forEach(item => c.appendChild(createRowElement(item.label, item.value, item.remaining, item.prized)));
+    }
+    function resetLayoutDefault() { localStorage.removeItem('wheel_session'); loadDefaults(); }
+    function clearHistory() { history = []; sessionStats = { spent: 0, won: 0 }; syncAndUI(); }
+    
+    function undoLastSpin() {
+        if (history.length === 0 || isSpinning) return; const last = history.shift();
+        const item = inventory.find(i => i.label === last.label); if (item) item.remaining++;
+        if (last.isUser) { sessionStats.spent -= last.bidValue; sessionStats.won -= last.hitValue; }
+        rebuildDOMFromInventory(); syncAndUI();
+    }
+    function initializeSession() { history = []; sessionStats = { spent: 0, won: 0 }; syncAndUI(); }
+    function pcmToWav(b, s) { const l = b.byteLength, f = new ArrayBuffer(44 + l), v = new DataView(f); v.setUint32(0, 0x52494646, false); v.setUint32(4, 36 + l, true); v.setUint32(8, 0x57415645, false); v.setUint32(12, 0x666d7420, false); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, s, true); v.setUint32(28, s * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); v.setUint32(36, 0x64617461, false); v.setUint32(40, l, true); new Uint8Array(f, 44).set(new Uint8Array(b)); return f; }
+    
+    function updateHistoryUI() {
+        const list = document.getElementById('history-list'); const profit = sessionStats.won - sessionStats.spent;
+        safeSet('total-spent', `£${sessionStats.spent.toFixed(2)}`); safeSet('total-won', `£${sessionStats.won.toFixed(2)}`);
+        const net = document.getElementById('total-net'); if (net) { net.innerText = `£${profit.toFixed(2)}`; net.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)'; }
+        const undo = document.getElementById('btn-undo'); undo.style.display = history.length > 0 ? "block" : "none";
+        if (roiChart) { roiChart.data.labels = history.map((_, i) => i); roiChart.data.datasets[0].data = history.map(h => h.hitValue).reverse(); roiChart.update(); }
+        
+        if (history.length === 0) {
+            list.innerHTML = `<li class="history-item" style="text-align:center; font-style:italic; color:#94a3b8; padding: 16px;">Empty</li>`;
+        } else {
+            list.innerHTML = history.slice(0, 10).map(h => `<li class="history-item"><b>${h.label}</b> (£${h.hitValue}) | ${h.time}</li>`).join('');
+        }
+    }
+    
+    function saveLayout() { localStorage.setItem('wheel_layout', JSON.stringify(inventory)); showStatus("SAVED", "var(--success)"); }
+    function loadLayout() { const d = localStorage.getItem('wheel_layout'); if (d) { inventory = JSON.parse(d); rebuildDOMFromInventory(); syncAndUI(); showStatus("LOADED", "var(--primary)"); } }
+    function exportCSV() { const csv = "Time,Label,Value\n" + history.map(h => `${h.time},${h.label},${h.hitValue}`).join('\n'); const b = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'wheel_log.csv'; a.click(); }
+</script>
+</body>
+</html>
