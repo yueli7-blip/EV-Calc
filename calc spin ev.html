@@ -9,7 +9,7 @@
         :root{--primary:#007BFF;--success:#28a745;--danger:#dc3545;--warning:#ffc107;--bg:#f4f7f9;--card-bg:#ffffff;--text:#2d3436;--prize-color:#ffc107;--other:#6c757d;--ai-glow:#7c3aed;--border:#e1e8ed;--color-spc:#0ea5e9;--color-etb:#a855f7;--color-upc:#f97316;--color-ex:#0d9488;--color-warriors:#ca8a04;--color-tusk:#991b1b;--color-energy:#94a3b8;--color-ah-etb:#10b981;--color-ah-pc:#6366f1}
         .inventory-grid-config{display:grid;grid-template-columns:35px 1.3fr 65px 110px 25px;gap:8px;align-items:center}
         *{box-sizing:border-box}
-        html,body{height:100%;min-height:100vh;overflow-y:auto;overflow-x:hidden}
+        html,body{min-height:100vh;overflow-y:auto;overflow-x:hidden}
         body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.4;display:block;user-select:none;padding-bottom:40px;}
         input,.ev-value,.history-item,.card span,.card td,.card th,.card b,.mini-value,.mini-label,.header-ai-tip{user-select:text}
         body.dragging-active,body.dragging-active *{cursor:grabbing!important}
@@ -44,7 +44,7 @@
         #wheelCanvas{cursor:grab}#wheelCanvas:active{cursor:grabbing}#gachaCanvas{cursor:grab}#gachaCanvas:active{cursor:grabbing}
         .resize-handle{position:absolute;bottom:4px;right:4px;width:32px;height:32px;background:radial-gradient(circle at center,#94a3b8 2.5px,transparent 2.5px);background-size:8px 8px;z-index:10;pointer-events:auto;opacity:0.4;transition:opacity 0.2s;cursor:nwse-resize}
         .resize-handle:hover{opacity:1}
-        .wheel-pointer{position:absolute;right:10px;top:50%;transform-origin:right center;font-size:24px;color:var(--primary);z-index:10;text-shadow:-1px 0 white,0 1px white,1px 0 white,0 -1px white;will-change:transform;}
+        .wheel-pointer{position:absolute;right:0px;top:50%;width:40px;height:20px;margin-top:-10px;transform-origin:35px 10px;z-index:10;will-change:transform;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3));}
         .prob-bar-wrapper{width:100%;height:24px;border-radius:6px;overflow:hidden;display:flex;background:#e2e8f0;border:1px solid rgba(0,0,0,0.05)}
         .prob-segment{height:100%;transition:width 0.4s cubic-bezier(0.4,0,0.2,1);border-right:1px solid rgba(255,255,255,0.2);position:relative}
         .prob-segment:hover{filter:brightness(1.1);cursor:help}
@@ -57,9 +57,9 @@
         .scroller-item{flex:0 0 160px;height:85px;border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:bold;text-align:center;padding:8px;line-height:1.2;background:white;color:#475569;word-break:break-word;user-select:none}
         .scroller-item.prized{background:linear-gradient(135deg,#fef08a,#facc15);color:#856404;border-color:#eab308;font-size:0.65rem}
         .slot-row{padding:6px 10px;border-radius:8px;background:#f8fafc;border:1px solid #f1f5f9}
+        .template-area {display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px;}
         .btn-template{border:1px solid rgba(0,0,0,0.1);padding:6px;border-radius:6px;font-size:0.65rem;font-weight:700;transition:all 0.2s;color:white;cursor:pointer}
         .btn-template:hover{filter:brightness(1.1);transform:translateY(-1px)}
-        .btn-template.spc{background:var(--color-spc)}.btn-template.etb{background:var(--color-etb)}.btn-template.upc{background:var(--color-upc)}.btn-template.ex{background:var(--color-ex)}.btn-template.warriors{background:var(--color-warriors)}.btn-template.tusk{background:var(--color-tusk)}.btn-template.ah-etb{background:var(--color-ah-etb)}.btn-template.ah-pc{background:var(--color-ah-pc)}.btn-template.energy{background:var(--color-energy);grid-column:span 2}
         .btn-add{background:#f1f5f9;color:var(--primary);padding:8px;width:100%;border-radius:8px;margin-top:12px;margin-bottom:8px;font-weight:800;border:1px dashed #cbd5e1;font-size:0.65rem;text-transform:uppercase;cursor:pointer}
         input{padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.85rem;width:100%;cursor:text;font-family:inherit}
         .qty-stepper{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:2px}
@@ -95,6 +95,14 @@
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulseGlow { 0% {box-shadow: 0 0 10px var(--prize-color); border-color: var(--prize-color);} 50% {box-shadow: 0 0 30px var(--prize-color); border-color: #eab308;} 100% {box-shadow: 0 0 10px var(--prize-color); border-color: var(--prize-color);}}
         .prize-glow { animation: pulseGlow 1.5s infinite; border: 2px solid var(--prize-color) !important; }
+        
+        .prize-toggle { color: #cbd5e1; cursor: pointer; border: none; background: transparent; transition: color 0.2s; font-size: 1.2rem; padding: 0; }
+        .prize-toggle.active { color: var(--prize-color); text-shadow: 0 0 3px rgba(255,193,7,0.4); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-card { background: white; padding: 20px; border-radius: 12px; width: 420px; max-width: 90vw; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display:flex; flex-direction:column; gap: 12px; max-height: 80vh;}
+        .modal-overlay *, .modal-card * { user-select: text !important; cursor: auto; }
     </style>
 </head>
 <body>
@@ -127,17 +135,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="template-area">
-                    <button onclick="quickAdd('Prismatic SPC', 220)" class="btn-template spc">Prismatic SPC</button>
-                    <button onclick="quickAdd('Prismatic ETB', 125)" class="btn-template etb">Prismatic ETB</button>
-                    <button onclick="quickAdd('Charizard X UPC', 140)" class="btn-template upc">Charizard UPC (£140)</button>
-                    <button onclick="quickAdd('Prismatic Lucario EX', 160)" class="btn-template ex">Lucario EX (£160)</button>
-                    <button onclick="quickAdd('Legendary Warriors', 120)" class="btn-template warriors">Warriors (£120)</button>
-                    <button onclick="quickAdd('Great Tusk Ex', 140)" class="btn-template tusk">Great Tusk (£140)</button>
-                    <button onclick="quickAdd('Ascended Heroes ETB', 80)" class="btn-template ah-etb">Ascended ETB (£80)</button>
-                    <button onclick="quickAdd('Ascended Heroes PC ETB', 150)" class="btn-template ah-pc">Ascended PC ETB (£150)</button>
-                    <button onclick="quickAdd('Energy', 0)" class="btn-template energy">Energy (£0)</button>
-                </div>
+                <div class="template-area" id="template-area"></div>
                 <button id="add-row-btn" class="btn-add" onclick="addSlotRow()">+ Add Slot</button>
                 <div class="inventory-grid-config" style="padding: 0 8px 4px; font-size: 0.55rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;">
                     <span>Prize</span><span>Name/Label</span><span>Val</span><span>Qty</span><span></span>
@@ -277,7 +275,9 @@
                 </div>
                 <div class="vis-content">
                     <canvas id="wheelCanvas" class="vis-canvas"></canvas>
-                    <div class="wheel-pointer">◀</div>
+                    <svg class="wheel-pointer" viewBox="0 0 40 20" xmlns="http://www.w3.org/2000/svg">
+                        <polygon points="12,10 38,5 38,15" fill="var(--primary)" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
                     <div class="resize-handle" id="wheel-resize-handle"></div>
                 </div>
             </div>
@@ -390,6 +390,21 @@
     </div>
 </div>
 
+<!-- TEMPLATE MANAGER MODAL -->
+<div id="template-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="margin:0; font-size:1rem; color:#1e293b; font-weight:800;">Manage Templates</h3>
+        <div id="template-list-edit" style="display:flex; flex-direction:column; gap:6px; overflow-y:auto; flex-grow:1; padding-right:4px;"></div>
+        <div style="display:grid; grid-template-columns: 30px 1fr 80px auto; gap:6px; margin-top:8px; border-top:1px solid #e2e8f0; padding-top:12px;">
+            <button id="new-template-prize" class="prize-toggle" onclick="this.classList.toggle('active')" style="cursor:pointer; border:1px solid #cbd5e1; border-radius:6px; background:white;">★</button>
+            <input type="text" id="new-template-name" placeholder="Item Name">
+            <input type="number" id="new-template-val" placeholder="£ Val">
+            <button onclick="addNewTemplate()" class="btn-hit-me" style="margin:0;">ADD</button>
+        </div>
+        <button onclick="closeTemplateModal()" class="btn-reset-ui" style="width:100%; margin-top:8px;">DONE</button>
+    </div>
+</div>
+
 <script>
     // System mandated API Setup - Automatically hooks up API key if running standalone locally
     let apiKey = "";
@@ -399,10 +414,139 @@
         }
     } catch(e) {}
 
+    // --- TEMPLATE ENGINE ---
+    let templates = [];
+    const defaultTemplates = [
+        { label: 'Prismatic SPC', value: 220, color: '#0ea5e9', prized: true },
+        { label: 'Prismatic ETB', value: 125, color: '#a855f7', prized: true },
+        { label: 'Charizard X UPC', value: 140, color: '#f97316', prized: true },
+        { label: 'Lucario EX', value: 160, color: '#0d9488', prized: true },
+        { label: 'Warriors', value: 120, color: '#ca8a04', prized: true },
+        { label: 'Great Tusk', value: 140, color: '#991b1b', prized: true },
+        { label: 'Ascended ETB', value: 80, color: '#10b981', prized: true },
+        { label: 'Ascended PC ETB', value: 150, color: '#6366f1', prized: true },
+        { label: 'Energy', value: 0, color: '#94a3b8', prized: false }
+    ];
+
+    function initTemplates() {
+        const saved = localStorage.getItem('wheel_templates');
+        if (saved) {
+            try { 
+                templates = JSON.parse(saved).map(t => ({
+                    ...t, 
+                    prized: t.prized !== undefined ? t.prized : (t.label !== 'Energy')
+                })); 
+            } catch(e) { templates = [...defaultTemplates]; }
+        } else {
+            templates = [...defaultTemplates];
+        }
+        renderTemplates();
+    }
+
+    function renderTemplates() {
+        const area = document.getElementById('template-area');
+        if(!area) return;
+        area.innerHTML = '';
+        templates.forEach((t) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-template';
+            btn.style.background = t.color;
+            btn.innerText = `${t.prized ? '★ ' : ''}${t.label} (£${t.value})`;
+            btn.onclick = () => quickAdd(t.label, t.value, t.prized);
+            area.appendChild(btn);
+        });
+        
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-template';
+        editBtn.style.background = '#f1f5f9';
+        editBtn.style.color = '#64748b';
+        editBtn.style.border = '1px dashed #cbd5e1';
+        editBtn.innerText = '+ Edit Templates';
+        editBtn.onclick = openTemplateModal;
+        area.appendChild(editBtn);
+    }
+
+    function openTemplateModal() {
+        renderTemplateEditList();
+        document.getElementById('template-modal').classList.add('active');
+    }
+
+    function closeTemplateModal() {
+        document.getElementById('template-modal').classList.remove('active');
+    }
+
+    function renderTemplateEditList() {
+        const list = document.getElementById('template-list-edit');
+        list.innerHTML = '';
+        templates.forEach((t, i) => {
+            const row = document.createElement('div');
+            row.style.display = 'grid'; 
+            row.style.gridTemplateColumns = '30px 1fr 70px 30px'; 
+            row.style.gap = '6px';
+            row.style.alignItems = 'center';
+            row.style.padding = '6px'; row.style.background = '#f8fafc'; row.style.borderRadius = '6px';
+            row.innerHTML = `
+                <button class="prize-toggle ${t.prized ? 'active' : ''}" onclick="toggleTemplatePrize(${i}, this)" style="cursor:pointer; border:none; background:transparent; font-size:1.1rem; padding:0;">★</button>
+                <input type="text" value="${t.label}" oninput="updateTemplate(${i}, 'label', this.value)" style="padding:4px; font-size:0.75rem;">
+                <input type="number" value="${t.value}" oninput="updateTemplate(${i}, 'value', this.value)" style="padding:4px; font-size:0.75rem;">
+                <button onclick="removeTemplate(${i})" style="color:#ef4444; background:none; border:none; cursor:pointer; font-weight:bold; font-size:1.2rem; padding:0;">×</button>
+            `;
+            list.appendChild(row);
+        });
+    }
+
+    function toggleTemplatePrize(index, btn) {
+        btn.classList.toggle('active');
+        templates[index].prized = btn.classList.contains('active');
+        saveTemplates();
+    }
+    
+    function updateTemplate(index, field, value) {
+        if (field === 'value') value = parseFloat(value) || 0;
+        templates[index][field] = value;
+        saveTemplates();
+    }
+    
+    function saveTemplates() {
+        localStorage.setItem('wheel_templates', JSON.stringify(templates));
+        renderTemplates();
+    }
+
+    function removeTemplate(index) {
+        templates.splice(index, 1);
+        saveTemplates();
+        renderTemplateEditList();
+    }
+
+    function addNewTemplate() {
+        const nameInput = document.getElementById('new-template-name');
+        const valInput = document.getElementById('new-template-val');
+        const prizeToggle = document.getElementById('new-template-prize');
+        const label = nameInput.value.trim();
+        const value = parseFloat(valInput.value || 0);
+        const prized = prizeToggle.classList.contains('active');
+        
+        if (!label) return;
+        
+        const palette = ['#0ea5e9', '#a855f7', '#f97316', '#0d9488', '#ca8a04', '#991b1b', '#10b981', '#6366f1', '#94a3b8', '#eab308', '#ef4444', '#3b82f6'];
+        const color = palette[templates.length % palette.length];
+        
+        templates.push({ label, value, color, prized });
+        saveTemplates();
+        
+        nameInput.value = ''; valInput.value = ''; prizeToggle.classList.remove('active');
+        renderTemplateEditList();
+    }
+
+
     // --- AUDIO ENGINE ---
     let actx = null;
     let audioInit = false;
     
+    window.addEventListener('mousedown', unlockAudio);
+    window.addEventListener('touchstart', unlockAudio, {passive: true});
+    window.addEventListener('click', unlockAudio, {passive: true});
+
     function unlockAudio() {
         if (audioInit) return;
         actx = new (window.AudioContext || window.webkitAudioContext)();
@@ -414,12 +558,10 @@
         osc.start(); osc.stop(actx.currentTime + 0.001);
         audioInit = true;
     }
-    
-    window.addEventListener('mousedown', unlockAudio);
-    window.addEventListener('touchstart', unlockAudio, {passive: true});
 
     function playTone(freq, type, duration, vol) {
         if (!actx || !audioInit) return;
+        if (actx.state === 'suspended') actx.resume();
         try {
             let osc = actx.createOscillator();
             let gain = actx.createGain();
@@ -434,10 +576,23 @@
         } catch (e) {}
     }
 
-    function playScrollerClick() { playTone(1200, 'square', 0.02, 0.03); }
+    function playScrollerClick() { 
+        if (!actx || !audioInit) return;
+        try {
+            let osc = actx.createOscillator(); let gain = actx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, actx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, actx.currentTime + 0.02);
+            gain.gain.setValueAtTime(0.2, actx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.02);
+            osc.connect(gain); gain.connect(actx.destination);
+            osc.start(); osc.stop(actx.currentTime + 0.02);
+        } catch(e) {}
+    }
     
     function playPegHit() {
         if (!actx || !audioInit) return;
+        if (actx.state === 'suspended') actx.resume();
         try {
             let osc = actx.createOscillator(); let gain = actx.createGain();
             osc.type = 'square';
@@ -456,6 +611,7 @@
     
     function playDispense() {
         if (!actx || !audioInit) return;
+        if (actx.state === 'suspended') actx.resume();
         try {
             for(let i=0; i<4; i++) {
                 setTimeout(() => {
@@ -484,36 +640,42 @@
         } catch(e){}
     }
     
-    const colLimit = { last: 0 };
+    const colLimit = { active: 0, last: 0 };
     function playMarbleClack(v) {
         if (!actx || !audioInit) return;
         let now = performance.now();
-        if (now - colLimit.last < 50) return; // 20Hz cap to prevent mess
+        if (now - colLimit.last < 40) return; 
+        if (colLimit.active >= 4) return;
         
-        let vol = Math.min(0.3, v * 0.05); 
-        if (vol < 0.02) return;
+        let vol = Math.min(0.3, v * 0.04); 
+        if (vol < 0.01) return;
+
         colLimit.last = now;
+        colLimit.active++;
+        setTimeout(() => { colLimit.active = Math.max(0, colLimit.active - 1); }, 60);
+
+        if (actx.state === 'suspended') actx.resume();
 
         try {
-            let baseFreq = 1200 + Math.random() * 400; 
+            let baseFreq = 2000 + Math.random() * 500; 
             
             let osc1 = actx.createOscillator(); let gain1 = actx.createGain();
             osc1.type = 'sine';
             osc1.frequency.setValueAtTime(baseFreq, actx.currentTime);
             gain1.gain.setValueAtTime(vol, actx.currentTime);
-            gain1.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.05);
+            gain1.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.03);
             
             let osc2 = actx.createOscillator(); let gain2 = actx.createGain();
-            osc2.type = 'triangle';
-            osc2.frequency.setValueAtTime(baseFreq * 2.5, actx.currentTime); 
-            gain2.gain.setValueAtTime(vol * 0.5, actx.currentTime);
-            gain2.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.03);
+            osc2.type = 'sine'; 
+            osc2.frequency.setValueAtTime(baseFreq * 1.5, actx.currentTime); 
+            gain2.gain.setValueAtTime(vol * 0.3, actx.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.02);
             
             osc1.connect(gain1); gain1.connect(actx.destination);
             osc2.connect(gain2); gain2.connect(actx.destination);
             
-            osc1.start(); osc1.stop(actx.currentTime + 0.05);
-            osc2.start(); osc2.stop(actx.currentTime + 0.03);
+            osc1.start(); osc1.stop(actx.currentTime + 0.03);
+            osc2.start(); osc2.stop(actx.currentTime + 0.02);
         } catch (e) {}
     }
 
@@ -540,6 +702,7 @@
     let wheelSpinAngle = 0;
     let wheelWinTime = 0;
     let wheelSparkles = [];
+    let wheelConfetti = [];
     let flipperAngle = 0;
     let flipperV = 0;
     let lastWheelRot = 0;
@@ -648,6 +811,8 @@
 
     // --- INITIALIZATION ---
     window.onload = () => {
+        initTemplates();
+        
         const ctx = document.getElementById('roiChart').getContext('2d');
         roiChart = new Chart(ctx, {
             type: 'line',
@@ -702,7 +867,7 @@
 
     function startAdjust(e, btn, delta, inputElem) {
         e.preventDefault();
-        stopAdjust(); // Clear any existing timers to prevent infinite loops
+        stopAdjust(); 
         const action = () => { inputElem.value = Math.max(0, parseInt(inputElem.value || 0) + delta); syncAndUI(); };
         action(); holdAdjustTimer = setTimeout(() => { holdAdjustInterval = setInterval(action, 80); }, 300);
     }
@@ -848,8 +1013,8 @@
             const rect = canvas.getBoundingClientRect(); const ratio = window.devicePixelRatio || 1;
             let scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
             const mouseX = (e.clientX - rect.left) * scaleX, mouseY = (e.clientY - rect.top) * scaleY;
-            const sizePx = canvas.width / ratio; const R = sizePx / 3.2; 
-            const cx = sizePx / 2, domeCy = sizePx * 0.35, knobY = domeCy + R * 1.1; 
+            const sizePx = canvas.width / ratio; const R = sizePx / 3.4; 
+            const cx = sizePx / 2, domeCy = sizePx * 0.33, knobY = domeCy + R * 1.1; 
             const drawMouseX = mouseX / ratio, drawMouseY = mouseY / ratio;
 
             if (Math.hypot(drawMouseX - cx, drawMouseY - knobY) < R * 0.4) {
@@ -892,8 +1057,8 @@
             let scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
             const drawMouseX = ((e.clientX - rect.left) * scaleX) / ratio;
             const drawMouseY = ((e.clientY - rect.top) * scaleY) / ratio;
-            const sizePx = canvas.width / ratio; const R = sizePx / 3.2; 
-            const cx = sizePx / 2, domeCy = sizePx * 0.35, knobY = domeCy + R * 1.1;
+            const sizePx = canvas.width / ratio; const R = sizePx / 3.4; 
+            const cx = sizePx / 2, domeCy = sizePx * 0.33, knobY = domeCy + R * 1.1;
 
             if (Math.hypot(drawMouseX - cx, drawMouseY - knobY) < R * 0.4 && !isSpinning && !gachaState.isMachineGrabbed && !gachaState.draggedBall) {
                 canvas.style.cursor = 'pointer';
@@ -936,7 +1101,7 @@
 
             if (!gachaState.draggedBall) return;
             canvas.style.cursor = 'grabbing';
-            const mouseX = drawMouseX, mouseY = drawMouseY, trayY = domeCy + R * 2.1;
+            const mouseX = drawMouseX, mouseY = drawMouseY;
             const now = performance.now(); const dt = Math.max(1, now - gachaState.lastMouse.time);
             
             let vx = (mouseX - gachaState.lastMouse.x) / dt * 7, vy = (mouseY - gachaState.lastMouse.y) / dt * 7;
@@ -949,10 +1114,11 @@
                 gachaState.draggedBall.y = mouseY;
                 const bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5;
                 const maxTrayX = sizePx - bR, minTrayX = bR; 
+                const maxTrayY = sizePx - bR, minTrayY = bR; 
                 if (gachaState.draggedBall.x > maxTrayX) gachaState.draggedBall.x = maxTrayX;
                 if (gachaState.draggedBall.x < minTrayX) gachaState.draggedBall.x = minTrayX;
-                if (gachaState.draggedBall.y > trayY - bR) gachaState.draggedBall.y = trayY - bR;
-                if (gachaState.draggedBall.y < bR) gachaState.draggedBall.y = bR; 
+                if (gachaState.draggedBall.y > maxTrayY) gachaState.draggedBall.y = maxTrayY;
+                if (gachaState.draggedBall.y < minTrayY) gachaState.draggedBall.y = minTrayY; 
             } else {
                 let relX = mouseX - cx - gachaState.machineX; let relY = mouseY - domeCy - gachaState.machineY;
                 let innerR = R - gachaState.draggedBall.r - 2; let dist = Math.sqrt(relX*relX + relY*relY);
@@ -1001,10 +1167,14 @@
                 let dot = b.vx * nx + b.vy * ny;
                 if (dot > 0) { 
                     b.vx -= 1.1 * dot * nx; b.vy -= 1.1 * dot * ny; 
-                    // Friction when rubbing against curved wall
                     b.vx *= 0.85; b.vy *= 0.85; 
-                    if(!isMinimized && dot > 0.8) playMarbleClack(dot);
+                    if(!isMinimized && dot > 2.5) playMarbleClack(dot);
                 } 
+            }
+            
+            let speedSq = b.vx*b.vx + b.vy*b.vy;
+            if (phase === "settle" && speedSq < 0.5 && b.y > innerR * 0.5) {
+                b.vx = 0; b.vy = 0; 
             }
         });
 
@@ -1024,16 +1194,15 @@
                             let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy, rvz = (b2.vz || 0) - (b1.vz || 0);
                             let velAlongNormal = rvx * nx + rvy * ny + rvz * nz;
                             if (velAlongNormal < -0.1) { 
-                                let restitution = phase === "chaos" ? 0.4 : 0.1;
+                                let restitution = phase === "chaos" ? 0.4 : 0.05;
                                 let impulse = -(1 + restitution) * velAlongNormal / 2; 
-                                if (b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; b1.vz -= nz * impulse; }
-                                if (b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; b2.vz += nz * impulse; }
+                                if (b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
+                                if (b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
                                 
-                                // Mutual friction
-                                if (b1 !== gachaState.draggedBall) { b1.vx *= 0.95; b1.vy *= 0.95; }
-                                if (b2 !== gachaState.draggedBall) { b2.vx *= 0.95; b2.vy *= 0.95; }
+                                if (b1 !== gachaState.draggedBall) { b1.vx *= 0.92; b1.vy *= 0.92; }
+                                if (b2 !== gachaState.draggedBall) { b2.vx *= 0.92; b2.vy *= 0.92; }
 
-                                if (!isMinimized && Math.abs(velAlongNormal) > 1.0) playMarbleClack(Math.abs(velAlongNormal));
+                                if (!isMinimized && Math.abs(velAlongNormal) > 2.5) playMarbleClack(Math.abs(velAlongNormal));
                             }
                         }
                     }
@@ -1056,7 +1225,7 @@
         const ratio = window.devicePixelRatio || 1; const sizePx = canvas.width / ratio;
         if (sizePx <= 0) return;
         
-        const R = sizePx / 3.2, cx = sizePx / 2, domeCy = sizePx * 0.35, chuteY = domeCy + R * 1.5, trayY = domeCy + R * 2.1;
+        const R = sizePx / 3.4, cx = sizePx / 2, domeCy = sizePx * 0.33, chuteY = domeCy + R * 1.5;
 
         if (!gachaState.isMachineGrabbed && (Math.abs(gachaState.machineX) > 0.1 || Math.abs(gachaState.machineY) > 0.1)) {
             gachaState.machineX *= 0.8; gachaState.machineY *= 0.8; 
@@ -1082,24 +1251,8 @@
                     }
                     dispensingBall = {
                         prized: gachaState.targetItem.prized, x: cx, y: chuteY, 
-                        vx: (Math.random() - 0.5) * 2, vy: R * 0.01, targetY: trayY, rotation: 0, starRotation: 0, scale: 1 
+                        vx: (Math.random() - 0.5) * 2, vy: R * 0.01, rotation: 0, starRotation: 0, scale: 1 
                     };
-                    
-                    if (gachaState.targetItem.prized) {
-                        gachaState.prizeDropTime = performance.now();
-                        gachaState.sparkles = [];
-                        for(let i = 0; i < 60; i++) {
-                            let angle = Math.random() * Math.PI * 2;
-                            let dist = Math.random() * R * 1.1;
-                            gachaState.sparkles.push({
-                                x: cx + Math.cos(angle)*dist,
-                                y: domeCy + Math.sin(angle)*dist,
-                                vx: Math.cos(angle) * (Math.random()*5 + 1),
-                                vy: Math.sin(angle) * (Math.random()*5 + 1) - 1,
-                                life: 1.0, decay: 0.01 + Math.random()*0.02
-                            });
-                        }
-                    }
                 }
             }
         } else {
@@ -1111,45 +1264,82 @@
 
         let activeBall = dispensingBall || lastDispensedBall;
         let activeBallSpeed = 0;
-        let floorY = trayY - (window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5); 
+        let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5;
         
         if (activeBall && activeBall !== gachaState.draggedBall) {
-            let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5;
-
             if (activeBall.prized) activeBall.starRotation = (activeBall.starRotation || 0) + 0.015;
 
-            if (Math.abs(activeBall.vy) < 0.05 && Math.abs(activeBall.vx) < 0.05 && activeBall.y >= floorY - 1) {
-                activeBall.vy = 0; activeBall.vx = 0; activeBall.y = floorY;
-            } else {
-                activeBall.vy += R * 0.0015; activeBall.x += activeBall.vx; activeBall.y += activeBall.vy;
-                activeBall.rotation += activeBall.vx * 0.08; 
-                
-                if (activeBall.y > floorY) {
-                    activeBall.y = floorY; 
-                    if (!isMinimized && activeBall.vy > 1.5) playMarbleClack(activeBall.vy);
-                    activeBall.vy *= -0.4; 
-                    if (Math.abs(activeBall.vy) < 1.0) activeBall.vy = 0; 
-                    activeBall.vx *= 0.92; 
-                }
-                if (activeBall.y < bR) {
-                    activeBall.y = bR;
-                    if (!isMinimized && Math.abs(activeBall.vy) > 1.5) playMarbleClack(Math.abs(activeBall.vy));
-                    activeBall.vy *= -0.5;
-                }
+            activeBall.vy += R * 0.002; 
+            activeBall.x += activeBall.vx; activeBall.y += activeBall.vy;
+            activeBall.rotation += activeBall.vx * 0.08; 
+            
+            // Floor Collision (Canvas Bottom)
+            let floorY = sizePx - bR;
+            if (activeBall.y > floorY) {
+                activeBall.y = floorY; 
+                if (!isMinimized && activeBall.vy > 1.0) playMarbleClack(activeBall.vy * 2);
+                activeBall.vy *= -0.4; 
+                if (Math.abs(activeBall.vy) < 1.0) activeBall.vy = 0; 
+                activeBall.vx *= 0.92; 
+            }
+            // Ceiling Collision
+            if (activeBall.y < bR) {
+                activeBall.y = bR;
+                if (!isMinimized && Math.abs(activeBall.vy) > 0.5) playMarbleClack(Math.abs(activeBall.vy) * 2);
+                activeBall.vy *= -0.5;
+            }
 
-                const maxTrayX = sizePx - bR, minTrayX = bR;
-                if (activeBall.x > maxTrayX) { 
-                    activeBall.x = maxTrayX; 
-                    if (!isMinimized && Math.abs(activeBall.vx) > 1.5) playMarbleClack(Math.abs(activeBall.vx));
-                    activeBall.vx *= -0.5; 
-                }
-                if (activeBall.x < minTrayX) { 
-                    activeBall.x = minTrayX; 
-                    if (!isMinimized && Math.abs(activeBall.vx) > 1.5) playMarbleClack(Math.abs(activeBall.vx));
-                    activeBall.vx *= -0.5; 
+            // Canvas Wall Collisions
+            const maxTrayX = sizePx - bR, minTrayX = bR;
+            if (activeBall.x > maxTrayX) { 
+                activeBall.x = maxTrayX; 
+                if (!isMinimized && Math.abs(activeBall.vx) > 0.5) playMarbleClack(Math.abs(activeBall.vx) * 2);
+                activeBall.vx *= -0.5; 
+            }
+            if (activeBall.x < minTrayX) { 
+                activeBall.x = minTrayX; 
+                if (!isMinimized && Math.abs(activeBall.vx) > 0.5) playMarbleClack(Math.abs(activeBall.vx) * 2);
+                activeBall.vx *= -0.5; 
+            }
+
+            // Solid Base Collision Logic
+            let baseTop = domeCy + R * 2.1;
+            let baseBottom = baseTop + R * 0.15;
+            let baseLeft = cx - R * 0.8;
+            let baseRight = cx + R * 0.8;
+            
+            let testX = activeBall.x;
+            let testY = activeBall.y;
+            if (activeBall.x < baseLeft) testX = baseLeft;
+            else if (activeBall.x > baseRight) testX = baseRight;
+            if (activeBall.y < baseTop) testY = baseTop;
+            else if (activeBall.y > baseBottom) testY = baseBottom;
+
+            let distX = activeBall.x - testX;
+            let distY = activeBall.y - testY;
+            let distance = Math.sqrt((distX*distX) + (distY*distY));
+
+            if (distance <= bR) {
+                let nx = distX / distance;
+                let ny = distY / distance;
+                activeBall.x = testX + nx * bR;
+                activeBall.y = testY + ny * bR;
+
+                let dot = activeBall.vx * nx + activeBall.vy * ny;
+                if (dot < 0) {
+                    let restitution = 0.4; 
+                    activeBall.vx -= (1 + restitution) * dot * nx;
+                    activeBall.vy -= (1 + restitution) * dot * ny;
+                    
+                    let tx = -ny, ty = nx;
+                    let tanDot = activeBall.vx * tx + activeBall.vy * ty;
+                    activeBall.vx -= tanDot * tx * 0.1;
+                    activeBall.vy -= tanDot * ty * 0.1;
+
+                    if (!isMinimized && Math.abs(dot) > 0.5) playMarbleClack(Math.abs(dot) * 2);
                 }
             }
-            
+
             activeBallSpeed = Math.abs(activeBall.vx) + Math.abs(activeBall.vy);
             
             if (activeBall.prized) {
@@ -1176,7 +1366,13 @@
         }
 
         let hasSparkles = gachaState.sparkles && gachaState.sparkles.length > 0;
-        let activeBallSettled = !activeBall || gachaState.draggedBall === activeBall || (activeBallSpeed < 0.5 && activeBall.y >= floorY - 1);
+        let isBallSleeping = false;
+        if (activeBall) {
+            if (activeBallSpeed < 0.2 && Math.abs(activeBall.vy) < 0.1) isBallSleeping = true;
+        } else {
+            isBallSleeping = true;
+        }
+        let activeBallSettled = !activeBall || gachaState.draggedBall === activeBall || isBallSleeping;
 
         if (maxSpeed < 0.5 && activeBallSettled && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasSparkles) {
             gachaState.idleFrames++;
@@ -1205,7 +1401,7 @@
         if (canvas.style.width !== sizePx + 'px') { canvas.style.width = sizePx + 'px'; canvas.style.height = sizePx + 'px'; }
         const bufferSize = Math.floor(sizePx * ratio);
         
-        const R = sizePx / 3.2, cx = sizePx / 2, domeCy = sizePx * 0.35, chuteY = domeCy + R * 1.5, trayY = domeCy + R * 2.1;
+        const R = sizePx / 3.4, cx = sizePx / 2, domeCy = sizePx * 0.33;
 
         if (canvas.width !== bufferSize) { 
             canvas.width = bufferSize; canvas.height = bufferSize; 
@@ -1214,17 +1410,6 @@
                 scale = R / window.cachedGacha.R;
                 window.cachedGacha.forEach(b => { b.x *= scale; b.y *= scale; b.z = (b.z||0) * scale; b.r *= scale; });
                 window.cachedGacha.R = R;
-            }
-            let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5;
-            if (lastDispensedBall && gachaState.lastCx) {
-                let relX = lastDispensedBall.x - gachaState.lastCx;
-                lastDispensedBall.x = cx + (relX * scale); lastDispensedBall.y = trayY - bR; 
-                lastDispensedBall.targetY = lastDispensedBall.y; lastDispensedBall.vx = 0; lastDispensedBall.vy = 0;
-            }
-            if (dispensingBall && !isSpinning && gachaState.lastCx) {
-                let relX = dispensingBall.x - gachaState.lastCx;
-                dispensingBall.x = cx + (relX * scale); dispensingBall.y = trayY - bR;
-                dispensingBall.targetY = dispensingBall.y; dispensingBall.vy = 0;
             }
         }
         gachaState.lastCx = cx; gachaState.lastDomeCy = domeCy;
@@ -1296,12 +1481,12 @@
         else ctx.fillRect(cx - R*0.2, domeCy + R*1.45, R*0.4, R*0.25);
         ctx.fill();
 
-        let trayGrad = ctx.createLinearGradient(cx, trayY, cx, trayY + R*0.2);
+        let trayGrad = ctx.createLinearGradient(cx, domeCy + R * 2.1, cx, domeCy + R * 2.1 + R*0.15);
         trayGrad.addColorStop(0, '#94a3b8'); trayGrad.addColorStop(1, '#475569');
         ctx.fillStyle = trayGrad; 
         ctx.beginPath();
-        if(ctx.roundRect) ctx.roundRect(cx - R*0.8, trayY, R*1.6, R*0.15, R*0.05);
-        else ctx.fillRect(cx - R*0.8, trayY, R*1.6, R*0.15);
+        if(ctx.roundRect) ctx.roundRect(cx - R*0.8, domeCy + R * 2.1, R*1.6, R*0.15, R*0.05);
+        else ctx.fillRect(cx - R*0.8, domeCy + R * 2.1, R*1.6, R*0.15);
         ctx.fill(); ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1; ctx.stroke();
 
         ctx.save();
@@ -1448,18 +1633,39 @@
     function triggerWheelWinGlow() {
         wheelWinTime = performance.now();
         wheelSparkles = [];
+        wheelConfetti = [];
         const canvas = document.getElementById('wheelCanvas'); if (!canvas) return;
         const sizePx = parseInt(canvas.style.width, 10);
         let cx = sizePx / 2, cy = sizePx / 2;
+        
+        const colors = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316', '#ec4899'];
+        
+        for(let i=0; i<150; i++) {
+            let angle = Math.random() * Math.PI * 2;
+            let velocity = Math.random() * 15 + 5; 
+            wheelConfetti.push({
+                x: cx, y: cy,
+                vx: Math.cos(angle) * velocity,
+                vy: Math.sin(angle) * velocity - 5, 
+                rot: Math.random() * Math.PI * 2,
+                rotSpeed: (Math.random() - 0.5) * 0.5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                w: Math.random() * 8 + 4, h: Math.random() * 12 + 6,
+                life: 1.0, decay: 0.005 + Math.random() * 0.01
+            });
+        }
+
         for(let i=0; i<80; i++) {
             let angle = Math.random() * Math.PI * 2;
-            let dist = Math.random() * (sizePx/2);
+            let dist = Math.random() * (sizePx/4); 
+            let vel = Math.random() * 6 + 2;
             wheelSparkles.push({
                 x: cx + Math.cos(angle)*dist,
                 y: cy + Math.sin(angle)*dist,
-                vx: Math.cos(angle) * (Math.random()*4 + 1),
-                vy: Math.sin(angle) * (Math.random()*4 + 1) - 1,
-                life: 1.0, decay: 0.01 + Math.random()*0.02
+                vx: Math.cos(angle) * vel,
+                vy: Math.sin(angle) * vel - 2,
+                life: 1.0, decay: 0.008 + Math.random()*0.015,
+                sizeMult: Math.random() * 2 + 1 
             });
         }
         requestAnimationFrame(drawWheel);
@@ -1561,37 +1767,64 @@
                 s.x += s.vx; s.y += s.vy; s.life -= s.decay;
                 if (s.life <= 0) { wheelSparkles.splice(i, 1); continue; }
                 ctx.globalAlpha = s.life; ctx.fillStyle = '#fef08a';
-                ctx.beginPath(); ctx.arc(s.x, s.y, Math.max(0.1, 4 * s.life), 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(s.x, s.y, Math.max(0.1, 4 * s.life * s.sizeMult), 0, Math.PI*2); ctx.fill();
             }
             ctx.restore();
             isWheelGlowing = true;
         }
 
+        // CONFETTI
+        if (wheelConfetti && wheelConfetti.length > 0) {
+            for (let i = wheelConfetti.length - 1; i >= 0; i--) {
+                let c = wheelConfetti[i];
+                c.x += c.vx;
+                c.y += c.vy;
+                c.vy += 0.4; 
+                c.vx *= 0.96; 
+                c.vy *= 0.96;
+                c.rot += c.rotSpeed;
+                c.life -= c.decay;
+                if (c.life <= 0 || c.y > sizePx + 50) { wheelConfetti.splice(i, 1); continue; }
+                ctx.save();
+                ctx.globalAlpha = c.life;
+                ctx.translate(c.x, c.y);
+                ctx.rotate(c.rot);
+                ctx.fillStyle = c.color;
+                ctx.fillRect(-c.w/2, -c.h/2, c.w, c.h);
+                ctx.restore();
+            }
+            isWheelGlowing = true;
+        }
+
         // Flipper Spring Physics
-        let now = performance.now();
-        let dt = Math.max(1, now - (gachaState.lastWheelTime || now));
-        gachaState.lastWheelTime = now;
-        
         let wheelVel = currentRotationOffset - lastWheelRot;
         if (Math.abs(wheelVel) > Math.PI) wheelVel = 0; 
         lastWheelRot = currentRotationOffset;
+        
+        let smoothedVel = gachaState.smoothedWheelVel || 0;
+        smoothedVel = smoothedVel * 0.8 + wheelVel * 0.2;
+        gachaState.smoothedWheelVel = smoothedVel;
 
         let forceDeflect = 0;
         let isForced = false;
         let approach = 0.15; 
 
-        let segFloat = currentRotationOffset / step;
-        let segIndex = Math.floor(segFloat);
-        let fraction = segFloat - segIndex; 
+        let effectiveRot = currentRotationOffset + 0.08;
+        let norm = effectiveRot % step;
+        if (norm < 0) norm += step;
+        let fraction = norm / step; 
+        let segIndex = Math.floor(effectiveRot / step);
 
-        if (wheelVel >= 0) { 
+        if (smoothedVel >= 0) { // Clockwise
             if (fraction > 1 - approach) {
-                forceDeflect = ((fraction - (1 - approach)) / approach) * 35; // push DOWN
+                // Peg drags pointer DOWN -> Positive Flipper Angle
+                forceDeflect = ((fraction - (1 - approach)) / approach) * 35; 
                 isForced = true;
             }
-        } else {
+        } else { // Anti-Clockwise
             if (fraction < approach) {
-                forceDeflect = ((approach - fraction) / approach) * -35; // push UP
+                // Peg drags pointer UP -> Negative Flipper Angle
+                forceDeflect = ((approach - fraction) / approach) * -35; 
                 isForced = true;
             }
         }
@@ -1600,16 +1833,17 @@
             flipperAngle = forceDeflect;
             flipperV = 0;
         } else {
-            flipperV += (0 - flipperAngle) * 0.3; // spring tension
-            flipperV *= 0.65; // dampen
+            flipperV += (0 - flipperAngle) * 0.4; 
+            flipperV *= 0.65; 
             flipperAngle += flipperV;
         }
         
         if (lastHapticSeg !== -1 && segIndex !== lastHapticSeg) {
-            if (isSpinning || wheelDragState) {
+            if (isSpinning || wheelDragState || Math.abs(smoothedVel) > 0.01) {
                 triggerHaptic();
                 playPegHit();
-                flipperV = (wheelVel >= 0) ? -20 : 20; // Instant spring kick on peg pass
+                // Kick spring back when peg slips past
+                flipperV = (smoothedVel >= 0) ? -35 : 35; 
             }
         }
         lastHapticSeg = segIndex;
@@ -1619,7 +1853,7 @@
             pointerEl.style.transform = `translateY(-50%) rotate(${flipperAngle}deg)`;
         }
 
-        if (isWheelGlowing || Math.abs(flipperAngle) > 0.5 || Math.abs(flipperV) > 0.5 || isSpinning || wheelDragState) { 
+        if (isWheelGlowing || Math.abs(flipperAngle) > 0.5 || Math.abs(flipperV) > 0.5 || isSpinning || wheelDragState || Math.abs(smoothedVel) > 0.001) { 
             requestAnimationFrame(drawWheel); 
         }
     }
@@ -1805,7 +2039,6 @@
             updateHistoryUI(); 
             updateOddsTable();
 
-            // Freeze state for 3 seconds to bask in win before resetting
             await new Promise(r => setTimeout(r, 3000));
             item.remaining--;
 
@@ -2131,10 +2364,10 @@
     function adjustBid(n) { const i = document.getElementById('bid-input'); i.value = Math.max(0, parseInt(i.value || 0) + n); syncAndUI(); }
     function togglePrize(btn) { btn.classList.toggle('active'); syncAndUI(); }
     function addSlotRow() { document.getElementById('outcomes-container').appendChild(createRowElement()); syncAndUI(); }
-    function quickAdd(label, value) {
+    function quickAdd(label, value, prized = false) {
         const cont = document.getElementById('outcomes-container'); const existing = Array.from(cont.querySelectorAll('.slot-row')).find(r => r.querySelector('.label-input').value === label);
         if (existing) { existing.querySelector('.slot-input').value = parseInt(existing.querySelector('.slot-input').value) + 1; }
-        else { cont.prepend(createRowElement(label, value, 1, label !== 'Energy')); }
+        else { cont.prepend(createRowElement(label, value, 1, prized)); }
         syncAndUI();
     }
     function createRowElement(label = "", val = 0, slots = 1, prized = false) {
