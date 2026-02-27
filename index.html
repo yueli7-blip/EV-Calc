@@ -14,8 +14,11 @@
         input,.ev-value,.history-item,.card span,.card td,.card th,.card b,.mini-value,.mini-label,.header-ai-tip{user-select:text}
         body.dragging-active,body.dragging-active *{cursor:grabbing!important}
         .app-container{max-width:1900px;width:100%;padding:16px;margin: 0 auto;}
-        .app-header{display:grid;grid-template-columns:auto 1fr 150px;align-items:center;margin:8px 0 24px;width:100%;gap:12px}
-        .app-header h1{grid-column:2;text-align:center;font-size:1.8rem;font-weight:800;color:#1e293b;margin:0;letter-spacing:-0.03em}
+        
+        .app-header { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 8px 0 24px; text-align: center; width: 100%; }
+        .app-header h1 { font-size: 1.8rem; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.03em; }
+        .header-btn-row { display: flex; gap: 8px; justify-content: center; }
+
         .btn-reset-ui{width:fit-content;padding:6px 14px;font-size:0.7rem;font-weight:800;background:#fff;border:1.5px solid #cbd5e1;color:#64748b;border-radius:8px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
         .btn-reset-ui:hover{border-color:var(--primary);color:var(--primary);background:#f8fafc;transform:translateY(-1px)}
         body.wheel-resizing,body.wheel-resizing *{cursor:col-resize!important}
@@ -109,12 +112,11 @@
 
 <div class="app-container">
     <div class="app-header">
-        <div style="display: flex; gap: 8px; grid-column: 1;">
+        <h1>Odds Advantage Calculator</h1>
+        <div class="header-btn-row">
             <button class="btn-reset-ui" onclick="resetUIDefaults()">RESET UI / GRID</button>
             <button class="btn-reset-ui" onclick="restoreCards()">RESTORE CARDS</button>
         </div>
-        <h1>Odds Advantage Calculator</h1>
-        <div></div> 
     </div>
     
     <div class="dashboard" id="main-dashboard">
@@ -549,14 +551,25 @@
 
     function unlockAudio() {
         if (audioInit) return;
-        actx = new (window.AudioContext || window.webkitAudioContext)();
-        if (actx.state === 'suspended') actx.resume();
-        let osc = actx.createOscillator();
-        let gain = actx.createGain();
-        gain.gain.value = 0;
-        osc.connect(gain); gain.connect(actx.destination);
-        osc.start(); osc.stop(actx.currentTime + 0.001);
-        audioInit = true;
+        try {
+            actx = new (window.AudioContext || window.webkitAudioContext)();
+            if (actx.state === 'suspended') actx.resume();
+            let osc = actx.createOscillator();
+            let gain = actx.createGain();
+            gain.gain.value = 0;
+            osc.connect(gain); gain.connect(actx.destination);
+            osc.start(); osc.stop(actx.currentTime + 0.001);
+            audioInit = true;
+        } catch(e) {}
+    }
+    
+    function triggerHaptic() {
+        try { 
+            if (navigator.vibrate) navigator.vibrate(15); 
+            else if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.haptic) {
+                window.webkit.messageHandlers.haptic.postMessage("impact");
+            }
+        } catch(e) {}
     }
 
     function playTone(freq, type, duration, vol) {
@@ -748,19 +761,28 @@
     let lastHapticSeg = -1;
     let lastHapticScroll = -1;
 
-    // --- GLOBAL UTILITIES ---
-    if (!CanvasRenderingContext2D.prototype.roundRect) {
-        CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-            if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
-            this.beginPath(); this.moveTo(x + r, y);
-            this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r);
-            this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r);
-            this.closePath(); return this;
-        }
-    }
+    function checkWheelHaptic() {
+        const module = document.getElementById('wheel-module');
+        if (module && module.classList.contains('minimized')) return;
 
-    function triggerHaptic() {
-        try { if (navigator.vibrate) navigator.vibrate(15); } catch(e) {}
+        const slots = getDistributedSlots();
+        if(slots.length === 0) return;
+        const step = (Math.PI * 2) / slots.length;
+        let targetIndex = slots.findIndex(s => s.prized); if (targetIndex === -1) targetIndex = 0;
+        const baseOffset = -(targetIndex * step + step / 2);
+        
+        let currentRotationOffset = baseOffset + wheelSpinAngle;
+        let normRot = currentRotationOffset % (Math.PI * 2);
+        if (normRot < 0) normRot += Math.PI * 2;
+        let currentSeg = Math.floor(normRot / step);
+        
+        if (currentSeg !== lastHapticSeg) { 
+            if (lastHapticSeg !== -1 && (isSpinning || wheelDragState)) { 
+                triggerHaptic(); 
+                playPegHit();
+            }
+            lastHapticSeg = currentSeg; 
+        }
     }
 
     function checkScrollerHaptic() {
@@ -1179,7 +1201,7 @@
                             let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy, rvz = (b2.vz || 0) - (b1.vz || 0);
                             let velAlongNormal = rvx * nx + rvy * ny + rvz * nz;
                             if (velAlongNormal < -0.1) { 
-                                let restitution = phase === "chaos" ? 0.4 : 0.0;
+                                let restitution = phase === "chaos" ? 0.4 : 0.05;
                                 let impulse = -(1 + restitution) * velAlongNormal / 2; 
                                 if (b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
                                 if (b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
@@ -1792,24 +1814,22 @@
 
         let forceDeflect = 0;
         let isForced = false;
-        let hitBoxRad = 0.12; 
+        let approachRad = 0.08; 
 
-        let norm = currentRotationOffset % step;
-        if (norm < 0) norm += step;
+        let closestPegAngle = currentRotationOffset % step;
+        if (closestPegAngle < 0) closestPegAngle += step;
         
-        let pegCW = norm - step; 
-        let pegCCW = norm;       
+        let peg1 = closestPegAngle;         
+        let peg2 = closestPegAngle - step;  
 
-        if (smoothedVel >= 0) { 
-            if (pegCW > -hitBoxRad) {
-                let push = (pegCW + hitBoxRad) / hitBoxRad; 
-                forceDeflect = push * -45; 
+        if (smoothedVel >= 0) { // Clockwise
+            if (peg2 > -approachRad) {
+                forceDeflect = (1 - (Math.abs(peg2) / approachRad)) * 35; // Downward
                 isForced = true;
             }
-        } else { 
-            if (pegCCW < hitBoxRad) {
-                let push = (hitBoxRad - pegCCW) / hitBoxRad; 
-                forceDeflect = push * 45; 
+        } else { // Anti-Clockwise
+            if (peg1 < approachRad) {
+                forceDeflect = (1 - (peg1 / approachRad)) * -35; // Upward
                 isForced = true;
             }
         }
@@ -1828,7 +1848,7 @@
             if (isSpinning || wheelDragState || Math.abs(smoothedVel) > 0.01) {
                 triggerHaptic();
                 playPegHit();
-                flipperV = (smoothedVel >= 0) ? 45 : -45; 
+                flipperV = (smoothedVel >= 0) ? -40 : 40; 
             }
         }
         lastHapticSeg = segIndex;
@@ -1991,7 +2011,6 @@
             let t = (time - startTime) / 4000; if (t > 1) t = 1;
             const ease = 1 - Math.pow(1 - t, 4); 
             wheelSpinAngle = startAngle + (targetAngle - startAngle) * ease;
-            requestAnimationFrame(drawWheel);
             if (t < 1 && isSpinning) requestAnimationFrame(animateWheel);
         }
         requestAnimationFrame(animateWheel);
@@ -2375,7 +2394,7 @@
     function undoLastSpin() {
         if (history.length === 0 || isSpinning) return; const last = history.shift();
         const item = inventory.find(i => i.label === last.label); if (item) item.remaining++;
-        if (last.isUser) { sessionStats.spent -= last.bidValue; sessionStats.won -= last.hitValue; }
+        if (last.isUser) { sessionStats.spent -= parseFloat(document.getElementById('bid-input').value); sessionStats.won -= last.hitValue; }
         rebuildDOMFromInventory(); syncAndUI();
     }
     function initializeSession() { history = []; sessionStats = { spent: 0, won: 0 }; syncAndUI(); }
