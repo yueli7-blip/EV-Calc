@@ -56,6 +56,7 @@
         .col-left .resizable-card,.col-right .resizable-card{width:100%!important;height:auto!important;aspect-ratio:1}
         .col-left .resize-handle,.col-right .resize-handle{display:none!important}
         .section-title{font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;cursor:inherit; touch-action:none;}
+        .section-title span:first-child { cursor: text; }
         .sub-text{font-size:0.5rem;opacity:0.6;text-transform:lowercase;font-weight:600}
         .card-controls{display:flex;gap:4px;align-items:center}
         .card-btn{background:none;border:none;color:#94a3b8;font-weight:bold;cursor:pointer;font-size:1.1rem;padding:0 4px;line-height:0.8;transition:color 0.2s}
@@ -101,7 +102,8 @@
         .header-ai-tip{font-size:0.75rem;font-style:italic;color:#475569;line-height:1.3;max-height:2.6em;overflow:hidden}
         .hit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:8px}
         .hit-group{background:#fff;border:1px solid var(--border);padding:6px;border-radius:8px;text-align:center}
-        .btn-hit-me{background:var(--primary);color:white;width:100%;padding:4px;margin-top:6px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer; transition: background 0.3s;}
+        .btn-hit-me{background:var(--primary);color:white;width:100%;padding:4px;margin-top:6px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer; transition: filter 0.3s;}
+        .btn-hit-me:hover{filter:brightness(1.1);}
         .btn-hit-other{background:#94a3b8;color:white;width:100%;padding:4px;margin-top:3px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer}
         .stats-sub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
         .mini-stat{padding:12px 14px;border-radius:12px;border:1px solid rgba(0,0,0,0.03)}
@@ -143,7 +145,7 @@
         <h1>Wheel Spin Odds Calculator</h1>
         <div class="header-controls-row">
             <div class="header-btn-row">
-                <button class="btn-reset-ui" onclick="resetUIDefaults()">RESET UI / GRID</button>
+                <button class="btn-reset-ui" onclick="resetToInitialState()">RESET UI / GRID</button>
                 <button class="btn-reset-ui" onclick="restoreCards()">RESTORE CARDS</button>
             </div>
             <div class="switch-container">
@@ -168,7 +170,7 @@
                         <span id="save-status">SAVED</span>
                         <button onclick="saveLayout()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">SAVE</button>
                         <button onclick="loadLayout()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">LOAD</button>
-                        <button onclick="resetLayoutDefault()" style="background:#f8d7da; color:#721c24; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">RESET</button>
+                        <button onclick="resetToInitialState()" style="background:#f8d7da; color:#721c24; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">RESET</button>
                         <div class="card-controls" style="margin-left: 8px;">
                             <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
                             <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
@@ -446,7 +448,6 @@
 </div>
 
 <script>
-    // System mandated API Setup
     let apiKey = "";
     try { 
         if (window.self === window.top && !window.location.hostname.includes("google")) {
@@ -986,6 +987,7 @@
             { label: "Charizard X UPC", value: 140, remaining: 1, prized: true },
             { label: "Energy", value: 0, remaining: 9, prized: false }
         ];
+        localStorage.setItem('wheel_init_snapshot', JSON.stringify(inventory));
         rebuildDOMFromInventory();
         syncAndUI();
     }
@@ -1369,7 +1371,7 @@
                                     b1.isSleeping = false; b2.isSleeping = false;
                                 }
 
-                                if (!isMinimized && Math.abs(velAlongNormal) > 3.0 && overlap < 2.0 && (!b1.isSleeping || !b2.isSleeping)) {
+                                if (!isMinimized && Math.abs(velAlongNormal) > 2.5 && overlap < 2.0 && (!b1.isSleeping || !b2.isSleeping)) {
                                     b1.bounceCount = (b1.bounceCount || 0) + 1;
                                     playMarbleClack(Math.abs(velAlongNormal), b1.bounceCount);
                                 }
@@ -1830,10 +1832,10 @@
             let edge = Math.floor(Math.random() * 4);
             let startX, startY;
             let angleToCenter;
-            if (edge === 0) { startX = Math.random() * sizePx; startY = -10; angleToCenter = Math.PI / 2; } 
-            else if (edge === 1) { startX = sizePx + 10; startY = Math.random() * sizePx; angleToCenter = Math.PI; } 
-            else if (edge === 2) { startX = Math.random() * sizePx; startY = sizePx + 10; angleToCenter = -Math.PI / 2; } 
-            else { startX = -10; startY = Math.random() * sizePx; angleToCenter = 0; } 
+            if (edge === 0) { startX = Math.random() * sizePx; startY = -20; angleToCenter = Math.PI / 2; } 
+            else if (edge === 1) { startX = sizePx + 20; startY = Math.random() * sizePx; angleToCenter = Math.PI; } 
+            else if (edge === 2) { startX = Math.random() * sizePx; startY = sizePx + 20; angleToCenter = -Math.PI / 2; } 
+            else { startX = -20; startY = Math.random() * sizePx; angleToCenter = 0; } 
 
             let angle = angleToCenter + (Math.random() - 0.5) * 1.5; 
             let velocity = Math.random() * 20 + 8; 
@@ -2013,13 +2015,13 @@
         if (smoothedVel >= 0) { // Clockwise
             if (peg2 > -approachRad) {
                 // Peg dragging pointer DOWN -> Positive Flipper Angle
-                forceDeflect = (1 - (Math.abs(peg2) / approachRad)) * 45; 
+                forceDeflect = (1 - (Math.abs(peg2) / approachRad)) * 40; 
                 isForced = true;
             }
         } else { // Anti-Clockwise
             if (peg1 < approachRad) {
                 // Peg dragging pointer UP -> Negative Flipper Angle
-                forceDeflect = (1 - (peg1 / approachRad)) * -45; 
+                forceDeflect = (1 - (peg1 / approachRad)) * -40; 
                 isForced = true;
             }
         }
@@ -2233,15 +2235,22 @@
         
         try {
             prepareScrollerSpin(item); prepareGachaSpin(item); prepareWheelSpin(item);
+            
+            const bid = parseFloat(document.getElementById('bid-input').value || 0);
+            if (isUser) { sessionStats.spent += bid; sessionStats.won += item.value; }
+            history.unshift({ label: item.label, hitValue: item.value, bidValue: bid, isUser, time: new Date().toLocaleTimeString() });
+            item.remaining--;
+            
+            rebuildDOMFromInventory(); // Rebuild textboxes with new quantity first
+            updateHistoryUI(); 
+            updateOddsTable();
+            syncAndUI(); // Now safely sync
+
             await new Promise(r => setTimeout(r, 4000));
             
             clearInterval(countdownInterval);
             if(btnRoll) btnRoll.innerText = "CELEBRATING...";
             if(btnReroll) btnReroll.innerText = "CELEBRATING...";
-            
-            const bid = parseFloat(document.getElementById('bid-input').value || 0);
-            if (isUser) { sessionStats.spent += bid; sessionStats.won += item.value; }
-            history.unshift({ label: item.label, hitValue: item.value, bidValue: bid, isUser, time: new Date().toLocaleTimeString() });
             
             if (item.prized) {
                 playWin();
@@ -2251,15 +2260,11 @@
                     wrapper.classList.add('prize-glow');
                     setTimeout(() => wrapper.classList.remove('prize-glow'), 3000);
                 }
+                await new Promise(r => setTimeout(r, 3000));
             }
 
-            updateHistoryUI(); 
-            updateOddsTable();
-
-            await new Promise(r => setTimeout(r, 3000));
-            item.remaining--;
-
         } finally {
+            clearInterval(countdownInterval);
             isSpinning = false; 
             if(btnRoll) btnRoll.innerText = origRollTxt;
             if(btnReroll) btnReroll.innerText = origRerollTxt;
@@ -2530,7 +2535,14 @@
             if (item.prized) { prizeQty += item.remaining; prizeVal += (item.value * item.remaining); }
             if (item.remaining > 0) {
                 const group = document.createElement('div'); group.className = 'hit-group';
-                group.innerHTML = `<b style="font-size:0.75rem">${item.label}</b><br><span style="font-size:0.6rem; color:#64748b">${item.remaining} left</span><button class="btn-hit-me" onclick="recordSpin(${item.id}, true)">I HIT</button><button class="btn-hit-other" onclick="recordSpin(${item.id}, false)">OUT</button>`;
+                
+                let itemColor = 'var(--primary)';
+                const tMatch = templates.find(t => t.label === item.label);
+                if (tMatch) itemColor = tMatch.color;
+                
+                const starHTML = item.prized ? '<span style="color:var(--prize-color); text-shadow: 0 0 2px rgba(255,193,7,0.5);">★</span> ' : '';
+                
+                group.innerHTML = `<b style="font-size:0.75rem">${starHTML}${item.label}</b><br><span style="font-size:0.6rem; color:#64748b">${item.remaining} left</span><button class="btn-hit-me" style="background:${itemColor}" onclick="recordSpin(${item.id}, true)">I HIT</button><button class="btn-hit-other" onclick="recordSpin(${item.id}, false)">OUT</button>`;
                 container.appendChild(group);
             }
         });
@@ -2656,16 +2668,40 @@
         const c = document.getElementById('outcomes-container'); c.innerHTML = '';
         inventory.forEach(item => c.appendChild(createRowElement(item.label, item.value, item.remaining, item.prized)));
     }
+    
+    function resetToInitialState() {
+        const snap = localStorage.getItem('wheel_init_snapshot');
+        if (snap) {
+            inventory = JSON.parse(snap);
+        } else {
+            localStorage.removeItem('wheel_session');
+            loadDefaults();
+            return; 
+        }
+        history = []; 
+        sessionStats = { spent: 0, won: 0 }; 
+        rebuildDOMFromInventory();
+        syncAndUI();
+        showStatus("RESET", "var(--danger)");
+    }
     function resetLayoutDefault() { localStorage.removeItem('wheel_session'); loadDefaults(); }
     function clearHistory() { history = []; sessionStats = { spent: 0, won: 0 }; syncAndUI(); }
     
     function undoLastSpin() {
         if (history.length === 0 || isSpinning) return; const last = history.shift();
         const item = inventory.find(i => i.label === last.label); if (item) item.remaining++;
-        if (last.isUser) { sessionStats.spent -= parseFloat(document.getElementById('bid-input').value); sessionStats.won -= last.hitValue; }
+        if (last.isUser) { sessionStats.spent -= parseFloat(last.bidValue || 0); sessionStats.won -= last.hitValue; }
         rebuildDOMFromInventory(); syncAndUI();
     }
-    function initializeSession() { history = []; sessionStats = { spent: 0, won: 0 }; syncAndUI(); }
+    
+    function initializeSession() { 
+        history = []; 
+        sessionStats = { spent: 0, won: 0 }; 
+        localStorage.setItem('wheel_init_snapshot', JSON.stringify(inventory));
+        syncAndUI();
+        showStatus("SESSION INIT", "var(--success)");
+    }
+    
     function pcmToWav(b, s) { const l = b.byteLength, f = new ArrayBuffer(44 + l), v = new DataView(f); v.setUint32(0, 0x52494646, false); v.setUint32(4, 36 + l, true); v.setUint32(8, 0x57415645, false); v.setUint32(12, 0x666d7420, false); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, s, true); v.setUint32(28, s * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); v.setUint32(36, 0x64617461, false); v.setUint32(40, l, true); new Uint8Array(f, 44).set(new Uint8Array(b)); return f; }
     
     function updateHistoryUI() {
