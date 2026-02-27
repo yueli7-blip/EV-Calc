@@ -563,30 +563,35 @@
         if (!actx || !audioInit) return;
         if (actx.state === 'suspended') actx.resume();
         try {
+            let t = actx.currentTime;
+            if (t <= 0) t = 0.01;
             let osc = actx.createOscillator();
             let gain = actx.createGain();
             osc.type = type;
-            osc.frequency.setValueAtTime(freq, actx.currentTime);
-            gain.gain.setValueAtTime(vol, actx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + duration);
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(vol, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
             osc.connect(gain);
             gain.connect(actx.destination);
-            osc.start();
-            osc.stop(actx.currentTime + duration);
+            osc.start(t);
+            osc.stop(t + duration);
         } catch (e) {}
     }
 
     function playScrollerClick() { 
         if (!actx || !audioInit) return;
+        if (actx.state === 'suspended') actx.resume();
         try {
+            let t = actx.currentTime;
+            if (t <= 0) t = 0.01;
             let osc = actx.createOscillator(); let gain = actx.createGain();
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(300, actx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, actx.currentTime + 0.02);
-            gain.gain.setValueAtTime(0.2, actx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.02);
+            osc.frequency.setValueAtTime(300, t);
+            osc.frequency.exponentialRampToValueAtTime(100, t + 0.02);
+            gain.gain.setValueAtTime(0.2, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
             osc.connect(gain); gain.connect(actx.destination);
-            osc.start(); osc.stop(actx.currentTime + 0.02);
+            osc.start(t); osc.stop(t + 0.02);
         } catch(e) {}
     }
     
@@ -594,18 +599,20 @@
         if (!actx || !audioInit) return;
         if (actx.state === 'suspended') actx.resume();
         try {
+            let t = actx.currentTime;
+            if (t <= 0) t = 0.01;
             let osc = actx.createOscillator(); let gain = actx.createGain();
             osc.type = 'square';
-            osc.frequency.setValueAtTime(80, actx.currentTime);
-            gain.gain.setValueAtTime(0.15, actx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.015);
+            osc.frequency.setValueAtTime(80, t);
+            gain.gain.setValueAtTime(0.15, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
             
             let filter = actx.createBiquadFilter();
             filter.type = 'bandpass';
             filter.frequency.value = 600;
             
             osc.connect(filter); filter.connect(gain); gain.connect(actx.destination);
-            osc.start(); osc.stop(actx.currentTime + 0.02);
+            osc.start(t); osc.stop(t + 0.02);
         } catch (e) {}
     }
     
@@ -616,66 +623,70 @@
             for(let i=0; i<4; i++) {
                 setTimeout(() => {
                     if(actx.state !== 'running') return;
+                    let t = actx.currentTime;
                     let osc = actx.createOscillator(); let g = actx.createGain();
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(180 + Math.random()*40, actx.currentTime);
-                    g.gain.setValueAtTime(0.15, actx.currentTime);
-                    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.04);
+                    osc.frequency.setValueAtTime(180 + Math.random()*40, t);
+                    g.gain.setValueAtTime(0.15, t);
+                    g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
                     osc.connect(g); g.connect(actx.destination);
-                    osc.start(); osc.stop(actx.currentTime + 0.04);
+                    osc.start(t); osc.stop(t + 0.04);
                 }, i * 80); 
             }
 
             setTimeout(() => {
                 if(actx.state !== 'running') return;
+                let t = actx.currentTime;
                 let osc = actx.createOscillator(); let g = actx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(300, actx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(80, actx.currentTime + 0.1);
-                g.gain.setValueAtTime(0.4, actx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.15);
+                osc.frequency.setValueAtTime(300, t);
+                osc.frequency.exponentialRampToValueAtTime(80, t + 0.1);
+                g.gain.setValueAtTime(0.4, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
                 osc.connect(g); g.connect(actx.destination);
-                osc.start(); osc.stop(actx.currentTime + 0.15);
+                osc.start(t); osc.stop(t + 0.15);
             }, 380); 
         } catch(e){}
     }
     
-    const colLimit = { active: 0, last: 0 };
+    const clackTimes = [];
     function playMarbleClack(v) {
         if (!actx || !audioInit) return;
         let now = performance.now();
-        if (now - colLimit.last < 40) return; 
-        if (colLimit.active >= 4) return;
+        
+        while(clackTimes.length > 0 && now - clackTimes[0] > 50) { clackTimes.shift(); }
+        if (clackTimes.length >= 3) return; // Strict concurrent queue drop limit 
+        if (clackTimes.length > 0 && now - clackTimes[clackTimes.length - 1] < 15) return;
         
         let vol = Math.min(0.3, v * 0.04); 
         if (vol < 0.01) return;
 
-        colLimit.last = now;
-        colLimit.active++;
-        setTimeout(() => { colLimit.active = Math.max(0, colLimit.active - 1); }, 60);
+        clackTimes.push(now);
 
         if (actx.state === 'suspended') actx.resume();
 
         try {
+            let t = actx.currentTime;
+            if (t <= 0) t = 0.01;
             let baseFreq = 2000 + Math.random() * 500; 
             
             let osc1 = actx.createOscillator(); let gain1 = actx.createGain();
             osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(baseFreq, actx.currentTime);
-            gain1.gain.setValueAtTime(vol, actx.currentTime);
-            gain1.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.03);
+            osc1.frequency.setValueAtTime(baseFreq, t);
+            gain1.gain.setValueAtTime(vol, t);
+            gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
             
             let osc2 = actx.createOscillator(); let gain2 = actx.createGain();
             osc2.type = 'sine'; 
-            osc2.frequency.setValueAtTime(baseFreq * 1.5, actx.currentTime); 
-            gain2.gain.setValueAtTime(vol * 0.3, actx.currentTime);
-            gain2.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.02);
+            osc2.frequency.setValueAtTime(baseFreq * 1.5, t); 
+            gain2.gain.setValueAtTime(vol * 0.3, t);
+            gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
             
             osc1.connect(gain1); gain1.connect(actx.destination);
             osc2.connect(gain2); gain2.connect(actx.destination);
             
-            osc1.start(); osc1.stop(actx.currentTime + 0.03);
-            osc2.start(); osc2.stop(actx.currentTime + 0.02);
+            osc1.start(t); osc1.stop(t + 0.03);
+            osc2.start(t); osc2.stop(t + 0.02);
         } catch (e) {}
     }
 
@@ -750,32 +761,6 @@
 
     function triggerHaptic() {
         try { if (navigator.vibrate) navigator.vibrate(15); } catch(e) {}
-    }
-
-    function checkWheelHaptic() {
-        const module = document.getElementById('wheel-module');
-        if (module && module.classList.contains('minimized')) return;
-
-        const slots = getDistributedSlots();
-        if(slots.length === 0) return;
-        const step = (Math.PI * 2) / slots.length;
-        let targetIndex = slots.findIndex(s => s.prized); if (targetIndex === -1) targetIndex = 0;
-        const baseOffset = -(targetIndex * step + step / 2);
-        
-        let currentRotationOffset = baseOffset + wheelSpinAngle;
-        let normRot = currentRotationOffset % (Math.PI * 2);
-        if (normRot < 0) normRot += Math.PI * 2;
-        let currentSeg = Math.floor(normRot / step);
-        
-        if (currentSeg !== lastHapticSeg) { 
-            if (lastHapticSeg !== -1) { 
-                triggerHaptic(); 
-                playPegHit();
-                flipperAngle = -30; // Instant physics spring back on peg impact
-                flipperV = 0;
-            }
-            lastHapticSeg = currentSeg; 
-        }
     }
 
     function checkScrollerHaptic() {
@@ -1168,7 +1153,7 @@
                 if (dot > 0) { 
                     b.vx -= 1.1 * dot * nx; b.vy -= 1.1 * dot * ny; 
                     b.vx *= 0.85; b.vy *= 0.85; 
-                    if(!isMinimized && dot > 2.5) playMarbleClack(dot);
+                    if(!isMinimized && dot > 2.0) playMarbleClack(dot);
                 } 
             }
             
@@ -1194,7 +1179,7 @@
                             let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy, rvz = (b2.vz || 0) - (b1.vz || 0);
                             let velAlongNormal = rvx * nx + rvy * ny + rvz * nz;
                             if (velAlongNormal < -0.1) { 
-                                let restitution = phase === "chaos" ? 0.4 : 0.05;
+                                let restitution = phase === "chaos" ? 0.4 : 0.0;
                                 let impulse = -(1 + restitution) * velAlongNormal / 2; 
                                 if (b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
                                 if (b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
@@ -1202,7 +1187,7 @@
                                 if (b1 !== gachaState.draggedBall) { b1.vx *= 0.92; b1.vy *= 0.92; }
                                 if (b2 !== gachaState.draggedBall) { b2.vx *= 0.92; b2.vy *= 0.92; }
 
-                                if (!isMinimized && Math.abs(velAlongNormal) > 2.5) playMarbleClack(Math.abs(velAlongNormal));
+                                if (!isMinimized && Math.abs(velAlongNormal) > 2.0) playMarbleClack(Math.abs(velAlongNormal));
                             }
                         }
                     }
@@ -1807,24 +1792,24 @@
 
         let forceDeflect = 0;
         let isForced = false;
-        let approach = 0.15; 
+        let hitBoxRad = 0.12; 
 
-        let effectiveRot = currentRotationOffset + 0.08;
-        let norm = effectiveRot % step;
+        let norm = currentRotationOffset % step;
         if (norm < 0) norm += step;
-        let fraction = norm / step; 
-        let segIndex = Math.floor(effectiveRot / step);
+        
+        let pegCW = norm - step; 
+        let pegCCW = norm;       
 
-        if (smoothedVel >= 0) { // Clockwise
-            if (fraction > 1 - approach) {
-                // Peg drags pointer DOWN -> Positive Flipper Angle
-                forceDeflect = ((fraction - (1 - approach)) / approach) * 35; 
+        if (smoothedVel >= 0) { 
+            if (pegCW > -hitBoxRad) {
+                let push = (pegCW + hitBoxRad) / hitBoxRad; 
+                forceDeflect = push * -45; 
                 isForced = true;
             }
-        } else { // Anti-Clockwise
-            if (fraction < approach) {
-                // Peg drags pointer UP -> Negative Flipper Angle
-                forceDeflect = ((approach - fraction) / approach) * -35; 
+        } else { 
+            if (pegCCW < hitBoxRad) {
+                let push = (hitBoxRad - pegCCW) / hitBoxRad; 
+                forceDeflect = push * 45; 
                 isForced = true;
             }
         }
@@ -1838,12 +1823,12 @@
             flipperAngle += flipperV;
         }
         
+        let segIndex = Math.floor(currentRotationOffset / step);
         if (lastHapticSeg !== -1 && segIndex !== lastHapticSeg) {
             if (isSpinning || wheelDragState || Math.abs(smoothedVel) > 0.01) {
                 triggerHaptic();
                 playPegHit();
-                // Kick spring back when peg slips past
-                flipperV = (smoothedVel >= 0) ? -35 : 35; 
+                flipperV = (smoothedVel >= 0) ? 45 : -45; 
             }
         }
         lastHapticSeg = segIndex;
@@ -2006,6 +1991,7 @@
             let t = (time - startTime) / 4000; if (t > 1) t = 1;
             const ease = 1 - Math.pow(1 - t, 4); 
             wheelSpinAngle = startAngle + (targetAngle - startAngle) * ease;
+            requestAnimationFrame(drawWheel);
             if (t < 1 && isSpinning) requestAnimationFrame(animateWheel);
         }
         requestAnimationFrame(animateWheel);
