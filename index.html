@@ -3,13 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Odds Advantage Calculator | Pro Strategy Suite</title>
+    <title>Wheel Spin Odds Calculator | Pro Strategy Suite</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root{--primary:#007BFF;--success:#28a745;--danger:#dc3545;--warning:#ffc107;--bg:#f4f7f9;--card-bg:#ffffff;--text:#2d3436;--prize-color:#ffc107;--other:#6c757d;--ai-glow:#7c3aed;--border:#e1e8ed;--color-spc:#0ea5e9;--color-etb:#a855f7;--color-upc:#f97316;--color-ex:#0d9488;--color-warriors:#ca8a04;--color-tusk:#991b1b;--color-energy:#94a3b8;--color-ah-etb:#10b981;--color-ah-pc:#6366f1}
+        
+        /* Seller Mode Visual Indicators */
+        body.seller-mode {
+            --primary: #ef4444; 
+            --bg: #fff5f5;
+        }
+
         .inventory-grid-config{display:grid;grid-template-columns:35px 1.3fr 65px 110px 25px;gap:8px;align-items:center}
         *{box-sizing:border-box}
-        html,body{min-height:100vh;overflow-y:auto;overflow-x:hidden}
+        html,body{min-height:100vh;overflow-y:auto;overflow-x:hidden; transition: background-color 0.3s;}
         body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.4;display:block;user-select:none;padding-bottom:40px; -webkit-user-select: none; -webkit-touch-callout: none;}
         input,.ev-value,.history-item,.card span,.card td,.card th,.card b,.mini-value,.mini-label,.header-ai-tip{user-select:text; -webkit-user-select:text; -webkit-touch-callout:default;}
         body.dragging-active,body.dragging-active *{cursor:grabbing!important}
@@ -17,12 +24,25 @@
         
         .app-header { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 8px 0 24px; text-align: center; width: 100%; }
         .app-header h1 { font-size: 1.8rem; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.03em; }
-        .header-btn-row { display: flex; gap: 8px; justify-content: center; }
+        .header-controls-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .header-btn-row { display: flex; gap: 8px; }
 
         .btn-reset-ui{width:fit-content;padding:6px 14px;font-size:0.7rem;font-weight:800;background:#fff;border:1.5px solid #cbd5e1;color:#64748b;border-radius:8px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
         .btn-reset-ui:hover{border-color:var(--primary);color:var(--primary);background:#f8fafc;transform:translateY(-1px)}
         body.wheel-resizing,body.wheel-resizing *{cursor:col-resize!important}
         
+        /* Toggle Switch Styles */
+        .switch-container { display: flex; align-items: center; justify-content: center; gap: 10px; background: #fff; padding: 6px 16px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border); margin: 0; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; margin: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3b82f6; transition: .3s; border-radius: 22px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.3);}
+        input:checked + .slider { background-color: #ef4444; }
+        input:checked + .slider:before { transform: translateX(22px); }
+        .mode-label { font-size: 0.75rem; font-weight: 800; color: #94a3b8; transition: color 0.3s; cursor: pointer; }
+        .mode-label.active.buyer { color: #3b82f6; }
+        .mode-label.active.seller { color: #ef4444; }
+
         .dashboard{display:flex;flex-direction:row;align-items:flex-start;gap:16px;width:100%;}
         .dashboard-col{display:flex;flex-direction:column;gap:16px;flex:1 1 0;min-width:280px;height:max-content;padding-bottom:60px;transition:flex 0.2s ease}
         @media(max-width:800px){.dashboard{flex-wrap:wrap}.dashboard-col{flex:1 1 100%}}
@@ -60,7 +80,7 @@
         .scroller-window{width:100%;overflow-x:auto;overflow-y:hidden;padding:10px 0;scrollbar-width:none;cursor:grab; touch-action: pan-y;}
         .scroller-window::-webkit-scrollbar { display: none; }
         .scroller-window:active{cursor:grabbing}
-        .scroller-pointer{position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:var(--primary);z-index:10;border-radius:2px;box-shadow:0 0 5px rgba(0,0,0,0.3);pointer-events:none}
+        .scroller-pointer{position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:var(--primary);z-index:10;border-radius:2px;box-shadow:0 0 5px rgba(0,0,0,0.3);pointer-events:none; transition: background 0.3s;}
         .scroller-track{display:flex;gap:6px;width:max-content}
         .scroller-item{flex:0 0 160px;height:85px;border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:bold;text-align:center;padding:8px;line-height:1.2;background:white;color:#475569;word-break:break-word;user-select:none; -webkit-user-select: none;}
         .scroller-item.prized{background:linear-gradient(135deg,#fef08a,#facc15);color:#856404;border-color:#eab308;font-size:0.65rem}
@@ -68,7 +88,7 @@
         .template-area {display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px;}
         .btn-template{border:1px solid rgba(0,0,0,0.1);padding:6px;border-radius:6px;font-size:0.65rem;font-weight:700;transition:all 0.2s;color:white;cursor:pointer}
         .btn-template:hover{filter:brightness(1.1);transform:translateY(-1px)}
-        .btn-add{background:#f1f5f9;color:var(--primary);padding:8px;width:100%;border-radius:8px;margin-top:12px;margin-bottom:8px;font-weight:800;border:1px dashed #cbd5e1;font-size:0.65rem;text-transform:uppercase;cursor:pointer}
+        .btn-add{background:#f1f5f9;color:var(--primary);padding:8px;width:100%;border-radius:8px;margin-top:12px;margin-bottom:8px;font-weight:800;border:1px dashed #cbd5e1;font-size:0.65rem;text-transform:uppercase;cursor:pointer; transition: color 0.3s;}
         input{padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.85rem;width:100%;cursor:text;font-family:inherit}
         .qty-stepper{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:2px}
         .step-btn{width:24px;height:24px;border-radius:4px;border:none;background:#f1f5f9;color:#475569;font-weight:800;font-size:1rem;cursor:pointer;user-select:none; -webkit-user-select: none;}
@@ -81,7 +101,7 @@
         .header-ai-tip{font-size:0.75rem;font-style:italic;color:#475569;line-height:1.3;max-height:2.6em;overflow:hidden}
         .hit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:8px}
         .hit-group{background:#fff;border:1px solid var(--border);padding:6px;border-radius:8px;text-align:center}
-        .btn-hit-me{background:var(--primary);color:white;width:100%;padding:4px;margin-top:6px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer}
+        .btn-hit-me{background:var(--primary);color:white;width:100%;padding:4px;margin-top:6px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer; transition: background 0.3s;}
         .btn-hit-other{background:#94a3b8;color:white;width:100%;padding:4px;margin-top:3px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer}
         .stats-sub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
         .mini-stat{padding:12px 14px;border-radius:12px;border:1px solid rgba(0,0,0,0.03)}
@@ -120,10 +140,20 @@
 
 <div class="app-container">
     <div class="app-header">
-        <h1>Odds Advantage Calculator</h1>
-        <div class="header-btn-row">
-            <button class="btn-reset-ui" onclick="resetUIDefaults()">RESET UI / GRID</button>
-            <button class="btn-reset-ui" onclick="restoreCards()">RESTORE CARDS</button>
+        <h1>Wheel Spin Odds Calculator</h1>
+        <div class="header-controls-row">
+            <div class="header-btn-row">
+                <button class="btn-reset-ui" onclick="resetUIDefaults()">RESET UI / GRID</button>
+                <button class="btn-reset-ui" onclick="restoreCards()">RESTORE CARDS</button>
+            </div>
+            <div class="switch-container">
+                <span id="label-buyer" class="mode-label active buyer" onclick="document.getElementById('mode-checkbox').click()">BUYER</span>
+                <label class="switch">
+                    <input type="checkbox" id="mode-checkbox" onchange="toggleMode()">
+                    <span class="slider"></span>
+                </label>
+                <span id="label-seller" class="mode-label seller" onclick="document.getElementById('mode-checkbox').click()">SELLER</span>
+            </div>
         </div>
     </div>
     
@@ -221,7 +251,7 @@
 
             <div class="card" id="card-bid">
                 <div class="section-title">
-                    <span>2. Active Bid Control</span>
+                    <span id="bid-control-title">2. Current Bid</span>
                     <div class="card-controls">
                         <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
                         <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
@@ -233,7 +263,7 @@
                         <input type="number" id="bid-input" value="10" style="width:75px; height:34px; text-align:center; font-weight:800; border-radius:8px;" oninput="syncAndUI()">
                         <button onmousedown="startAdjust(event, this, 1, document.getElementById('bid-input'))" ontouchstart="startAdjust(event, this, 1, document.getElementById('bid-input'))" onmouseleave="stopAdjust()" class="step-btn" style="width:34px; height:34px; font-size:1.2rem;">+</button>
                     </div>
-                    <div style="text-align: right;"><span class="mini-label">Bid ROI</span><span id="stat-diff-perc" style="font-weight:900; color:var(--primary); font-size: 1.2rem;">0.00%</span></div>
+                    <div style="text-align: right;"><span class="mini-label" id="bid-roi-label">Bid ROI</span><span id="stat-diff-perc" style="font-weight:900; color:var(--primary); font-size: 1.2rem;">0.00%</span></div>
                 </div>
             </div>
             
@@ -263,7 +293,7 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; justify-content: space-between;">
-                    <button id="btn-sim-roll" onclick="simulateResult()" style="flex: 1; background: var(--ai-glow); color: white; border: none; padding: 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: filter 0.2s; white-space: nowrap;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">SIMULATE ROLL</button>
+                    <button id="btn-sim-roll" onclick="simulateResult()" style="flex: 1; background: var(--primary); color: white; border: none; padding: 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: filter 0.2s; white-space: nowrap;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">SIMULATE ROLL</button>
                     <button id="btn-sim-reroll" onclick="rerollSimulation()" style="flex: 1; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: background 0.2s; white-space: nowrap;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">REROLL</button>
                     <button onclick="undoLastSpin()" style="flex: 0.5; background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; padding: 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">UNDO</button>
                 </div>
@@ -416,13 +446,29 @@
 </div>
 
 <script>
-    // System mandated API Setup 
     let apiKey = "";
     try { 
         if (window.self === window.top && !window.location.hostname.includes("google")) {
             apiKey = "AIzaSyCwzToTspxne2FuFOd8_VxRXxqGkrBZP4Y";
         }
     } catch(e) {}
+
+    let appMode = 'buyer'; 
+    function toggleMode() {
+        const cb = document.getElementById('mode-checkbox');
+        appMode = cb.checked ? 'seller' : 'buyer';
+        document.getElementById('label-buyer').classList.toggle('active', appMode === 'buyer');
+        document.getElementById('label-seller').classList.toggle('active', appMode === 'seller');
+        
+        if (appMode === 'seller') {
+            document.body.classList.add('seller-mode');
+        } else {
+            document.body.classList.remove('seller-mode');
+        }
+        
+        document.getElementById('bid-roi-label').innerText = appMode === 'buyer' ? 'Bid ROI' : 'Price ROI';
+        syncAndUI();
+    }
 
     // --- TEMPLATE ENGINE ---
     let templates = [];
@@ -434,7 +480,8 @@
         { label: 'Warriors', value: 120, color: '#ca8a04', prized: true },
         { label: 'Great Tusk', value: 140, color: '#991b1b', prized: true },
         { label: 'Ascended ETB', value: 80, color: '#10b981', prized: true },
-        { label: 'Ascended PC ETB', value: 150, color: '#6366f1', prized: true },
+        { label: 'Ascended PC ETB', value: 200, color: '#6366f1', prized: true },
+        { label: 'Brilliant Stars PC ETB', value: 120, color: '#eab308', prized: true },
         { label: 'Energy', value: 0, color: '#94a3b8', prized: false }
     ];
 
@@ -547,7 +594,6 @@
         nameInput.value = ''; valInput.value = ''; prizeToggle.classList.remove('active');
         renderTemplateEditList();
     }
-
 
     // --- AUDIO ENGINE ---
     let actx = null;
@@ -1239,9 +1285,9 @@
             // Sleep evaluation
             let speed = Math.hypot(b.vx, b.vy);
             if (phase === "settle") {
-                if (speed < 0.5) b.sleepFrames = (b.sleepFrames || 0) + 1;
+                if (speed < 0.25 && b.y > innerR * 0.2) b.sleepFrames = (b.sleepFrames || 0) + 1;
                 else b.sleepFrames = 0;
-                b.isSleeping = b.sleepFrames > 15;
+                b.isSleeping = b.sleepFrames > 10;
             } else {
                 b.sleepFrames = 0; b.isSleeping = false;
             }
@@ -1254,7 +1300,8 @@
             } else {
                 if (!b.isSleeping) {
                     b.vy += 0.32; // 10% weaker gravity 
-                    let drag = 0.96; b.vx *= drag; b.vy *= drag; 
+                    let drag = b.y > innerR * 0.5 ? 0.92 : 0.98; // more friction near bottom 
+                    b.vx *= drag; b.vy *= drag; 
                 } else {
                     b.vx = 0; b.vy = 0; 
                 }
@@ -1273,10 +1320,10 @@
                 let dot = b.vx * nx + b.vy * ny;
                 if (dot > 0) { 
                     b.vx -= 1.1 * dot * nx; b.vy -= 1.1 * dot * ny; 
-                    b.vx *= 0.9; b.vy *= 0.9; // Less friction
+                    b.vx *= 0.8; b.vy *= 0.8; 
                     
                     if (dot > 0.5) { b.sleepFrames = 0; b.isSleeping = false; }
-                    if (!isMinimized && dot > 2.5 && !b.isSleeping) {
+                    if (!isMinimized && dot > 3.0 && !b.isSleeping) {
                         b.bounceCount = (b.bounceCount || 0) + 1;
                         playMarbleClack(dot, b.bounceCount);
                     }
@@ -1307,12 +1354,21 @@
                                 if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
                                 if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
                                 
+                                // Extreme kinetic drain to force massive clumps to stop vibrating
+                                if (Math.abs(velAlongNormal) < 2.0) {
+                                    if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.5; b1.vy *= 0.5; }
+                                    if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.5; b2.vy *= 0.5; }
+                                } else {
+                                    if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.95; b1.vy *= 0.95; }
+                                    if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.95; b2.vy *= 0.95; }
+                                }
+
                                 if (Math.abs(velAlongNormal) > 0.5) {
                                     b1.sleepFrames = 0; b2.sleepFrames = 0;
                                     b1.isSleeping = false; b2.isSleeping = false;
                                 }
 
-                                if (!isMinimized && Math.abs(velAlongNormal) > 2.5 && overlap < 2.0 && (!b1.isSleeping || !b2.isSleeping)) {
+                                if (!isMinimized && Math.abs(velAlongNormal) > 3.0 && overlap < 2.0 && (!b1.isSleeping || !b2.isSleeping)) {
                                     b1.bounceCount = (b1.bounceCount || 0) + 1;
                                     playMarbleClack(Math.abs(velAlongNormal), b1.bounceCount);
                                 }
@@ -1390,7 +1446,7 @@
             let floorY = sizePx - bR;
             if (activeBall.y > floorY) {
                 activeBall.y = floorY; 
-                if (!isMinimized && activeBall.vy > 1.0) {
+                if (!isMinimized && activeBall.vy > 1.5) {
                     activeBall.bounceCount = (activeBall.bounceCount || 0) + 1;
                     playMarbleClack(activeBall.vy * 2, activeBall.bounceCount);
                 } else if (activeBall.vy <= 0.5) activeBall.bounceCount = 0;
@@ -1773,10 +1829,10 @@
             let edge = Math.floor(Math.random() * 4);
             let startX, startY;
             let angleToCenter;
-            if (edge === 0) { startX = Math.random() * sizePx; startY = 0; angleToCenter = Math.PI / 2; } 
-            else if (edge === 1) { startX = sizePx; startY = Math.random() * sizePx; angleToCenter = Math.PI; } 
-            else if (edge === 2) { startX = Math.random() * sizePx; startY = sizePx; angleToCenter = -Math.PI / 2; } 
-            else { startX = 0; startY = Math.random() * sizePx; angleToCenter = 0; } 
+            if (edge === 0) { startX = Math.random() * sizePx; startY = -10; angleToCenter = Math.PI / 2; } 
+            else if (edge === 1) { startX = sizePx + 10; startY = Math.random() * sizePx; angleToCenter = Math.PI; } 
+            else if (edge === 2) { startX = Math.random() * sizePx; startY = sizePx + 10; angleToCenter = -Math.PI / 2; } 
+            else { startX = -10; startY = Math.random() * sizePx; angleToCenter = 0; } 
 
             let angle = angleToCenter + (Math.random() - 0.5) * 1.5; 
             let velocity = Math.random() * 20 + 8; 
@@ -2372,7 +2428,7 @@
             try {
                 const response = await fetch(url, { 
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: "Concise Strategy consultant." }] } }) 
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: `Concise Strategy consultant. Mode is ${appMode.toUpperCase()}` }] } }) 
                 });
                 if (response.ok) { 
                     updateAIStatus(`Success! Reading response...`);
@@ -2397,7 +2453,7 @@
         box.innerHTML = `<span class="loading-spinner"></span>`;
         updateAIStatus("CLEAR"); updateAIStatus("Initializing strategy calculation...");
         const snap = { ev: document.getElementById('stat-ev').innerText, bid: document.getElementById('bid-input').value, roi: document.getElementById('stat-diff-perc').innerText };
-        const res = await callGemini(`EV: ${snap.ev}, Bid: £${snap.bid}, ROI: ${snap.roi}. Concise tip?`);
+        const res = await callGemini(`Mode: ${appMode.toUpperCase()}, EV: ${snap.ev}, Target Price: £${snap.bid}, ROI: ${snap.roi}. Concise tip?`);
         if (res.error) { box.innerText = res.error; updateAIStatus(res.error); } 
         else { lastAdvice = res.text; box.innerText = res.text; updateAIStatus("Advice successfully rendered."); setTimeout(() => updateAIStatus("CLEAR"), 6000); }
     }
@@ -2484,10 +2540,24 @@
         safeSet('stat-ev', `£${ev.toFixed(2)}`); safeSet('stat-slots', totalSlots);
         safeSet('stat-prize-prob', `${totalSlots > 0 ? (prizeQty / totalSlots * 100).toFixed(0) : 0}%`);
         safeSet('stat-avg-prize', `£${prizeQty > 0 ? (prizeVal / prizeQty).toFixed(2) : '0.00'}`);
-        safeSet('stat-diff-perc', `${bid > 0 ? ((ev - bid) / bid * 100).toFixed(2) : 0}%`);
         safeSet('setup-total-slots-info', `Total Slots: ${totalSlots}`);
+        
+        let diffPerc = 0;
+        if (appMode === 'buyer') {
+            diffPerc = bid > 0 ? ((ev - bid) / bid * 100) : 0;
+        } else {
+            diffPerc = ev > 0 ? ((bid - ev) / ev * 100) : 0;
+        }
+        safeSet('stat-diff-perc', `${diffPerc.toFixed(2)}%`);
+        
         const card = document.getElementById('card-ev');
-        if (card) card.style.borderLeft = `10px solid ${ev >= bid * 1.1 ? 'var(--success)' : (ev >= bid ? 'var(--warning)' : 'var(--danger)')}`;
+        if (card) {
+            if (appMode === 'buyer') {
+                card.style.borderLeft = `10px solid ${ev >= bid * 1.1 ? 'var(--success)' : (ev >= bid ? 'var(--warning)' : 'var(--danger)')}`;
+            } else {
+                card.style.borderLeft = `10px solid ${bid >= ev * 1.1 ? 'var(--success)' : (bid >= ev ? 'var(--warning)' : 'var(--danger)')}`;
+            }
+        }
 
         if(!isSpinning) {
             const slots = getDistributedSlots();
@@ -2540,13 +2610,26 @@
         const grid = document.getElementById('heatmap-grid'); if (!grid) return;
         const total = inventory.reduce((a, b) => a + b.remaining, 0), sum = inventory.reduce((a, b) => a + (b.value * b.remaining), 0);
         const ev = total > 0 ? sum / total : 0; grid.innerHTML = '';
-        for (let price = Math.floor(ev); price > 0; price--) {
-            const roi = ((ev - price) / price * 100); if (roi < 0) continue; 
-            const row = document.createElement('div'); row.className = 'heatmap-row heatmap-grid-layout';
-            row.style.background = roi >= 20 ? '#dcfce7' : (roi >= 10 ? '#f0fdf4' : '#fffbeb');
-            row.onclick = () => { document.getElementById('bid-input').value = price; syncAndUI(); };
-            row.innerHTML = `<div style="text-align:center; font-size:0.7rem; font-weight:800;">£${price}</div><div style="text-align:center; font-size:0.7rem; font-weight:800;">${roi.toFixed(1)}%</div><div style="text-align:center; font-size:0.7rem; font-weight:800;">£${(ev-price).toFixed(2)}</div>`;
-            grid.appendChild(row); if (roi > 28) break;
+        
+        if (appMode === 'buyer') {
+            for (let price = Math.floor(ev); price > 0; price--) {
+                const roi = ((ev - price) / price * 100); if (roi < 0) continue; 
+                const row = document.createElement('div'); row.className = 'heatmap-row heatmap-grid-layout';
+                row.style.background = roi >= 20 ? '#dcfce7' : (roi >= 10 ? '#f0fdf4' : '#fffbeb');
+                row.onclick = () => { document.getElementById('bid-input').value = price; syncAndUI(); };
+                row.innerHTML = `<div style="text-align:center; font-size:0.7rem; font-weight:800;">£${price}</div><div style="text-align:center; font-size:0.7rem; font-weight:800;">${roi.toFixed(1)}%</div><div style="text-align:center; font-size:0.7rem; font-weight:800;">£${(ev-price).toFixed(2)}</div>`;
+                grid.appendChild(row); if (roi > 28) break;
+            }
+        } else {
+            for (let price = Math.ceil(ev); price <= Math.ceil(ev * 2.5); price++) {
+                if (price === 0) continue;
+                const roi = ev > 0 ? ((price - ev) / ev * 100) : 0; if (roi < 0) continue; 
+                const row = document.createElement('div'); row.className = 'heatmap-row heatmap-grid-layout';
+                row.style.background = roi >= 20 ? '#dcfce7' : (roi >= 10 ? '#f0fdf4' : '#fffbeb');
+                row.onclick = () => { document.getElementById('bid-input').value = price; syncAndUI(); };
+                row.innerHTML = `<div style="text-align:center; font-size:0.7rem; font-weight:800;">£${price}</div><div style="text-align:center; font-size:0.7rem; font-weight:800;">${roi.toFixed(1)}%</div><div style="text-align:center; font-size:0.7rem; font-weight:800;">£${(price-ev).toFixed(2)}</div>`;
+                grid.appendChild(row); if (roi > 35) break;
+            }
         }
     }
 
