@@ -1,0 +1,14 @@
+name: Inject Secrets
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace Placeholder with Secret
+        run: |
+          sed -i 's/REPLACE_ME_WITH_KEY/${{ secrets.MY_API_KEY }}/g' index.html
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: . # or your build folder
