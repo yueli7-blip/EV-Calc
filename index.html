@@ -10,8 +10,8 @@
         .inventory-grid-config{display:grid;grid-template-columns:35px 1.3fr 65px 110px 25px;gap:8px;align-items:center}
         *{box-sizing:border-box}
         html,body{min-height:100vh;overflow-y:auto;overflow-x:hidden}
-        body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.4;display:block;user-select:none;padding-bottom:40px;}
-        input,.ev-value,.history-item,.card span,.card td,.card th,.card b,.mini-value,.mini-label,.header-ai-tip{user-select:text}
+        body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.4;display:block;user-select:none;padding-bottom:40px; -webkit-user-select: none; -webkit-touch-callout: none;}
+        input,.ev-value,.history-item,.card span,.card td,.card th,.card b,.mini-value,.mini-label,.header-ai-tip{user-select:text; -webkit-user-select:text; -webkit-touch-callout:default;}
         body.dragging-active,body.dragging-active *{cursor:grabbing!important}
         .app-container{max-width:1900px;width:100%;padding:16px;margin: 0 auto;}
         
@@ -27,16 +27,15 @@
         .dashboard-col{display:flex;flex-direction:column;gap:16px;flex:1 1 0;min-width:280px;height:max-content;padding-bottom:60px;transition:flex 0.2s ease}
         @media(max-width:800px){.dashboard{flex-wrap:wrap}.dashboard-col{flex:1 1 100%}}
         
-        .card{background:var(--card-bg);padding:16px 20px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border:1px solid var(--border);position:relative;transition:border-color 0.2s,box-shadow 0.2s;cursor:grab;width:100%;flex:0 0 auto}
+        .card{background:var(--card-bg);padding:16px 20px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border:1px solid var(--border);position:relative;transition:border-color 0.2s,box-shadow 0.2s;cursor:grab;width:100%;flex:0 0 auto; -webkit-user-select: none; -webkit-touch-callout: none;}
         .card:hover{border-color:#cbd5e1}
-        .card span,.card td,.card th,.card b,.mini-value,.mini-label,.ev-value,.header-ai-tip{cursor:text}
         
         .card.dragging-active-card{opacity:1!important;box-shadow:0 25px 50px -12px rgba(0,0,0,0.3)!important;z-index:999999!important;cursor:grabbing!important; transform:scale(1.02) rotate(1deg);}
         .card.placeholder{background-color:#f1f5f9;border:2px dashed #cbd5e1;opacity:0.5;box-shadow:none;pointer-events:none;visibility:visible!important;}
         
         .col-left .resizable-card,.col-right .resizable-card{width:100%!important;height:auto!important;aspect-ratio:1}
         .col-left .resize-handle,.col-right .resize-handle{display:none!important}
-        .section-title{font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;cursor:inherit}
+        .section-title{font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;cursor:inherit; touch-action:none;}
         .sub-text{font-size:0.5rem;opacity:0.6;text-transform:lowercase;font-weight:600}
         .card-controls{display:flex;gap:4px;align-items:center}
         .card-btn{background:none;border:none;color:#94a3b8;font-weight:bold;cursor:pointer;font-size:1.1rem;padding:0 4px;line-height:0.8;transition:color 0.2s}
@@ -52,19 +51,18 @@
         .resize-handle{position:absolute;bottom:4px;right:4px;width:32px;height:32px;background:radial-gradient(circle at center,#94a3b8 2.5px,transparent 2.5px);background-size:8px 8px;z-index:10;pointer-events:auto;opacity:0.4;transition:opacity 0.2s;cursor:nwse-resize}
         .resize-handle:hover{opacity:1}
         
-        /* Thin pointer adjusted to the right */
         .wheel-pointer{position:absolute;right:0px;top:50%;width:35px;height:14px;margin-top:-7px;transform-origin:30px 7px;z-index:10;will-change:transform;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3));}
         
         .prob-bar-wrapper{width:100%;height:24px;border-radius:6px;overflow:hidden;display:flex;background:#e2e8f0;border:1px solid rgba(0,0,0,0.05)}
         .prob-segment{height:100%;transition:width 0.4s cubic-bezier(0.4,0,0.2,1);border-right:1px solid rgba(255,255,255,0.2);position:relative}
         .prob-segment:hover{filter:brightness(1.1);cursor:help}
         .scroller-wrapper{position:relative;width:100%;border-radius:10px;border:1px solid var(--border);background:#f8fafc;overflow:hidden; transition: all 0.3s;}
-        .scroller-window{width:100%;overflow-x:auto;overflow-y:hidden;padding:10px 0;scrollbar-width:none;cursor:grab}
+        .scroller-window{width:100%;overflow-x:auto;overflow-y:hidden;padding:10px 0;scrollbar-width:none;cursor:grab; touch-action: pan-y;}
         .scroller-window::-webkit-scrollbar { display: none; }
         .scroller-window:active{cursor:grabbing}
         .scroller-pointer{position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:var(--primary);z-index:10;border-radius:2px;box-shadow:0 0 5px rgba(0,0,0,0.3);pointer-events:none}
         .scroller-track{display:flex;gap:6px;width:max-content}
-        .scroller-item{flex:0 0 160px;height:85px;border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:bold;text-align:center;padding:8px;line-height:1.2;background:white;color:#475569;word-break:break-word;user-select:none}
+        .scroller-item{flex:0 0 160px;height:85px;border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:bold;text-align:center;padding:8px;line-height:1.2;background:white;color:#475569;word-break:break-word;user-select:none; -webkit-user-select: none;}
         .scroller-item.prized{background:linear-gradient(135deg,#fef08a,#facc15);color:#856404;border-color:#eab308;font-size:0.65rem}
         .slot-row{padding:6px 10px;border-radius:8px;background:#f8fafc;border:1px solid #f1f5f9}
         .template-area {display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px;}
@@ -73,7 +71,7 @@
         .btn-add{background:#f1f5f9;color:var(--primary);padding:8px;width:100%;border-radius:8px;margin-top:12px;margin-bottom:8px;font-weight:800;border:1px dashed #cbd5e1;font-size:0.65rem;text-transform:uppercase;cursor:pointer}
         input{padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.85rem;width:100%;cursor:text;font-family:inherit}
         .qty-stepper{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:2px}
-        .step-btn{width:24px;height:24px;border-radius:4px;border:none;background:#f1f5f9;color:#475569;font-weight:800;font-size:1rem;cursor:pointer;user-select:none}
+        .step-btn{width:24px;height:24px;border-radius:4px;border:none;background:#f1f5f9;color:#475569;font-weight:800;font-size:1rem;cursor:pointer;user-select:none; -webkit-user-select: none;}
         .step-btn:active{background:#e2e8f0}
         .btn-init{background:#1e293b;color:white;width:100%;padding:10px;font-size:0.75rem;font-weight:800;border-radius:8px;text-transform:uppercase;border:none;margin-top:4px;cursor:pointer}
         .prominent-ev-card{background:linear-gradient(135deg,#fff9e6 0%,#fffbeb 100%);border:1.5px solid var(--prize-color)}
@@ -112,7 +110,7 @@
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-card { background: white; padding: 20px; border-radius: 12px; width: 420px; max-width: 90vw; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display:flex; flex-direction:column; gap: 12px; max-height: 80vh;}
-        .modal-overlay *, .modal-card * { user-select: text !important; cursor: auto; }
+        .modal-overlay *, .modal-card * { user-select: text !important; cursor: auto; -webkit-user-select: text !important;}
     </style>
 </head>
 <body>
@@ -265,8 +263,8 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; justify-content: space-between;">
-                    <button onclick="simulateResult()" style="flex: 1; background: var(--ai-glow); color: white; border: none; padding: 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: filter 0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">SIMULATE NEXT</button>
-                    <button onclick="rerollSimulation()" style="flex: 1; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">REROLL</button>
+                    <button id="btn-sim-roll" onclick="simulateResult()" style="flex: 1; background: var(--ai-glow); color: white; border: none; padding: 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: filter 0.2s; white-space: nowrap;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">SIMULATE ROLL</button>
+                    <button id="btn-sim-reroll" onclick="rerollSimulation()" style="flex: 1; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: background 0.2s; white-space: nowrap;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">REROLL</button>
                     <button onclick="undoLastSpin()" style="flex: 0.5; background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; padding: 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">UNDO</button>
                 </div>
             </div>
@@ -418,7 +416,7 @@
 </div>
 
 <script>
-    // System mandated API Setup
+    // System mandated API Setup 
     let apiKey = "";
     try { 
         if (window.self === window.top && !window.location.hostname.includes("google")) {
@@ -580,6 +578,17 @@
             } else {
                 let cb = document.getElementById('haptic-checkbox');
                 if (cb) { cb.click(); }
+                // Psychoacoustic bass bump for iOS lack of haptics
+                if (actx && audioInit && actx.state === 'running') {
+                    let t = actx.currentTime;
+                    let osc = actx.createOscillator(); let gain = actx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(50, t);
+                    gain.gain.setValueAtTime(0.08, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+                    osc.connect(gain); gain.connect(actx.destination);
+                    osc.start(t); osc.stop(t + 0.02);
+                }
             }
         } catch(e) {}
     }
@@ -645,18 +654,18 @@
         if (!actx || !audioInit) return;
         if (actx.state === 'suspended') actx.resume();
         try {
-            for(let i=0; i<4; i++) {
+            for(let i=0; i<6; i++) {
                 setTimeout(() => {
                     if(actx.state !== 'running') return;
                     let t = actx.currentTime;
                     let osc = actx.createOscillator(); let g = actx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(180 + Math.random()*40, t);
-                    g.gain.setValueAtTime(0.15, t);
-                    g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400 + Math.random()*200, t);
+                    g.gain.setValueAtTime(0.1, t);
+                    g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
                     osc.connect(g); g.connect(actx.destination);
-                    osc.start(t); osc.stop(t + 0.04);
-                }, i * 80); 
+                    osc.start(t); osc.stop(t + 0.05);
+                }, i * 60 + Math.random() * 20); 
             }
 
             setTimeout(() => {
@@ -664,29 +673,38 @@
                 let t = actx.currentTime;
                 let osc = actx.createOscillator(); let g = actx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(300, t);
+                osc.frequency.setValueAtTime(250, t);
                 osc.frequency.exponentialRampToValueAtTime(80, t + 0.1);
-                g.gain.setValueAtTime(0.4, t);
+                g.gain.setValueAtTime(0.5, t);
                 g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
                 osc.connect(g); g.connect(actx.destination);
                 osc.start(t); osc.stop(t + 0.15);
-            }, 380); 
+            }, 420); 
         } catch(e){}
     }
     
+    let circuitBreakerUntil = 0;
     const clackTimes = [];
+    
     function playMarbleClack(v, bounceCount = 0) {
         if (!actx || !audioInit) return;
         let now = performance.now();
+        if (now < circuitBreakerUntil) return;
         
-        while(clackTimes.length > 0 && now - clackTimes[0] > 50) { clackTimes.shift(); }
-        if (clackTimes.length >= 3) return; 
+        while(clackTimes.length > 0 && now - clackTimes[0] > 100) { clackTimes.shift(); }
+        if (clackTimes.length >= 8) { 
+            circuitBreakerUntil = now + 400; 
+            return;
+        }
+        
+        if (clackTimes.length > 0 && now - clackTimes[clackTimes.length - 1] < 15) return; 
+
+        clackTimes.push(now);
         
         let ampMod = Math.pow(0.85, Math.min(bounceCount, 12));
         let vol = Math.min(0.4, v * 0.05) * ampMod; 
         if (vol < 0.005) return;
 
-        clackTimes.push(now);
         if (actx.state === 'suspended') actx.resume();
 
         try {
@@ -694,7 +712,7 @@
             if (t <= 0) t = 0.01;
             
             let pitchMod = Math.pow(1.06, Math.min(bounceCount, 12));
-            let baseFreq = (1800 + Math.random() * 400) * pitchMod; 
+            let baseFreq = (1600 + Math.random() * 400) * pitchMod; 
             
             let osc1 = actx.createOscillator(); let gain1 = actx.createGain();
             osc1.type = 'sine';
@@ -1016,7 +1034,8 @@
         };
 
         slider.addEventListener('mousedown', startDrag);
-        slider.addEventListener('mouseleave', stopDrag); slider.addEventListener('mouseup', stopDrag);
+        slider.addEventListener('mouseleave', stopDrag);
+        slider.addEventListener('mouseup', stopDrag);
         slider.addEventListener('mousemove', (e) => { e.preventDefault(); moveDrag(e); });
         slider.addEventListener('touchstart', startDrag, {passive: true});
         slider.addEventListener('touchend', stopDrag); slider.addEventListener('touchcancel', stopDrag);
@@ -1234,7 +1253,7 @@
                 b.vy += 0.22; let drag = 0.95; b.vx *= drag; b.vy *= drag; b.vz *= drag;
             } else {
                 if (!b.isSleeping) {
-                    b.vy += 0.36; // 10% weaker gravity 
+                    b.vy += 0.32; // 10% weaker gravity 
                     let drag = 0.96; b.vx *= drag; b.vy *= drag; 
                 } else {
                     b.vx = 0; b.vy = 0; 
@@ -1254,7 +1273,7 @@
                 let dot = b.vx * nx + b.vy * ny;
                 if (dot > 0) { 
                     b.vx -= 1.1 * dot * nx; b.vy -= 1.1 * dot * ny; 
-                    b.vx *= 0.85; b.vy *= 0.85; 
+                    b.vx *= 0.9; b.vy *= 0.9; // Less friction
                     
                     if (dot > 0.5) { b.sleepFrames = 0; b.isSleeping = false; }
                     if (!isMinimized && dot > 2.5 && !b.isSleeping) {
@@ -1281,16 +1300,13 @@
                             let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy, rvz = (b2.vz || 0) - (b1.vz || 0);
                             let velAlongNormal = rvx * nx + rvy * ny + rvz * nz;
                             if (velAlongNormal < -0.1) { 
-                                // Dynamic restitution to prevent jitter
-                                let bounce = (Math.abs(velAlongNormal) > 1.0) ? (phase === "chaos" ? 0.6 : 0.4) : 0.0; 
+                                // Bouncier restitution 
+                                let bounce = (Math.abs(velAlongNormal) > 1.0) ? (phase === "chaos" ? 0.6 : 0.48) : 0.06; 
                                 let impulse = -(1 + bounce) * velAlongNormal / 2; 
                                 
                                 if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
                                 if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
                                 
-                                if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.92; b1.vy *= 0.92; }
-                                if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.92; b2.vy *= 0.92; }
-
                                 if (Math.abs(velAlongNormal) > 0.5) {
                                     b1.sleepFrames = 0; b2.sleepFrames = 0;
                                     b1.isSleeping = false; b2.isSleeping = false;
@@ -1366,7 +1382,7 @@
         if (activeBall && activeBall !== gachaState.draggedBall) {
             if (activeBall.prized) activeBall.starRotation = (activeBall.starRotation || 0) + 0.015;
 
-            activeBall.vy += R * 0.0018; 
+            activeBall.vy += R * 0.002; 
             activeBall.x += activeBall.vx; activeBall.y += activeBall.vy;
             activeBall.rotation += activeBall.vx * 0.08; 
             
@@ -1374,12 +1390,12 @@
             let floorY = sizePx - bR;
             if (activeBall.y > floorY) {
                 activeBall.y = floorY; 
-                if (!isMinimized && activeBall.vy > 0.5) {
+                if (!isMinimized && activeBall.vy > 1.0) {
                     activeBall.bounceCount = (activeBall.bounceCount || 0) + 1;
                     playMarbleClack(activeBall.vy * 2, activeBall.bounceCount);
                 } else if (activeBall.vy <= 0.5) activeBall.bounceCount = 0;
                 
-                activeBall.vy *= -0.6; 
+                activeBall.vy *= -0.48; // Bouncier floor 
                 if (Math.abs(activeBall.vy) < 1.0) activeBall.vy = 0; 
                 activeBall.vx *= 0.92; 
             }
@@ -1756,14 +1772,14 @@
         for(let i=0; i<150; i++) {
             let edge = Math.floor(Math.random() * 4);
             let startX, startY;
-            if (edge === 0) { startX = Math.random() * sizePx; startY = 10; } 
-            else if (edge === 1) { startX = sizePx - 10; startY = Math.random() * sizePx; } 
-            else if (edge === 2) { startX = Math.random() * sizePx; startY = sizePx - 10; } 
-            else { startX = 10; startY = Math.random() * sizePx; } 
+            let angleToCenter;
+            if (edge === 0) { startX = Math.random() * sizePx; startY = 0; angleToCenter = Math.PI / 2; } 
+            else if (edge === 1) { startX = sizePx; startY = Math.random() * sizePx; angleToCenter = Math.PI; } 
+            else if (edge === 2) { startX = Math.random() * sizePx; startY = sizePx; angleToCenter = -Math.PI / 2; } 
+            else { startX = 0; startY = Math.random() * sizePx; angleToCenter = 0; } 
 
-            let angleToCenter = Math.atan2(cy - startY, cx - startX);
-            let angle = angleToCenter + (Math.random() - 0.5) * 0.5; 
-            let velocity = Math.random() * 18 + 10; 
+            let angle = angleToCenter + (Math.random() - 0.5) * 1.5; 
+            let velocity = Math.random() * 20 + 8; 
             
             wheelConfetti.push({
                 x: startX, y: startY,
@@ -1901,7 +1917,7 @@
                 let c = wheelConfetti[i];
                 c.x += c.vx;
                 c.y += c.vy;
-                c.vy += 0.2; 
+                c.vy += 0.4; 
                 c.vx *= 0.96; 
                 c.vy *= 0.96;
                 c.rot += c.rotSpeed;
@@ -1940,13 +1956,13 @@
         if (smoothedVel >= 0) { // Clockwise
             if (peg2 > -approachRad) {
                 // Peg dragging pointer DOWN -> Positive Flipper Angle
-                forceDeflect = (1 - (Math.abs(peg2) / approachRad)) * 40; 
+                forceDeflect = (1 - (Math.abs(peg2) / approachRad)) * 45; 
                 isForced = true;
             }
         } else { // Anti-Clockwise
             if (peg1 < approachRad) {
                 // Peg dragging pointer UP -> Negative Flipper Angle
-                forceDeflect = (1 - (peg1 / approachRad)) * -40; 
+                forceDeflect = (1 - (peg1 / approachRad)) * -45; 
                 isForced = true;
             }
         }
@@ -2142,9 +2158,29 @@
         
         isSpinning = true; hoveredSegmentIndex = -1;
         
+        const btnRoll = document.getElementById('btn-sim-roll');
+        const btnReroll = document.getElementById('btn-sim-reroll');
+        const origRollTxt = btnRoll ? btnRoll.innerText : "SIMULATE ROLL";
+        const origRerollTxt = btnReroll ? btnReroll.innerText : "REROLL";
+        
+        let rollTimer = 4;
+        const updateBtns = (t) => {
+            if(btnRoll) btnRoll.innerText = `ROLLING... ${t}`;
+            if(btnReroll) btnReroll.innerText = `ROLLING... ${t}`;
+        };
+        updateBtns(rollTimer);
+        let countdownInterval = setInterval(() => {
+            rollTimer--;
+            if (rollTimer > 0) updateBtns(rollTimer);
+        }, 1000);
+        
         try {
             prepareScrollerSpin(item); prepareGachaSpin(item); prepareWheelSpin(item);
             await new Promise(r => setTimeout(r, 4000));
+            
+            clearInterval(countdownInterval);
+            if(btnRoll) btnRoll.innerText = "CELEBRATING...";
+            if(btnReroll) btnReroll.innerText = "CELEBRATING...";
             
             const bid = parseFloat(document.getElementById('bid-input').value || 0);
             if (isUser) { sessionStats.spent += bid; sessionStats.won += item.value; }
@@ -2168,6 +2204,8 @@
 
         } finally {
             isSpinning = false; 
+            if(btnRoll) btnRoll.innerText = origRollTxt;
+            if(btnReroll) btnReroll.innerText = origRerollTxt;
             lastDispensedBall = dispensingBall; dispensingBall = null; 
             if (isNaN(wheelSpinAngle)) wheelSpinAngle = 0; wheelSpinAngle = wheelSpinAngle % (Math.PI * 2); 
             rebuildDOMFromInventory(); syncAndUI();
