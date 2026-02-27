@@ -43,8 +43,10 @@
         .card.minimized{height:auto!important;min-height:0!important;padding-bottom:16px}
         .card.minimized>*:not(.section-title){display:none!important}
         .vis-content{aspect-ratio:1;width:100%;height:auto;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;padding:10px;position:relative;overflow:hidden}
-        .vis-canvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:default}
+        
+        .vis-canvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:default; touch-action:none; user-select:none; -webkit-user-select:none;}
         #wheelCanvas{cursor:grab}#wheelCanvas:active{cursor:grabbing}#gachaCanvas{cursor:grab}#gachaCanvas:active{cursor:grabbing}
+        
         .resize-handle{position:absolute;bottom:4px;right:4px;width:32px;height:32px;background:radial-gradient(circle at center,#94a3b8 2.5px,transparent 2.5px);background-size:8px 8px;z-index:10;pointer-events:auto;opacity:0.4;transition:opacity 0.2s;cursor:nwse-resize}
         .resize-handle:hover{opacity:1}
         .wheel-pointer{position:absolute;right:0px;top:50%;width:40px;height:20px;margin-top:-10px;transform-origin:35px 10px;z-index:10;will-change:transform;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3));}
@@ -109,6 +111,9 @@
     </style>
 </head>
 <body>
+
+<!-- Hidden iOS Haptic Hack -->
+<input type="checkbox" id="haptic-checkbox" style="position:absolute; opacity:0; pointer-events:none; z-index:-1;">
 
 <div class="app-container">
     <div class="app-header">
@@ -304,7 +309,7 @@
             <div class="card" id="card-scroller">
                 <div class="section-title">
                     <div style="display:flex; align-items:center; gap: 8px;">
-                        <span>Slot Track Scroller</span>
+                        <span>Roulette Roll</span>
                         <span id="scroller-warn" class="sub-text" style="color:var(--warning)"></span>
                     </div>
                     <div class="card-controls">
@@ -565,9 +570,12 @@
     
     function triggerHaptic() {
         try { 
-            if (navigator.vibrate) navigator.vibrate(15); 
-            else if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.haptic) {
-                window.webkit.messageHandlers.haptic.postMessage("impact");
+            if (navigator.vibrate) {
+                navigator.vibrate(15); 
+            } else {
+                // iOS hidden checkbox hack
+                let cb = document.getElementById('haptic-checkbox');
+                if (cb) { cb.checked = !cb.checked; cb.click(); }
             }
         } catch(e) {}
     }
@@ -941,45 +949,33 @@
     function initScrollerDrag() {
         const slider = document.getElementById('scroller-window'); if (!slider) return;
         let isDown = false, startX, scrollLeft, velX = 0, momentumID, lastTime = 0, lastX = 0;
-        let timestamps = [], positions = [];
 
-        const startDrag = (pageX) => {
+        const getPos = (e) => e.touches && e.touches.length > 0 ? e.touches[0].pageX : e.pageX;
+
+        const startDrag = (e) => {
             if (isSpinning) return;
+            let pageX = getPos(e);
             isDown = true; slider.style.cursor = 'grabbing';
             startX = pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft;
-            velX = 0; timestamps = [performance.now()]; positions = [pageX];
+            lastX = pageX; velX = 0; lastTime = performance.now();
             cancelAnimationFrame(momentumID);
         };
-        const stopDrag = () => {
-            if (!isDown) return;
-            isDown = false; slider.style.cursor = 'grab';
-            
-            if (timestamps.length > 1) {
-                let dt = performance.now() - timestamps[timestamps.length - 1];
-                if (dt < 100) {
-                    let moveDt = timestamps[timestamps.length - 1] - timestamps[0];
-                    let moveDx = positions[positions.length - 1] - positions[0];
-                    velX = moveDt > 0 ? -(moveDx / moveDt) * 16 : 0;
-                } else velX = 0;
-            }
-            beginMomentum();
-        };
-        const moveDrag = (pageX) => {
+        const stopDrag = () => { if (!isDown) return; isDown = false; slider.style.cursor = 'grab'; beginMomentum(); };
+        const moveDrag = (e) => {
             if (!isDown || isSpinning) return;
+            let pageX = getPos(e);
             const x = pageX - slider.offsetLeft; const walk = (x - startX); 
             slider.scrollLeft = scrollLeft - walk;
-            
-            let now = performance.now(); timestamps.push(now); positions.push(pageX);
-            if (timestamps.length > 5) { timestamps.shift(); positions.shift(); }
-            checkScrollerHaptic();
+            let now = performance.now(); let dt = Math.max(1, now - lastTime); let dx = pageX - lastX;
+            velX = -dx / dt * 35; lastX = pageX; lastTime = now; checkScrollerHaptic();
         };
 
-        slider.addEventListener('mousedown', (e) => startDrag(e.pageX));
+        slider.addEventListener('mousedown', startDrag);
         slider.addEventListener('mouseleave', stopDrag); slider.addEventListener('mouseup', stopDrag);
-        slider.addEventListener('mousemove', (e) => { e.preventDefault(); moveDrag(e.pageX); });
-        slider.addEventListener('touchstart', (e) => startDrag(e.touches[0].pageX), {passive: true});
+        slider.addEventListener('mousemove', (e) => { e.preventDefault(); moveDrag(e); });
+        slider.addEventListener('touchstart', startDrag, {passive: true});
         slider.addEventListener('touchend', stopDrag); slider.addEventListener('touchcancel', stopDrag);
-        slider.addEventListener('touchmove', (e) => { moveDrag(e.touches[0].pageX); }, {passive: true});
+        slider.addEventListener('touchmove', moveDrag, {passive: true});
 
         function beginMomentum() {
             function loop() {
@@ -988,7 +984,7 @@
                 if (slider.scrollLeft > setWidth * 3.5) slider.scrollLeft -= setWidth;
 
                 if (!isDown && Math.abs(velX) > 0.5 && !isSpinning) {
-                    slider.scrollLeft += velX; velX *= 0.95; 
+                    slider.scrollLeft += velX; velX *= 0.98; 
                     checkScrollerHaptic(); momentumID = requestAnimationFrame(loop);
                 }
             }
@@ -1014,12 +1010,21 @@
 
     function initGachaInteraction() {
         const canvas = document.getElementById('gachaCanvas'); if (!canvas) return;
+
+        const getPos = (e) => {
+            let clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+            return {clientX, clientY};
+        };
         
-        canvas.addEventListener('mousedown', e => {
+        const handleDown = e => {
             if (isSpinning) return;
+            if (e.cancelable) e.preventDefault();
+            const {clientX, clientY} = getPos(e);
+            
             const rect = canvas.getBoundingClientRect(); const ratio = window.devicePixelRatio || 1;
             let scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
-            const mouseX = (e.clientX - rect.left) * scaleX, mouseY = (e.clientY - rect.top) * scaleY;
+            const mouseX = (clientX - rect.left) * scaleX, mouseY = (clientY - rect.top) * scaleY;
             const sizePx = canvas.width / ratio; const R = sizePx / 3.4; 
             const cx = sizePx / 2, domeCy = sizePx * 0.33, knobY = domeCy + R * 1.1; 
             const drawMouseX = mouseX / ratio, drawMouseY = mouseY / ratio;
@@ -1055,15 +1060,16 @@
                 gachaState.lastMouse = { x: drawMouseX, y: drawMouseY, time: performance.now() }; wakeUpGacha();
             } else {
                 gachaState.isMachineGrabbed = true;
-                gachaState.lastMouse = { x: e.clientX, y: e.clientY, time: performance.now() }; wakeUpGacha();
+                gachaState.lastMouse = { x: clientX, y: clientY, time: performance.now() }; wakeUpGacha();
             }
-        });
+        };
 
-        window.addEventListener('mousemove', e => {
+        const handleMove = e => {
             const rect = canvas.getBoundingClientRect(); const ratio = window.devicePixelRatio || 1;
             let scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
-            const drawMouseX = ((e.clientX - rect.left) * scaleX) / ratio;
-            const drawMouseY = ((e.clientY - rect.top) * scaleY) / ratio;
+            const {clientX, clientY} = getPos(e);
+            const drawMouseX = ((clientX - rect.left) * scaleX) / ratio;
+            const drawMouseY = ((clientY - rect.top) * scaleY) / ratio;
             const sizePx = canvas.width / ratio; const R = sizePx / 3.4; 
             const cx = sizePx / 2, domeCy = sizePx * 0.33, knobY = domeCy + R * 1.1;
 
@@ -1074,6 +1080,7 @@
             }
 
             if (gachaState.isKnobGrabbed && !isSpinning) {
+                if (e.cancelable) e.preventDefault();
                 canvas.style.cursor = 'grabbing';
                 
                 let currentCursorAngle = Math.atan2(drawMouseY - knobY, drawMouseX - cx);
@@ -1097,16 +1104,18 @@
             }
 
             if (gachaState.isMachineGrabbed && !isSpinning) {
+                if (e.cancelable) e.preventDefault();
                 canvas.style.cursor = 'grabbing';
-                let dx = e.clientX - gachaState.lastMouse.x, dy = e.clientY - gachaState.lastMouse.y;
+                let dx = clientX - gachaState.lastMouse.x, dy = clientY - gachaState.lastMouse.y;
                 gachaState.machineX += dx * 0.6; gachaState.machineY += dy * 0.6;
                 if (window.cachedGacha && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
                     window.cachedGacha.forEach(b => { b.vx -= dx * 0.25; b.vy -= dy * 0.25; }); 
                 }
-                gachaState.lastMouse = { x: e.clientX, y: e.clientY, time: performance.now() }; wakeUpGacha(); return;
+                gachaState.lastMouse = { x: clientX, y: clientY, time: performance.now() }; wakeUpGacha(); return;
             }
 
             if (!gachaState.draggedBall) return;
+            if (e.cancelable) e.preventDefault();
             canvas.style.cursor = 'grabbing';
             const mouseX = drawMouseX, mouseY = drawMouseY;
             const now = performance.now(); const dt = Math.max(1, now - gachaState.lastMouse.time);
@@ -1135,13 +1144,21 @@
                 gachaState.draggedBall.z = 0; gachaState.draggedBall.vz = 0;
             }
             wakeUpGacha(); 
-        });
+        };
 
-        window.addEventListener('mouseup', () => {
+        const handleUp = e => {
             gachaState.isKnobGrabbed = false;
             if (gachaState.draggedBall) { gachaState.draggedBall = null; wakeUpGacha(); }
             gachaState.isMachineGrabbed = false;
-        });
+        };
+
+        canvas.addEventListener('mousedown', handleDown);
+        window.addEventListener('mousemove', handleMove, {passive: false});
+        window.addEventListener('mouseup', handleUp);
+        
+        canvas.addEventListener('touchstart', handleDown, {passive: false});
+        window.addEventListener('touchmove', handleMove, {passive: false});
+        window.addEventListener('touchend', handleUp);
     }
 
     function updateGachaPhysics(R, phase) {
@@ -1280,7 +1297,6 @@
             activeBall.x += activeBall.vx; activeBall.y += activeBall.vy;
             activeBall.rotation += activeBall.vx * 0.08; 
             
-            // Floor Collision (Canvas Bottom)
             let floorY = sizePx - bR;
             if (activeBall.y > floorY) {
                 activeBall.y = floorY; 
@@ -1289,14 +1305,12 @@
                 if (Math.abs(activeBall.vy) < 1.0) activeBall.vy = 0; 
                 activeBall.vx *= 0.92; 
             }
-            // Ceiling Collision
             if (activeBall.y < bR) {
                 activeBall.y = bR;
                 if (!isMinimized && Math.abs(activeBall.vy) > 0.5) playMarbleClack(Math.abs(activeBall.vy) * 2);
                 activeBall.vy *= -0.5;
             }
 
-            // Canvas Wall Collisions
             const maxTrayX = sizePx - bR, minTrayX = bR;
             if (activeBall.x > maxTrayX) { 
                 activeBall.x = maxTrayX; 
@@ -1309,7 +1323,6 @@
                 activeBall.vx *= -0.5; 
             }
 
-            // Solid Base Collision Logic
             let baseTop = domeCy + R * 2.1;
             let baseBottom = baseTop + R * 0.15;
             let baseLeft = cx - R * 0.8;
@@ -1648,17 +1661,26 @@
         const colors = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316', '#ec4899'];
         
         for(let i=0; i<150; i++) {
-            let angle = Math.random() * Math.PI * 2;
-            let velocity = Math.random() * 15 + 5; 
+            let edge = Math.floor(Math.random() * 4);
+            let startX, startY;
+            if (edge === 0) { startX = Math.random() * sizePx; startY = -30; } 
+            else if (edge === 1) { startX = sizePx + 30; startY = Math.random() * sizePx; } 
+            else if (edge === 2) { startX = Math.random() * sizePx; startY = sizePx + 30; } 
+            else { startX = -30; startY = Math.random() * sizePx; } 
+
+            let angleToCenter = Math.atan2(cy - startY, cx - startX);
+            let angle = angleToCenter + (Math.random() - 0.5) * 0.8; 
+            let velocity = Math.random() * 15 + 8; 
+            
             wheelConfetti.push({
-                x: cx, y: cy,
+                x: startX, y: startY,
                 vx: Math.cos(angle) * velocity,
-                vy: Math.sin(angle) * velocity - 5, 
+                vy: Math.sin(angle) * velocity, 
                 rot: Math.random() * Math.PI * 2,
                 rotSpeed: (Math.random() - 0.5) * 0.5,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 w: Math.random() * 8 + 4, h: Math.random() * 12 + 6,
-                life: 1.0, decay: 0.005 + Math.random() * 0.01
+                life: 1.0, decay: 0.003 + Math.random() * 0.008
             });
         }
 
@@ -1824,12 +1846,14 @@
 
         if (smoothedVel >= 0) { // Clockwise
             if (peg2 > -approachRad) {
-                forceDeflect = (1 - (Math.abs(peg2) / approachRad)) * 35; // Downward
+                // Peg pushing DOWN on upper edge of pointer
+                forceDeflect = (1 - (Math.abs(peg2) / approachRad)) * 35; 
                 isForced = true;
             }
         } else { // Anti-Clockwise
             if (peg1 < approachRad) {
-                forceDeflect = (1 - (peg1 / approachRad)) * -35; // Upward
+                // Peg pushing UP on lower edge of pointer
+                forceDeflect = (1 - (peg1 / approachRad)) * -35; 
                 isForced = true;
             }
         }
@@ -1848,6 +1872,7 @@
             if (isSpinning || wheelDragState || Math.abs(smoothedVel) > 0.01) {
                 triggerHaptic();
                 playPegHit();
+                // Spring violently kicks back in opposite direction on slip
                 flipperV = (smoothedVel >= 0) ? -40 : 40; 
             }
         }
@@ -2011,6 +2036,7 @@
             let t = (time - startTime) / 4000; if (t > 1) t = 1;
             const ease = 1 - Math.pow(1 - t, 4); 
             wheelSpinAngle = startAngle + (targetAngle - startAngle) * ease;
+            drawWheel(); 
             if (t < 1 && isSpinning) requestAnimationFrame(animateWheel);
         }
         requestAnimationFrame(animateWheel);
