@@ -271,7 +271,7 @@
             
             <div class="card" id="card-spin">
                 <div class="section-title">
-                    <span>Record Manual Spin</span>
+                    <span>Input Spin Result</span>
                     <div class="card-controls">
                         <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
                         <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
@@ -311,6 +311,7 @@
                         <span class="vis-slots-count sub-text"></span>
                     </div>
                     <div class="card-controls">
+                        <button class="card-btn" onclick="toggleWheelMute(this)" onmousedown="event.stopPropagation()" title="Toggle Wheel Sounds" style="font-size: 0.9rem;">🔊</button>
                         <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
                         <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
                     </div>
@@ -331,6 +332,7 @@
                         <span class="vis-slots-count sub-text"></span>
                     </div>
                     <div class="card-controls">
+                        <button class="card-btn" onclick="toggleGachaMute(this)" onmousedown="event.stopPropagation()" title="Toggle Collision Sounds" style="font-size: 0.9rem;">🔊</button>
                         <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
                         <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
                     </div>
@@ -348,6 +350,7 @@
                         <span id="scroller-warn" class="sub-text" style="color:var(--warning)"></span>
                     </div>
                     <div class="card-controls">
+                        <button class="card-btn" onclick="toggleScrollerMute(this)" onmousedown="event.stopPropagation()" title="Toggle Scroller Sounds" style="font-size: 0.9rem;">🔊</button>
                         <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
                         <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
                     </div>
@@ -600,10 +603,28 @@
     // --- AUDIO ENGINE ---
     let actx = null;
     let audioInit = false;
+    let gachaMuted = false;
+    let wheelMuted = false;
+    let scrollerMuted = false;
     
     window.addEventListener('mousedown', unlockAudio);
     window.addEventListener('touchstart', unlockAudio, {passive: true});
     window.addEventListener('click', unlockAudio, {passive: true});
+
+    function toggleGachaMute(btn) {
+        gachaMuted = !gachaMuted;
+        btn.innerText = gachaMuted ? '🔇' : '🔊';
+    }
+    
+    function toggleWheelMute(btn) {
+        wheelMuted = !wheelMuted;
+        btn.innerText = wheelMuted ? '🔇' : '🔊';
+    }
+    
+    function toggleScrollerMute(btn) {
+        scrollerMuted = !scrollerMuted;
+        btn.innerText = scrollerMuted ? '🔇' : '🔊';
+    }
 
     function unlockAudio() {
         if (audioInit) return;
@@ -661,7 +682,7 @@
     }
 
     function playScrollerClick() { 
-        if (!actx || !audioInit) return;
+        if (scrollerMuted || !actx || !audioInit) return;
         if (actx.state === 'suspended') actx.resume();
         try {
             let t = actx.currentTime;
@@ -678,7 +699,7 @@
     }
     
     function playPegHit() {
-        if (!actx || !audioInit) return;
+        if (wheelMuted || !actx || !audioInit) return;
         if (actx.state === 'suspended') actx.resume();
         try {
             let t = actx.currentTime;
@@ -734,8 +755,10 @@
     let circuitBreakerUntil = 0;
     const clackTimes = [];
     
-    function playMarbleClack(v, bounceCount = 0) {
+    function playMarbleClack(v, bounceCount = 0, isBallOnBall = false) {
+        if (isBallOnBall && gachaMuted) return;
         if (!actx || !audioInit) return;
+        
         let now = performance.now();
         if (now < circuitBreakerUntil) return;
         
@@ -852,7 +875,7 @@
     let wheelDragState = false;
     
     let dispensingBall = null;
-    let lastDispensedBall = null; 
+    let dispensedBalls = []; 
     let gachaState = {
         draggedBall: null,
         isTrayBall: false,
@@ -874,6 +897,7 @@
         hasDropped: false,
         targetItem: null,
         sparkles: [],
+        prizeConfetti: [],
         prizeDropTime: null
     };
 
@@ -1141,7 +1165,29 @@
             const cx = sizePx / 2, domeCy = sizePx * 0.33, knobY = domeCy + R * 1.1; 
             const drawMouseX = mouseX / ratio, drawMouseY = mouseY / ratio;
 
-            if (Math.hypot(drawMouseX - cx, drawMouseY - knobY) < R * 0.4) {
+            let foundBall = null, isTray = false;
+            let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5;
+            
+            // Check dispensed balls on tray
+            for (let i = dispensedBalls.length - 1; i >= 0; i--) {
+                let tb = dispensedBalls[i];
+                if (Math.hypot(drawMouseX - tb.x, drawMouseY - tb.y) <= bR + 5) { foundBall = tb; isTray = true; break; }
+            }
+            
+            // Check inside dome
+            if (!foundBall && window.cachedGacha) {
+                let relX = drawMouseX - cx - gachaState.machineX; let relY = drawMouseY - domeCy - gachaState.machineY;
+                for (let i = window.cachedGacha.length - 1; i >= 0; i--) {
+                    let b = window.cachedGacha[i];
+                    if (Math.hypot(relX - b.x, relY - b.y) <= b.r + 5) { foundBall = b; break; }
+                }
+            }
+
+            if (foundBall) {
+                if (e.cancelable) e.preventDefault();
+                gachaState.draggedBall = foundBall; gachaState.isTrayBall = isTray;
+                gachaState.lastMouse = { x: drawMouseX, y: drawMouseY, time: performance.now() }; wakeUpGacha();
+            } else if (Math.hypot(drawMouseX - cx, drawMouseY - knobY) < R * 0.4) {
                 if (e.cancelable) e.preventDefault();
                 gachaState.isKnobGrabbed = true;
                 gachaState.knobAngle = gachaState.knobAngle || 0;
@@ -1151,27 +1197,7 @@
                 gachaState.manualTurnAccumulator = 0;
                 gachaState.knobV = 0; 
                 gachaState.knobTarget = null; 
-                wakeUpGacha(); return;
-            }
-
-            let foundBall = null, isTray = false;
-            let trayBall = lastDispensedBall || dispensingBall;
-            if (trayBall && window.cachedGacha && window.cachedGacha[0]) {
-                let bR = window.cachedGacha[0].r;
-                if (Math.hypot(drawMouseX - trayBall.x, drawMouseY - trayBall.y) <= bR) { foundBall = trayBall; isTray = true; }
-            }
-            if (!foundBall && window.cachedGacha) {
-                let relX = drawMouseX - cx - gachaState.machineX; let relY = drawMouseY - domeCy - gachaState.machineY;
-                for (let i = window.cachedGacha.length - 1; i >= 0; i--) {
-                    let b = window.cachedGacha[i];
-                    if (Math.hypot(relX - b.x, relY - b.y) <= b.r) { foundBall = b; break; }
-                }
-            }
-
-            if (foundBall) {
-                if (e.cancelable) e.preventDefault();
-                gachaState.draggedBall = foundBall; gachaState.isTrayBall = isTray;
-                gachaState.lastMouse = { x: drawMouseX, y: drawMouseY, time: performance.now() }; wakeUpGacha();
+                wakeUpGacha();
             } else {
                 gachaState.isMachineGrabbed = true;
                 gachaState.lastMouse = { x: clientX, y: clientY, time: performance.now() }; wakeUpGacha();
@@ -1282,15 +1308,18 @@
         const gachaModule = document.getElementById('gacha-module');
         const isMinimized = gachaModule && gachaModule.classList.contains('minimized');
 
+        let isForceSettling = gachaState.forceSettle > 0;
+        let grav = isForceSettling ? 3.0 : 0.28;
+
         balls.forEach(b => {
             if (b.prized) b.starRotation = (b.starRotation || 0) + 0.015;
 
             // Sleep evaluation
             let speed = Math.hypot(b.vx, b.vy);
-            if (phase === "settle") {
+            if (phase === "settle" && !isForceSettling) {
                 if (speed < 0.25 && b.y > innerR * 0.2) b.sleepFrames = (b.sleepFrames || 0) + 1;
                 else b.sleepFrames = 0;
-                b.isSleeping = b.sleepFrames > 10;
+                b.isSleeping = b.sleepFrames > 20;
             } else {
                 b.sleepFrames = 0; b.isSleeping = false;
             }
@@ -1302,8 +1331,8 @@
                 b.vy += 0.22; let drag = 0.95; b.vx *= drag; b.vy *= drag; b.vz *= drag;
             } else {
                 if (!b.isSleeping) {
-                    b.vy += 0.32; // 10% weaker gravity 
-                    let drag = b.y > innerR * 0.5 ? 0.92 : 0.98; // more friction near bottom 
+                    b.vy += grav; 
+                    let drag = isForceSettling ? 0.6 : (b.y > innerR * 0.5 ? 0.92 : 0.98); 
                     b.vx *= drag; b.vy *= drag; 
                 } else {
                     b.vx = 0; b.vy = 0; 
@@ -1322,24 +1351,38 @@
                 b.x = nx * innerR; b.y = ny * innerR;
                 let dot = b.vx * nx + b.vy * ny;
                 if (dot > 0) { 
-                    b.vx -= 1.1 * dot * nx; b.vy -= 1.1 * dot * ny; 
-                    b.vx *= 0.8; b.vy *= 0.8; 
+                    let wallBounce = isForceSettling ? 0.0 : (dot > 0.8 ? b.restitution : 0.15);
+                    b.vx -= (1 + wallBounce) * dot * nx; 
+                    b.vy -= (1 + wallBounce) * dot * ny; 
+                    
+                    b.vx *= 0.99; 
+                    b.vy *= 0.99; 
                     
                     if (dot > 0.5) { b.sleepFrames = 0; b.isSleeping = false; }
-                    if (!isMinimized && dot > 3.0 && !b.isSleeping) {
+                    if (!isMinimized && dot > 1.2 && !b.isSleeping && !isForceSettling) {
                         b.bounceCount = (b.bounceCount || 0) + 1;
-                        playMarbleClack(dot, b.bounceCount);
+                        playMarbleClack(dot, b.bounceCount, false);
                     }
                 } 
             }
         });
 
-        for (let iter = 0; iter < 3; iter++) {
+        // Optimize physics loop with spatial bounding-box checks (AABB)
+        for (let iter = 0; iter < 2; iter++) {
             for(let i=0; i<balls.length; i++) {
+                let b1 = balls[i];
                 for(let j=i+1; j<balls.length; j++) {
-                    let b1 = balls[i], b2 = balls[j];
-                    let dx = b2.x - b1.x, dy = b2.y - b1.y, dz = (b2.z || 0) - (b1.z || 0);
-                    let distSq = dx*dx + dy*dy + dz*dz; let minDistSq = (b1.r + b2.r) * (b1.r + b2.r);
+                    let b2 = balls[j];
+                    if (b1.isSleeping && b2.isSleeping) continue;
+                    
+                    let minDistSq = (b1.r + b2.r) * (b1.r + b2.r);
+                    let dx = b2.x - b1.x;
+                    if (dx * dx > minDistSq) continue;
+                    let dy = b2.y - b1.y;
+                    if (dy * dy > minDistSq) continue;
+                    let dz = (b2.z || 0) - (b1.z || 0);
+                    let distSq = dx*dx + dy*dy + dz*dz;
+                    
                     if (distSq < minDistSq && distSq > 0.0001) {
                         let dist = Math.sqrt(distSq); let overlap = ((b1.r + b2.r) - dist) * 0.5; let nx = dx/dist, ny = dy/dist, nz = dz/dist;
                         if (overlap > 0.05) {
@@ -1350,20 +1393,28 @@
                             let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy, rvz = (b2.vz || 0) - (b1.vz || 0);
                             let velAlongNormal = rvx * nx + rvy * ny + rvz * nz;
                             if (velAlongNormal < -0.1) { 
-                                // Bouncier restitution 
-                                let bounce = (Math.abs(velAlongNormal) > 1.0) ? (phase === "chaos" ? 0.6 : 0.48) : 0.06; 
+                                let combinedRestitution = (b1.restitution + b2.restitution) / 2;
+                                let bounce = (Math.abs(velAlongNormal) > 0.8) ? combinedRestitution : 0.1; 
+                                if (isForceSettling) bounce = 0.0;
                                 let impulse = -(1 + bounce) * velAlongNormal / 2; 
                                 
                                 if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
                                 if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
+
+                                // Prevent sticky vertical stacking with a tiny horizontal slide perturbation
+                                if (Math.abs(nx) < 0.2 && Math.abs(velAlongNormal) < 1.0 && !isForceSettling) {
+                                    let slide = (Math.random() - 0.5) * 0.3;
+                                    if (!b1.isSleeping) b1.vx += slide;
+                                    if (!b2.isSleeping) b2.vx -= slide;
+                                }
                                 
-                                // Extreme kinetic drain to force massive clumps to stop vibrating
-                                if (Math.abs(velAlongNormal) < 2.0) {
-                                    if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.5; b1.vy *= 0.5; }
-                                    if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.5; b2.vy *= 0.5; }
+                                // Kinetic drain only for extremely slow collisions to allow rolling off
+                                if (Math.abs(velAlongNormal) < 0.8) {
+                                    if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.85; b1.vy *= 0.85; }
+                                    if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.85; b2.vy *= 0.85; }
                                 } else {
-                                    if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.95; b1.vy *= 0.95; }
-                                    if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.95; b2.vy *= 0.95; }
+                                    if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.99; b1.vy *= 0.99; }
+                                    if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.99; b2.vy *= 0.99; }
                                 }
 
                                 if (Math.abs(velAlongNormal) > 0.5) {
@@ -1371,9 +1422,9 @@
                                     b1.isSleeping = false; b2.isSleeping = false;
                                 }
 
-                                if (!isMinimized && Math.abs(velAlongNormal) > 2.5 && overlap < 2.0 && (!b1.isSleeping || !b2.isSleeping)) {
+                                if (!isMinimized && Math.abs(velAlongNormal) > 1.5 && overlap < 2.0 && (!b1.isSleeping || !b2.isSleeping) && !isForceSettling) {
                                     b1.bounceCount = (b1.bounceCount || 0) + 1;
-                                    playMarbleClack(Math.abs(velAlongNormal), b1.bounceCount);
+                                    playMarbleClack(Math.abs(velAlongNormal), b1.bounceCount, true);
                                 }
                             }
                         }
@@ -1385,6 +1436,144 @@
                 let currentDist = Math.sqrt(b.x*b.x + b.y*b.y);
                 if (currentDist > innerR && currentDist > 0) { b.x = (b.x / currentDist) * innerR; b.y = (b.y / currentDist) * innerR; }
             });
+        }
+        
+        if (gachaState.forceSettle > 0) gachaState.forceSettle--;
+    }
+
+    function updateTrayBalls(sizePx, bR, isMinimized) {
+        if (!dispensedBalls || dispensedBalls.length === 0) return;
+        
+        dispensedBalls.forEach(b => {
+            if (b.prized) b.starRotation = (b.starRotation || 0) + 0.015;
+            if (b === gachaState.draggedBall) return;
+            
+            b.vy += 0.25; 
+            b.x += b.vx; b.y += b.vy;
+            b.rotation += b.vx * 0.08; 
+            
+            let floorY = sizePx - bR;
+            if (b.y > floorY) {
+                b.y = floorY; 
+                if (!isMinimized && b.vy > 0.8) {
+                    b.bounceCount = (b.bounceCount || 0) + 1;
+                    playMarbleClack(b.vy * 2, b.bounceCount, false);
+                } else if (b.vy <= 0.5) b.bounceCount = 0;
+                
+                b.vy *= -b.restitution; 
+                if (Math.abs(b.vy) < 0.35) b.vy = 0; 
+                b.vx *= 0.95; 
+            }
+            if (b.y < bR) {
+                b.y = bR;
+                if (!isMinimized && Math.abs(b.vy) > 0.8) {
+                    b.bounceCount = (b.bounceCount || 0) + 1;
+                    playMarbleClack(Math.abs(b.vy) * 2, b.bounceCount, false);
+                }
+                b.vy *= -b.restitution;
+            }
+
+            const maxTrayX = sizePx - bR, minTrayX = bR;
+            if (b.x > maxTrayX) { 
+                b.x = maxTrayX; 
+                if (!isMinimized && Math.abs(b.vx) > 0.8) {
+                    b.bounceCount = (b.bounceCount || 0) + 1;
+                    playMarbleClack(Math.abs(b.vx) * 2, b.bounceCount, false);
+                }
+                b.vx *= -b.restitution; 
+            }
+            if (b.x < minTrayX) { 
+                b.x = minTrayX; 
+                if (!isMinimized && Math.abs(b.vx) > 0.8) {
+                    b.bounceCount = (b.bounceCount || 0) + 1;
+                    playMarbleClack(Math.abs(b.vx) * 2, b.bounceCount, false);
+                }
+                b.vx *= -b.restitution; 
+            }
+
+            const R = sizePx / 3.4, cx = sizePx / 2, domeCy = sizePx * 0.33;
+            let baseTop = domeCy + R * 2.1;
+            let baseBottom = baseTop + R * 0.15;
+            let baseLeft = cx - R * 0.8;
+            let baseRight = cx + R * 0.8;
+            
+            let testX = b.x;
+            let testY = b.y;
+            if (b.x < baseLeft) testX = baseLeft;
+            else if (b.x > baseRight) testX = baseRight;
+            if (b.y < baseTop) testY = baseTop;
+            else if (b.y > baseBottom) testY = baseBottom;
+
+            let distX = b.x - testX;
+            let distY = b.y - testY;
+            let distance = Math.sqrt((distX*distX) + (distY*distY));
+
+            if (distance <= bR) {
+                let nx = distX / distance;
+                let ny = distY / distance;
+                b.x = testX + nx * bR;
+                b.y = testY + ny * bR;
+
+                let dot = b.vx * nx + b.vy * ny;
+                if (dot < 0) {
+                    let restitution = b.restitution; 
+                    b.vx -= (1 + restitution) * dot * nx;
+                    b.vy -= (1 + restitution) * dot * ny;
+                    
+                    let tx = -ny, ty = nx;
+                    let tanDot = b.vx * tx + b.vy * ty;
+                    b.vx -= tanDot * tx * 0.05;
+                    b.vy -= tanDot * ty * 0.05;
+
+                    if (!isMinimized && Math.abs(dot) > 0.8) {
+                        b.bounceCount = (b.bounceCount || 0) + 1;
+                        playMarbleClack(Math.abs(dot) * 2, b.bounceCount, false);
+                    }
+                }
+            }
+        });
+
+        // Inter-tray collision
+        for (let i = 0; i < dispensedBalls.length; i++) {
+            for (let j = i + 1; j < dispensedBalls.length; j++) {
+                let b1 = dispensedBalls[i];
+                let b2 = dispensedBalls[j];
+                let dx = b2.x - b1.x; let dy = b2.y - b1.y;
+                let distSq = dx*dx + dy*dy; let minDistSq = (bR + bR) * (bR + bR);
+                if (distSq < minDistSq && distSq > 0.0001) {
+                    let dist = Math.sqrt(distSq); let overlap = ((bR + bR) - dist) * 0.5; 
+                    let nx = dx/dist, ny = dy/dist;
+                    if (overlap > 0.05) {
+                        if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap; b1.y -= ny * overlap; }
+                        if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap; b2.y += ny * overlap; }
+                    }
+                    let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy;
+                    let velAlongNormal = rvx * nx + rvy * ny;
+                    if (velAlongNormal < -0.1) {
+                        let combinedRestitution = (b1.restitution + b2.restitution) / 2;
+                        let bounce = (Math.abs(velAlongNormal) > 0.8) ? combinedRestitution : 0.1;
+                        let impulse = -(1 + bounce) * velAlongNormal / 2; 
+                        
+                        if (b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
+                        if (b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
+                        
+                        if (Math.abs(nx) < 0.2 && Math.abs(velAlongNormal) < 1.0) {
+                            let slide = (Math.random() - 0.5) * 0.3;
+                            b1.vx += slide; b2.vx -= slide;
+                        }
+                        
+                        if (Math.abs(velAlongNormal) < 0.8) {
+                            if (b1 !== gachaState.draggedBall) { b1.vx *= 0.85; b1.vy *= 0.85; }
+                            if (b2 !== gachaState.draggedBall) { b2.vx *= 0.85; b2.vy *= 0.85; }
+                        }
+                        
+                        if (!isMinimized && Math.abs(velAlongNormal) > 1.5 && overlap < 2.0) {
+                            b1.bounceCount = (b1.bounceCount || 0) + 1;
+                            playMarbleClack(Math.abs(velAlongNormal), b1.bounceCount, true);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1423,8 +1612,29 @@
                     }
                     dispensingBall = {
                         prized: gachaState.targetItem.prized, x: cx, y: chuteY, 
-                        vx: (Math.random() - 0.5) * 2, vy: R * 0.01, rotation: 0, starRotation: 0, scale: 1 
+                        vx: (Math.random() - 0.5) * 2, vy: R * 0.01, rotation: 0, starRotation: 0, scale: 1,
+                        restitution: 0.63 + Math.random() * 0.21, bounceCount: 0 
                     };
+                    dispensedBalls.push(dispensingBall);
+                    if (dispensedBalls.length > 10) dispensedBalls.shift();
+                    
+                    if (gachaState.targetItem.prized) {
+                        gachaState.prizeConfetti = [];
+                        gachaState.sparkles = [];
+                        const colors = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316', '#ec4899'];
+                        for (let i=0; i<150; i++) {
+                            let a = Math.random() * Math.PI * 2;
+                            let v = Math.random() * 15 + 5;
+                            gachaState.prizeConfetti.push({
+                                x: cx, y: domeCy,
+                                vx: Math.cos(a)*v, vy: Math.sin(a)*v,
+                                rot: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.5,
+                                w: Math.random() * 8 + 4, h: Math.random() * 12 + 6,
+                                color: colors[Math.floor(Math.random() * colors.length)],
+                                life: 1.0, decay: 0.005 + Math.random()*0.01
+                            });
+                        }
+                    }
                 }
             }
         } else {
@@ -1434,114 +1644,8 @@
         gachaState.knobAngle += gachaState.knobV;
         gachaState.knobV *= 0.8; 
 
-        let activeBall = dispensingBall || lastDispensedBall;
-        let activeBallSpeed = 0;
         let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5;
-        
-        if (activeBall && activeBall !== gachaState.draggedBall) {
-            if (activeBall.prized) activeBall.starRotation = (activeBall.starRotation || 0) + 0.015;
-
-            activeBall.vy += R * 0.002; 
-            activeBall.x += activeBall.vx; activeBall.y += activeBall.vy;
-            activeBall.rotation += activeBall.vx * 0.08; 
-            
-            // Floor Collision (Canvas Bottom)
-            let floorY = sizePx - bR;
-            if (activeBall.y > floorY) {
-                activeBall.y = floorY; 
-                if (!isMinimized && activeBall.vy > 1.5) {
-                    activeBall.bounceCount = (activeBall.bounceCount || 0) + 1;
-                    playMarbleClack(activeBall.vy * 2, activeBall.bounceCount);
-                } else if (activeBall.vy <= 0.5) activeBall.bounceCount = 0;
-                
-                activeBall.vy *= -0.48; // Bouncier floor 
-                if (Math.abs(activeBall.vy) < 1.0) activeBall.vy = 0; 
-                activeBall.vx *= 0.92; 
-            }
-            // Ceiling Collision
-            if (activeBall.y < bR) {
-                activeBall.y = bR;
-                if (!isMinimized && Math.abs(activeBall.vy) > 0.5) {
-                    activeBall.bounceCount = (activeBall.bounceCount || 0) + 1;
-                    playMarbleClack(Math.abs(activeBall.vy) * 2, activeBall.bounceCount);
-                }
-                activeBall.vy *= -0.6;
-            }
-
-            // Canvas Wall Collisions
-            const maxTrayX = sizePx - bR, minTrayX = bR;
-            if (activeBall.x > maxTrayX) { 
-                activeBall.x = maxTrayX; 
-                if (!isMinimized && Math.abs(activeBall.vx) > 0.5) {
-                    activeBall.bounceCount = (activeBall.bounceCount || 0) + 1;
-                    playMarbleClack(Math.abs(activeBall.vx) * 2, activeBall.bounceCount);
-                }
-                activeBall.vx *= -0.6; 
-            }
-            if (activeBall.x < minTrayX) { 
-                activeBall.x = minTrayX; 
-                if (!isMinimized && Math.abs(activeBall.vx) > 0.5) {
-                    activeBall.bounceCount = (activeBall.bounceCount || 0) + 1;
-                    playMarbleClack(Math.abs(activeBall.vx) * 2, activeBall.bounceCount);
-                }
-                activeBall.vx *= -0.6; 
-            }
-
-            // Solid Base Collision Logic
-            let baseTop = domeCy + R * 2.1;
-            let baseBottom = baseTop + R * 0.15;
-            let baseLeft = cx - R * 0.8;
-            let baseRight = cx + R * 0.8;
-            
-            let testX = activeBall.x;
-            let testY = activeBall.y;
-            if (activeBall.x < baseLeft) testX = baseLeft;
-            else if (activeBall.x > baseRight) testX = baseRight;
-            if (activeBall.y < baseTop) testY = baseTop;
-            else if (activeBall.y > baseBottom) testY = baseBottom;
-
-            let distX = activeBall.x - testX;
-            let distY = activeBall.y - testY;
-            let distance = Math.sqrt((distX*distX) + (distY*distY));
-
-            if (distance <= bR) {
-                let nx = distX / distance;
-                let ny = distY / distance;
-                activeBall.x = testX + nx * bR;
-                activeBall.y = testY + ny * bR;
-
-                let dot = activeBall.vx * nx + activeBall.vy * ny;
-                if (dot < 0) {
-                    let restitution = 0.5; 
-                    activeBall.vx -= (1 + restitution) * dot * nx;
-                    activeBall.vy -= (1 + restitution) * dot * ny;
-                    
-                    let tx = -ny, ty = nx;
-                    let tanDot = activeBall.vx * tx + activeBall.vy * ty;
-                    activeBall.vx -= tanDot * tx * 0.1;
-                    activeBall.vy -= tanDot * ty * 0.1;
-
-                    if (!isMinimized && Math.abs(dot) > 0.5) {
-                        activeBall.bounceCount = (activeBall.bounceCount || 0) + 1;
-                        playMarbleClack(Math.abs(dot) * 2, activeBall.bounceCount);
-                    }
-                }
-            }
-
-            activeBallSpeed = Math.abs(activeBall.vx) + Math.abs(activeBall.vy);
-            
-            if (activeBall.prized) {
-                if (!gachaState.sparkles) gachaState.sparkles = [];
-                if (Math.random() < (activeBallSpeed > 0.2 ? 0.6 : 0.15)) {
-                    gachaState.sparkles.push({
-                        x: activeBall.x + (Math.random()-0.5)*bR, y: activeBall.y + (Math.random()-0.5)*bR,
-                        vx: (Math.random() - 0.5) * 1.5 - (activeBall.vx * 0.3),
-                        vy: (Math.random() - 0.5) * 1.5 - (activeBall.vy * 0.3),
-                        life: 1.0, decay: 0.02 + Math.random()*0.03
-                    });
-                }
-            }
-        }
+        updateTrayBalls(sizePx, bR, isMinimized);
 
         if (!isMinimized) drawGacha();
 
@@ -1553,26 +1657,24 @@
             });
         }
 
-        let hasSparkles = gachaState.sparkles && gachaState.sparkles.length > 0;
-        let isBallSleeping = false;
-        if (activeBall) {
-            if (activeBallSpeed < 0.2 && Math.abs(activeBall.vy) < 0.1) isBallSleeping = true;
-        } else {
-            isBallSleeping = true;
-        }
-        let activeBallSettled = !activeBall || gachaState.draggedBall === activeBall || isBallSleeping;
+        let hasEffects = (gachaState.sparkles && gachaState.sparkles.length > 0) || (gachaState.prizeConfetti && gachaState.prizeConfetti.length > 0);
+        let trayMoving = false;
+        dispensedBalls.forEach(b => {
+            if (Math.abs(b.vx) > 0.5 || Math.abs(b.vy) > 0.5 || gachaState.draggedBall === b) trayMoving = true;
+            if (b.prized) hasEffects = true;
+        });
 
-        if (maxSpeed < 0.5 && activeBallSettled && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasSparkles) {
+        if (maxSpeed < 0.5 && !trayMoving && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasEffects && gachaState.forceSettle <= 0) {
             gachaState.idleFrames++;
             if (gachaState.idleFrames > 30) { 
                 if (window.cachedGacha) { window.cachedGacha.forEach(b => { b.vx = 0; b.vy = 0; b.vz = 0; }); }
-                if (activeBall) { activeBall.vx = 0; activeBall.vy = 0; }
+                dispensedBalls.forEach(b => { b.vx = 0; b.vy = 0; });
                 gachaState.awake = false; 
                 return; 
             }
         } else { gachaState.idleFrames = 0; }
         
-        if (gachaState.awake || isSpinning || Math.abs(gachaState.machineX) > 0.5 || Math.abs(gachaState.knobV) > 0.01 || hasSparkles || (activeBall && activeBall.prized)) { 
+        if (gachaState.awake || isSpinning || Math.abs(gachaState.machineX) > 0.5 || Math.abs(gachaState.knobV) > 0.01 || hasEffects || trayMoving || gachaState.forceSettle > 0) { 
             requestAnimationFrame(gachaLoop); 
         }
     }
@@ -1631,7 +1733,7 @@
                 let r = R * Math.sqrt(0.65 / expectedCap); r = Math.max(4, Math.min(r, R/5)); 
                 let pos = []; let innerR = R - r - 2; let py = innerR - 1; let rowIdx = 0;
                 while (py > -innerR && pos.length < expectedCap) {
-                    let halfWidth = Math.sqrt(innerR*innerR - py*py); let startX = -halfWidth + 0.1;
+                    let halfWidth = Math.sqrt(Math.max(0, innerR*innerR - py*py)); let startX = -halfWidth + 0.1;
                     if (rowIdx % 2 === 1) startX += r;
                     for (let x = startX; x <= halfWidth; x += r * 2.05) { if (pos.length < expectedCap) pos.push({x, y: py}); }
                     py -= r * 1.732; rowIdx++;
@@ -1639,7 +1741,12 @@
                 pos.sort((a,b) => b.y - a.y); 
                 window.cachedGacha = []; window.cachedGacha.R = R; window.cachedGacha.r = r; window.cachedGacha.hash = invHash;
                 for(let i=0; i<Math.min(pos.length, sample.length); i++) {
-                    window.cachedGacha.push({ x: pos[i].x, y: pos[i].y, z: 0, vx: 0, vy: 0, vz: 0, r: r, prized: sample[i].prized, isDispensing: false, rotation: Math.random() * Math.PI * 2, starRotation: Math.random() * Math.PI * 2 });
+                    window.cachedGacha.push({ 
+                        x: pos[i].x, y: pos[i].y, z: 0, vx: 0, vy: 0, vz: 0, r: r, 
+                        prized: sample[i].prized, isDispensing: false, 
+                        rotation: Math.random() * Math.PI * 2, starRotation: Math.random() * Math.PI * 2,
+                        restitution: 0.63 + Math.random() * 0.21, bounceCount: 0 
+                    });
                 }
             }
         }
@@ -1766,6 +1873,22 @@
         ctx.fill();
         ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; ctx.stroke();
         
+        if (gachaState.prizeConfetti && gachaState.prizeConfetti.length > 0) {
+            for (let i = gachaState.prizeConfetti.length - 1; i >= 0; i--) {
+                let c = gachaState.prizeConfetti[i];
+                c.x += c.vx; c.y += c.vy; c.vy += 0.4; 
+                c.vx *= 0.96; c.vy *= 0.96;
+                c.rot += c.rotSpeed; c.life -= c.decay;
+                if (c.life <= 0 || c.y > sizePx + 50) { gachaState.prizeConfetti.splice(i, 1); continue; }
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, c.life);
+                ctx.translate(c.x, c.y); ctx.rotate(c.rot);
+                ctx.fillStyle = c.color;
+                ctx.fillRect(-c.w/2, -c.h/2, c.w, c.h);
+                ctx.restore();
+            }
+        }
+        
         if (gachaState.sparkles && gachaState.sparkles.length > 0) {
             ctx.save();
             ctx.shadowBlur = 10;
@@ -1774,7 +1897,7 @@
                 let s = gachaState.sparkles[i];
                 s.x += s.vx; s.y += s.vy; s.life -= s.decay;
                 if (s.life <= 0) { gachaState.sparkles.splice(i, 1); continue; }
-                ctx.globalAlpha = s.life;
+                ctx.globalAlpha = Math.max(0, s.life);
                 ctx.fillStyle = '#fef08a';
                 ctx.beginPath();
                 ctx.arc(s.x, s.y, Math.max(0.1, 4 * s.life), 0, Math.PI*2);
@@ -1785,8 +1908,7 @@
         
         ctx.restore();
 
-        let ballToDraw = dispensingBall || lastDispensedBall;
-        if (ballToDraw) {
+        dispensedBalls.forEach(ballToDraw => {
             ctx.save(); ctx.translate(ballToDraw.x, ballToDraw.y);
             let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5; 
             
@@ -1815,7 +1937,7 @@
             ctx.shadowBlur = 0; 
             ctx.beginPath(); ctx.arc(-bR*0.25, -bR*0.35, bR*0.25, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
             ctx.restore();
-        }
+        });
     }
 
     function triggerWheelWinGlow() {
@@ -1823,22 +1945,23 @@
         wheelSparkles = [];
         wheelConfetti = [];
         const canvas = document.getElementById('wheelCanvas'); if (!canvas) return;
-        const sizePx = parseInt(canvas.style.width, 10) || canvas.width;
+        const rect = canvas.getBoundingClientRect();
+        const sizePx = rect.width; 
         let cx = sizePx / 2, cy = sizePx / 2;
         
         const colors = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316', '#ec4899'];
         
-        for(let i=0; i<150; i++) {
+        for(let i=0; i<200; i++) {
             let edge = Math.floor(Math.random() * 4);
             let startX, startY;
             let angleToCenter;
-            if (edge === 0) { startX = Math.random() * sizePx; startY = -20; angleToCenter = Math.PI / 2; } 
-            else if (edge === 1) { startX = sizePx + 20; startY = Math.random() * sizePx; angleToCenter = Math.PI; } 
-            else if (edge === 2) { startX = Math.random() * sizePx; startY = sizePx + 20; angleToCenter = -Math.PI / 2; } 
-            else { startX = -20; startY = Math.random() * sizePx; angleToCenter = 0; } 
+            if (edge === 0) { startX = Math.random() * sizePx; startY = 0; angleToCenter = Math.PI / 2; } 
+            else if (edge === 1) { startX = sizePx; startY = Math.random() * sizePx; angleToCenter = Math.PI; } 
+            else if (edge === 2) { startX = Math.random() * sizePx; startY = sizePx; angleToCenter = -Math.PI / 2; } 
+            else { startX = 0; startY = Math.random() * sizePx; angleToCenter = 0; } 
 
-            let angle = angleToCenter + (Math.random() - 0.5) * 1.5; 
-            let velocity = Math.random() * 20 + 8; 
+            let angle = angleToCenter + (Math.random() - 0.5) * 1.2; 
+            let velocity = Math.random() * 18 + 8; 
             
             wheelConfetti.push({
                 x: startX, y: startY,
@@ -1963,7 +2086,7 @@
                 let s = wheelSparkles[i];
                 s.x += s.vx; s.y += s.vy; s.life -= s.decay;
                 if (s.life <= 0) { wheelSparkles.splice(i, 1); continue; }
-                ctx.globalAlpha = s.life; ctx.fillStyle = '#fef08a';
+                ctx.globalAlpha = Math.max(0, s.life); ctx.fillStyle = '#fef08a';
                 ctx.beginPath(); ctx.arc(s.x, s.y, Math.max(0.1, 4 * s.life * s.sizeMult), 0, Math.PI*2); ctx.fill();
             }
             ctx.restore();
@@ -1981,7 +2104,7 @@
                 c.vy *= 0.96;
                 c.rot += c.rotSpeed;
                 c.life -= c.decay;
-                if (c.life <= 0 || c.y > sizePx + 50) { wheelConfetti.splice(i, 1); continue; }
+                if (c.life <= 0 || c.y > sizePx + 50 || c.x < -50 || c.x > sizePx + 50) { wheelConfetti.splice(i, 1); continue; }
                 ctx.save();
                 ctx.globalAlpha = Math.max(0, c.life);
                 ctx.translate(c.x, c.y);
@@ -2070,6 +2193,7 @@
 
         const startDrag = (e) => {
             if (isSpinning) return;
+            if (e.cancelable) e.preventDefault();
             isDown = true; wheelDragState = true; canvas.style.cursor = 'grabbing';
             lastAngle = getAngle(e); vAngle = 0; lastTime = performance.now();
             cancelAnimationFrame(momentumID); hoveredSegmentIndex = -1; 
@@ -2078,7 +2202,7 @@
 
         const moveDrag = (e) => {
             if (!isDown || isSpinning) return;
-            e.preventDefault();
+            if (e.cancelable) e.preventDefault();
             let currentAngle = getAngle(e); let diff = currentAngle - lastAngle;
             if (diff > Math.PI) diff -= Math.PI * 2; if (diff < -Math.PI) diff += Math.PI * 2;
             wheelSpinAngle += diff; lastAngle = currentAngle;
@@ -2088,10 +2212,10 @@
 
         const stopDrag = () => { if (!isDown) return; isDown = false; wheelDragState = false; canvas.style.cursor = 'grab'; beginMomentum(); };
 
-        canvas.addEventListener('mousedown', startDrag); canvas.addEventListener('mousemove', moveDrag);
-        canvas.addEventListener('mouseup', stopDrag); canvas.addEventListener('mouseleave', stopDrag);
-        canvas.addEventListener('touchstart', startDrag, {passive: true}); canvas.addEventListener('touchmove', moveDrag, {passive: false});
-        canvas.addEventListener('touchend', stopDrag); canvas.addEventListener('touchcancel', stopDrag);
+        canvas.addEventListener('mousedown', startDrag); window.addEventListener('mousemove', moveDrag, {passive: false});
+        window.addEventListener('mouseup', stopDrag); canvas.addEventListener('mouseleave', stopDrag);
+        canvas.addEventListener('touchstart', startDrag, {passive: false}); window.addEventListener('touchmove', moveDrag, {passive: false});
+        window.addEventListener('touchend', stopDrag); canvas.addEventListener('touchcancel', stopDrag);
 
         function beginMomentum() {
             function loop() {
@@ -2162,7 +2286,19 @@
             let t = (time - startTime) / duration; if (t > 1) t = 1;
             const ease = 1 - Math.pow(1 - t, 4); 
             windowEl.scrollLeft = startScroll + distance * ease;
-            checkScrollerHaptic();
+            
+            // Check haptics using updated function
+            if (!scrollerMuted) {
+                let idx = Math.floor((windowEl.scrollLeft + centerOffset) / 166);
+                if (idx !== lastHapticScroll) { 
+                    if (lastHapticScroll !== -1) {
+                        triggerHaptic(); 
+                        playScrollerClick();
+                    }
+                    lastHapticScroll = idx; 
+                }
+            }
+
             if (t < 1) requestAnimationFrame(animateScroll);
         }
         requestAnimationFrame(animateScroll);
@@ -2170,8 +2306,7 @@
 
     function prepareGachaSpin(targetItem) {
         if (!document.getElementById('gachaCanvas')) return;
-        dispensingBall = null; lastDispensedBall = null; 
-
+        
         if (window.cachedGacha && window.cachedGacha.length > 0) {
             window.cachedGacha.forEach(b => {
                 b.vx = (Math.random() - 0.5) * 4; b.vy = (Math.random() - 0.5) * 4;
@@ -2184,6 +2319,7 @@
 
         gachaState.knobTarget = gachaState.knobAngle + (Math.PI * 4); // Turn 720 degrees
         gachaState.spinStartTime = performance.now(); gachaState.hasDropped = false; gachaState.targetItem = targetItem;
+        gachaState.prizeConfetti = []; gachaState.sparkles = [];
         wakeUpGacha();
     }
 
@@ -2241,10 +2377,10 @@
             history.unshift({ label: item.label, hitValue: item.value, bidValue: bid, isUser, time: new Date().toLocaleTimeString() });
             item.remaining--;
             
-            rebuildDOMFromInventory(); // Rebuild textboxes with new quantity first
+            rebuildDOMFromInventory(); 
             updateHistoryUI(); 
             updateOddsTable();
-            syncAndUI(); // Now safely sync
+            syncAndUI(); 
 
             await new Promise(r => setTimeout(r, 4000));
             
@@ -2254,6 +2390,7 @@
             
             if (item.prized) {
                 playWin();
+                gachaState.prizeDropTime = performance.now();
                 triggerWheelWinGlow();
                 const wrapper = document.getElementById('main-scroller-wrapper');
                 if (wrapper && !wrapper.closest('.card').classList.contains('minimized')) {
@@ -2268,7 +2405,7 @@
             isSpinning = false; 
             if(btnRoll) btnRoll.innerText = origRollTxt;
             if(btnReroll) btnReroll.innerText = origRerollTxt;
-            lastDispensedBall = dispensingBall; dispensingBall = null; 
+            
             if (isNaN(wheelSpinAngle)) wheelSpinAngle = 0; wheelSpinAngle = wheelSpinAngle % (Math.PI * 2); 
             rebuildDOMFromInventory(); syncAndUI();
         }
@@ -2302,7 +2439,7 @@
             let clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
             let clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
             
-            e.preventDefault(); 
+            if (e.cancelable) e.preventDefault(); 
             if (window.getSelection) { window.getSelection().removeAllRanges(); }
 
             const card = e.target.closest('.card'); 
@@ -2325,14 +2462,15 @@
             autoScrollSpeed = 0;
             dragScrollRAF = requestAnimationFrame(updateAutoScroll);
 
-            window.addEventListener('mousemove', dragMove); window.addEventListener('mouseup', dragEnd);
+            window.addEventListener('mousemove', dragMove, {passive: false}); window.addEventListener('mouseup', dragEnd);
             window.addEventListener('touchmove', dragMove, {passive: false}); window.addEventListener('touchend', dragEnd);
         }
 
         let lastClientX, lastClientY;
 
         function dragMove(e) {
-            if (!dragCard) return; e.preventDefault();
+            if (!dragCard) return; 
+            if (e.cancelable) e.preventDefault();
             let clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
             let clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
             
@@ -2542,7 +2680,9 @@
                 
                 const starHTML = item.prized ? '<span style="color:var(--prize-color); text-shadow: 0 0 2px rgba(255,193,7,0.5);">★</span> ' : '';
                 
-                group.innerHTML = `<b style="font-size:0.75rem">${starHTML}${item.label}</b><br><span style="font-size:0.6rem; color:#64748b">${item.remaining} left</span><button class="btn-hit-me" style="background:${itemColor}" onclick="recordSpin(${item.id}, true)">I HIT</button><button class="btn-hit-other" onclick="recordSpin(${item.id}, false)">OUT</button>`;
+                const boughtBtnHTML = appMode === 'buyer' ? `<button class="btn-hit-me" style="background:${itemColor}" onclick="recordSpin(${item.id}, true)">BOUGHT</button>` : '';
+                
+                group.innerHTML = `<b style="font-size:0.75rem">${starHTML}${item.label}</b><br><span style="font-size:0.6rem; color:#64748b">${item.remaining} left</span>${boughtBtnHTML}<button class="btn-hit-other" onclick="recordSpin(${item.id}, false)">ROLLED</button>`;
                 container.appendChild(group);
             }
         });
@@ -2634,14 +2774,22 @@
                 grid.appendChild(row); if (roi > 28) break;
             }
         } else {
-            for (let price = Math.ceil(ev); price <= Math.ceil(ev * 2.5); price++) {
+            for (let price = Math.max(1, Math.floor(ev * 0.5)); price <= Math.ceil(ev * 1.5); price++) {
                 if (price === 0) continue;
-                const roi = ev > 0 ? ((price - ev) / ev * 100) : 0; if (roi < 0) continue; 
+                const roi = ev > 0 ? ((price - ev) / ev * 100) : 0; 
+                if (roi < -20.5 || roi > 20.5) continue; 
+                
                 const row = document.createElement('div'); row.className = 'heatmap-row heatmap-grid-layout';
-                row.style.background = roi >= 20 ? '#dcfce7' : (roi >= 10 ? '#f0fdf4' : '#fffbeb');
+                let bg = '#fffbeb';
+                if (roi >= 10) bg = '#dcfce7';
+                else if (roi >= 0) bg = '#f0fdf4';
+                else if (roi <= -10) bg = '#fee2e2';
+                else if (roi < 0) bg = '#fef2f2';
+                
+                row.style.background = bg;
                 row.onclick = () => { document.getElementById('bid-input').value = price; syncAndUI(); };
                 row.innerHTML = `<div style="text-align:center; font-size:0.7rem; font-weight:800;">£${price}</div><div style="text-align:center; font-size:0.7rem; font-weight:800;">${roi.toFixed(1)}%</div><div style="text-align:center; font-size:0.7rem; font-weight:800;">£${(price-ev).toFixed(2)}</div>`;
-                grid.appendChild(row); if (roi > 35) break;
+                grid.appendChild(row); 
             }
         }
     }
