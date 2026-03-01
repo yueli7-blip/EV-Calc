@@ -288,6 +288,9 @@
                 <div class="section-title">
                     <div style="display:flex; align-items:center; gap: 8px;">
                         <span>Auto-Simulate Spin</span>
+                        <label style="display:flex; align-items:center; gap:4px; font-size:0.55rem; color:var(--primary); cursor:pointer; text-transform:uppercase; font-weight:900;">
+                            <input type="checkbox" id="auto-roll-checkbox" style="width:auto; margin:0; cursor:pointer;"> AUTO ROLL
+                        </label>
                     </div>
                     <div class="card-controls">
                         <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
@@ -479,10 +482,10 @@
     let templates = [];
     const defaultTemplates = [
         { label: 'Prismatic SPC', value: 220, color: '#0ea5e9', prized: true },
-        { label: 'Prismatic ETB', value: 125, color: '#a855f7', prized: true },
+        { label: 'Prismatic ETB', value: 135, color: '#a855f7', prized: true },
         { label: 'Charizard X UPC', value: 140, color: '#f97316', prized: true },
         { label: 'Lucario EX', value: 160, color: '#0d9488', prized: true },
-        { label: 'Warriors', value: 120, color: '#ca8a04', prized: true },
+        { label: 'Legendary Warriors', value: 120, color: '#ca8a04', prized: true },
         { label: 'Great Tusk', value: 140, color: '#991b1b', prized: true },
         { label: 'Ascended ETB', value: 80, color: '#10b981', prized: true },
         { label: 'Ascended PC ETB', value: 200, color: '#6366f1', prized: true },
@@ -904,46 +907,6 @@
     let lastHapticSeg = -1;
     let lastHapticScroll = -1;
 
-    function checkWheelHaptic() {
-        const module = document.getElementById('wheel-module');
-        if (module && module.classList.contains('minimized')) return;
-
-        const slots = getDistributedSlots();
-        if(slots.length === 0) return;
-        const step = (Math.PI * 2) / slots.length;
-        let targetIndex = slots.findIndex(s => s.prized); if (targetIndex === -1) targetIndex = 0;
-        const baseOffset = -(targetIndex * step + step / 2);
-        
-        let currentRotationOffset = baseOffset + wheelSpinAngle;
-        let normRot = currentRotationOffset % (Math.PI * 2);
-        if (normRot < 0) normRot += Math.PI * 2;
-        let currentSeg = Math.floor(normRot / step);
-        
-        if (currentSeg !== lastHapticSeg) { 
-            if (lastHapticSeg !== -1 && (isSpinning || wheelDragState)) { 
-                triggerHaptic(); 
-                playPegHit();
-            }
-            lastHapticSeg = currentSeg; 
-        }
-    }
-
-    function checkScrollerHaptic() {
-        const module = document.getElementById('card-scroller');
-        if (module && module.classList.contains('minimized')) return;
-
-        const slider = document.getElementById('scroller-window'); if(!slider) return;
-        let centerOffset = slider.clientWidth / 2;
-        let idx = Math.floor((slider.scrollLeft + centerOffset) / 166);
-        if (idx !== lastHapticScroll) { 
-            if (lastHapticScroll !== -1) {
-                triggerHaptic(); 
-                playScrollerClick();
-            }
-            lastHapticScroll = idx; 
-        }
-    }
-
     function getDistributedSlots() {
         let expanded = [];
         inventory.forEach((item, id) => { for(let n=0; n<item.remaining; n++) expanded.push({...item, id}); });
@@ -1168,13 +1131,11 @@
             let foundBall = null, isTray = false;
             let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5;
             
-            // Check dispensed balls on tray
+            // CHECK BALLS FIRST
             for (let i = dispensedBalls.length - 1; i >= 0; i--) {
                 let tb = dispensedBalls[i];
                 if (Math.hypot(drawMouseX - tb.x, drawMouseY - tb.y) <= bR + 5) { foundBall = tb; isTray = true; break; }
             }
-            
-            // Check inside dome
             if (!foundBall && window.cachedGacha) {
                 let relX = drawMouseX - cx - gachaState.machineX; let relY = drawMouseY - domeCy - gachaState.machineY;
                 for (let i = window.cachedGacha.length - 1; i >= 0; i--) {
@@ -1308,18 +1269,14 @@
         const gachaModule = document.getElementById('gacha-module');
         const isMinimized = gachaModule && gachaModule.classList.contains('minimized');
 
-        let isForceSettling = gachaState.forceSettle > 0;
-        let grav = isForceSettling ? 3.0 : 0.28;
-
         balls.forEach(b => {
             if (b.prized) b.starRotation = (b.starRotation || 0) + 0.015;
 
-            // Sleep evaluation
             let speed = Math.hypot(b.vx, b.vy);
-            if (phase === "settle" && !isForceSettling) {
+            if (phase === "settle") {
                 if (speed < 0.25 && b.y > innerR * 0.2) b.sleepFrames = (b.sleepFrames || 0) + 1;
                 else b.sleepFrames = 0;
-                b.isSleeping = b.sleepFrames > 20;
+                b.isSleeping = b.sleepFrames > 15;
             } else {
                 b.sleepFrames = 0; b.isSleeping = false;
             }
@@ -1331,8 +1288,8 @@
                 b.vy += 0.22; let drag = 0.95; b.vx *= drag; b.vy *= drag; b.vz *= drag;
             } else {
                 if (!b.isSleeping) {
-                    b.vy += grav; 
-                    let drag = isForceSettling ? 0.6 : (b.y > innerR * 0.5 ? 0.92 : 0.98); 
+                    b.vy += 0.25; 
+                    let drag = 0.98; 
                     b.vx *= drag; b.vy *= drag; 
                 } else {
                     b.vx = 0; b.vy = 0; 
@@ -1351,15 +1308,16 @@
                 b.x = nx * innerR; b.y = ny * innerR;
                 let dot = b.vx * nx + b.vy * ny;
                 if (dot > 0) { 
-                    let wallBounce = isForceSettling ? 0.0 : (dot > 0.8 ? b.restitution : 0.15);
+                    // Higher threshold for sounds, lower friction for rolling off
+                    let wallBounce = dot > 0.8 ? b.restitution : 0.05;
                     b.vx -= (1 + wallBounce) * dot * nx; 
                     b.vy -= (1 + wallBounce) * dot * ny; 
                     
-                    b.vx *= 0.99; 
+                    b.vx *= 0.99; // Rolling physics
                     b.vy *= 0.99; 
                     
                     if (dot > 0.5) { b.sleepFrames = 0; b.isSleeping = false; }
-                    if (!isMinimized && dot > 1.2 && !b.isSleeping && !isForceSettling) {
+                    if (!isMinimized && dot > 4.0 && !b.isSleeping) {
                         b.bounceCount = (b.bounceCount || 0) + 1;
                         playMarbleClack(dot, b.bounceCount, false);
                     }
@@ -1367,7 +1325,6 @@
             }
         });
 
-        // Optimize physics loop with spatial bounding-box checks (AABB)
         for (let iter = 0; iter < 2; iter++) {
             for(let i=0; i<balls.length; i++) {
                 let b1 = balls[i];
@@ -1376,10 +1333,8 @@
                     if (b1.isSleeping && b2.isSleeping) continue;
                     
                     let minDistSq = (b1.r + b2.r) * (b1.r + b2.r);
-                    let dx = b2.x - b1.x;
-                    if (dx * dx > minDistSq) continue;
-                    let dy = b2.y - b1.y;
-                    if (dy * dy > minDistSq) continue;
+                    let dx = b2.x - b1.x; if (dx * dx > minDistSq) continue;
+                    let dy = b2.y - b1.y; if (dy * dy > minDistSq) continue;
                     let dz = (b2.z || 0) - (b1.z || 0);
                     let distSq = dx*dx + dy*dy + dz*dz;
                     
@@ -1394,21 +1349,18 @@
                             let velAlongNormal = rvx * nx + rvy * ny + rvz * nz;
                             if (velAlongNormal < -0.1) { 
                                 let combinedRestitution = (b1.restitution + b2.restitution) / 2;
-                                let bounce = (Math.abs(velAlongNormal) > 0.8) ? combinedRestitution : 0.1; 
-                                if (isForceSettling) bounce = 0.0;
+                                let bounce = (Math.abs(velAlongNormal) > 0.8) ? combinedRestitution : 0.05; 
                                 let impulse = -(1 + bounce) * velAlongNormal / 2; 
                                 
                                 if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
                                 if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
 
-                                // Prevent sticky vertical stacking with a tiny horizontal slide perturbation
-                                if (Math.abs(nx) < 0.2 && Math.abs(velAlongNormal) < 1.0 && !isForceSettling) {
+                                // High-energy collisions slide off, low energy ones drain more to rolloff
+                                if (Math.abs(nx) < 0.2 && Math.abs(velAlongNormal) < 1.0) {
                                     let slide = (Math.random() - 0.5) * 0.3;
-                                    if (!b1.isSleeping) b1.vx += slide;
-                                    if (!b2.isSleeping) b2.vx -= slide;
+                                    b1.vx += slide; b2.vx -= slide;
                                 }
                                 
-                                // Kinetic drain only for extremely slow collisions to allow rolling off
                                 if (Math.abs(velAlongNormal) < 0.8) {
                                     if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.85; b1.vy *= 0.85; }
                                     if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.85; b2.vy *= 0.85; }
@@ -1422,7 +1374,8 @@
                                     b1.isSleeping = false; b2.isSleeping = false;
                                 }
 
-                                if (!isMinimized && Math.abs(velAlongNormal) > 1.5 && overlap < 2.0 && (!b1.isSleeping || !b2.isSleeping) && !isForceSettling) {
+                                // Increased threshold for audio feedback
+                                if (!isMinimized && Math.abs(velAlongNormal) > 6.0 && overlap < 2.0 && (!b1.isSleeping || !b2.isSleeping)) {
                                     b1.bounceCount = (b1.bounceCount || 0) + 1;
                                     playMarbleClack(Math.abs(velAlongNormal), b1.bounceCount, true);
                                 }
@@ -1437,8 +1390,6 @@
                 if (currentDist > innerR && currentDist > 0) { b.x = (b.x / currentDist) * innerR; b.y = (b.y / currentDist) * innerR; }
             });
         }
-        
-        if (gachaState.forceSettle > 0) gachaState.forceSettle--;
     }
 
     function updateTrayBalls(sizePx, bR, isMinimized) {
@@ -1664,7 +1615,7 @@
             if (b.prized) hasEffects = true;
         });
 
-        if (maxSpeed < 0.5 && !trayMoving && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasEffects && gachaState.forceSettle <= 0) {
+        if (maxSpeed < 0.5 && !trayMoving && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasEffects) {
             gachaState.idleFrames++;
             if (gachaState.idleFrames > 30) { 
                 if (window.cachedGacha) { window.cachedGacha.forEach(b => { b.vx = 0; b.vy = 0; b.vz = 0; }); }
@@ -1674,7 +1625,7 @@
             }
         } else { gachaState.idleFrames = 0; }
         
-        if (gachaState.awake || isSpinning || Math.abs(gachaState.machineX) > 0.5 || Math.abs(gachaState.knobV) > 0.01 || hasEffects || trayMoving || gachaState.forceSettle > 0) { 
+        if (gachaState.awake || isSpinning || Math.abs(gachaState.machineX) > 0.5 || Math.abs(gachaState.knobV) > 0.01 || hasEffects || trayMoving) { 
             requestAnimationFrame(gachaLoop); 
         }
     }
@@ -2215,7 +2166,7 @@
         canvas.addEventListener('mousedown', startDrag); window.addEventListener('mousemove', moveDrag, {passive: false});
         window.addEventListener('mouseup', stopDrag); canvas.addEventListener('mouseleave', stopDrag);
         canvas.addEventListener('touchstart', startDrag, {passive: false}); window.addEventListener('touchmove', moveDrag, {passive: false});
-        window.addEventListener('touchend', stopDrag); canvas.addEventListener('touchcancel', stopDrag);
+        canvas.addEventListener('touchend', stopDrag); canvas.addEventListener('touchcancel', stopDrag);
 
         function beginMomentum() {
             function loop() {
@@ -2358,7 +2309,7 @@
         const origRollTxt = btnRoll ? btnRoll.innerText : "SIMULATE ROLL";
         const origRerollTxt = btnReroll ? btnReroll.innerText : "REROLL";
         
-        let rollTimer = 4;
+        let rollTimer = item.prized ? 7 : 4;
         const updateBtns = (t) => {
             if(btnRoll) btnRoll.innerText = `ROLLING... ${t}`;
             if(btnReroll) btnReroll.innerText = `ROLLING... ${t}`;
@@ -2366,7 +2317,7 @@
         updateBtns(rollTimer);
         let countdownInterval = setInterval(() => {
             rollTimer--;
-            if (rollTimer > 0) updateBtns(rollTimer);
+            if (rollTimer >= 0) updateBtns(rollTimer);
         }, 1000);
         
         try {
@@ -2383,10 +2334,6 @@
             syncAndUI(); 
 
             await new Promise(r => setTimeout(r, 4000));
-            
-            clearInterval(countdownInterval);
-            if(btnRoll) btnRoll.innerText = "CELEBRATING...";
-            if(btnReroll) btnReroll.innerText = "CELEBRATING...";
             
             if (item.prized) {
                 playWin();
@@ -2408,6 +2355,16 @@
             
             if (isNaN(wheelSpinAngle)) wheelSpinAngle = 0; wheelSpinAngle = wheelSpinAngle % (Math.PI * 2); 
             rebuildDOMFromInventory(); syncAndUI();
+            
+            const autoRollCb = document.getElementById('auto-roll-checkbox');
+            if (autoRollCb && autoRollCb.checked) {
+                const totalLeft = inventory.reduce((sum, i) => sum + i.remaining, 0);
+                if (totalLeft > 0) {
+                    setTimeout(simulateResult, 200);
+                } else {
+                    autoRollCb.checked = false;
+                }
+            }
         }
     }
 
