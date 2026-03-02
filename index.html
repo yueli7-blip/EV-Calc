@@ -1494,10 +1494,12 @@
             }
 
             const R = sizePx / 3.4, cx = sizePx / 2, domeCy = sizePx * 0.33;
-            let baseTop = domeCy + R * 2.1;
+            let mX = gachaState.machineX || 0;
+            let mY = gachaState.machineY || 0;
+            let baseTop = domeCy + mY + R * 2.1;
             let baseBottom = baseTop + R * 0.15;
-            let baseLeft = cx - R * 0.8;
-            let baseRight = cx + R * 0.8;
+            let baseLeft = cx + mX - R * 0.8;
+            let baseRight = cx + mX + R * 0.8;
             
             let testX = b.x;
             let testY = b.y;
@@ -1511,25 +1513,31 @@
             let distance = Math.sqrt((distX*distX) + (distY*distY));
 
             if (distance <= bR) {
-                let nx = distX / distance;
-                let ny = distY / distance;
-                b.x = testX + nx * bR;
-                b.y = testY + ny * bR;
+                if (distance < 0.001) {
+                    // Safety catch: Center of ball deeply penetrated the platform. Pop it to the top.
+                    b.y = baseTop - bR;
+                    if (b.vy > 0) b.vy *= -b.restitution;
+                } else {
+                    let nx = distX / distance;
+                    let ny = distY / distance;
+                    b.x = testX + nx * bR;
+                    b.y = testY + ny * bR;
 
-                let dot = b.vx * nx + b.vy * ny;
-                if (dot < 0) {
-                    let restitution = b.restitution; 
-                    b.vx -= (1 + restitution) * dot * nx;
-                    b.vy -= (1 + restitution) * dot * ny;
-                    
-                    let tx = -ny, ty = nx;
-                    let tanDot = b.vx * tx + b.vy * ty;
-                    b.vx -= tanDot * tx * 0.05;
-                    b.vy -= tanDot * ty * 0.05;
+                    let dot = b.vx * nx + b.vy * ny;
+                    if (dot < 0) {
+                        let restitution = b.restitution; 
+                        b.vx -= (1 + restitution) * dot * nx;
+                        b.vy -= (1 + restitution) * dot * ny;
+                        
+                        let tx = -ny, ty = nx;
+                        let tanDot = b.vx * tx + b.vy * ty;
+                        b.vx -= tanDot * tx * 0.05;
+                        b.vy -= tanDot * ty * 0.05;
 
-                    if (!isMinimized && Math.abs(dot) > 0.8) {
-                        b.bounceCount = (b.bounceCount || 0) + 1;
-                        playMarbleClack(Math.abs(dot) * 2, b.bounceCount, false);
+                        if (!isMinimized && Math.abs(dot) > 0.8) {
+                            b.bounceCount = (b.bounceCount || 0) + 1;
+                            playMarbleClack(Math.abs(dot) * 2, b.bounceCount, false);
+                        }
                     }
                 }
             }
@@ -1613,8 +1621,12 @@
                         if (dBallIdx > -1) window.cachedGacha.splice(dBallIdx, 1);
                     }
                     dispensingBall = {
-                        prized: gachaState.targetItem.prized, x: cx, y: chuteY, 
-                        vx: (Math.random() - 0.5) * 2, vy: R * 0.01, rotation: 0, starRotation: 0, scale: 1,
+                        prized: gachaState.targetItem.prized, 
+                        x: cx + (gachaState.machineX || 0), 
+                        y: chuteY + (gachaState.machineY || 0), 
+                        vx: (Math.random() - 0.5) * 2 + (gachaState.machineX ? gachaState.machineX * 0.01 : 0), 
+                        vy: R * 0.01 + (gachaState.machineY ? gachaState.machineY * 0.01 : 0), 
+                        rotation: 0, starRotation: 0, scale: 1,
                         restitution: 0.63 + Math.random() * 0.21, bounceCount: 0 
                     };
                     dispensedBalls.push(dispensingBall);
