@@ -77,8 +77,8 @@
         .prob-bar-wrapper{width:100%;height:24px;border-radius:6px;overflow:hidden;display:flex;background:#e2e8f0;border:1px solid rgba(0,0,0,0.05)}
         .prob-segment{height:100%;transition:width 0.4s cubic-bezier(0.4,0,0.2,1);border-right:1px solid rgba(255,255,255,0.2);position:relative}
         .prob-segment:hover{filter:brightness(1.1);cursor:help}
-        .scroller-wrapper{position:relative;width:100%;border-radius:10px;border:1px solid var(--border);background:#f8fafc;overflow:hidden; transition: all 0.3s;}
-        .scroller-window{width:100%;overflow-x:auto;overflow-y:hidden;padding:10px 0;scrollbar-width:none;cursor:grab; touch-action: pan-y;}
+        .scroller-wrapper{position:relative;width:100%;border-radius:10px;border:1px solid var(--border);background:#f8fafc;overflow:hidden; transition: all 0.3s; overscroll-behavior-x: none;}
+        .scroller-window{width:100%;overflow-x:auto;overflow-y:hidden;padding:10px 0;scrollbar-width:none;cursor:grab; touch-action: pan-y; overscroll-behavior-x: none;}
         .scroller-window::-webkit-scrollbar { display: none; }
         .scroller-window:active{cursor:grabbing}
         .scroller-pointer{position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:var(--primary);z-index:10;border-radius:2px;box-shadow:0 0 5px rgba(0,0,0,0.3);pointer-events:none; transition: background 0.3s;}
@@ -603,7 +603,7 @@
         renderTemplateEditList();
     }
 
-    // --- AUDIO ENGINE ---
+    // --- AUDIO & HAPTIC ENGINE ---
     let actx = null;
     let audioInit = false;
     let gachaMuted = false;
@@ -663,6 +663,20 @@
                 }
             }
         } catch(e) {}
+    }
+
+    function checkScrollerHaptic() {
+        const windowEl = document.getElementById('scroller-window');
+        if (!windowEl || scrollerMuted) return;
+        const centerOffset = windowEl.clientWidth / 2;
+        let idx = Math.floor((windowEl.scrollLeft + centerOffset) / 166);
+        if (idx !== lastHapticScroll) {
+            if (lastHapticScroll !== -1) {
+                triggerHaptic();
+                playScrollerClick();
+            }
+            lastHapticScroll = idx;
+        }
     }
 
     function playTone(freq, type, duration, vol) {
@@ -907,6 +921,17 @@
     let lastHapticSeg = -1;
     let lastHapticScroll = -1;
 
+    let isDrawWheelQueued = false;
+    function safeDrawWheel() {
+        if (!isDrawWheelQueued) {
+            isDrawWheelQueued = true;
+            requestAnimationFrame(() => {
+                isDrawWheelQueued = false;
+                drawWheel();
+            });
+        }
+    }
+
     function getDistributedSlots() {
         let expanded = [];
         inventory.forEach((item, id) => { for(let n=0; n<item.remaining; n++) expanded.push({...item, id}); });
@@ -934,7 +959,7 @@
         });
 
         initCustomCardDrag(); 
-        initColumnResizer('wheel-module', 'wheel-resize-handle', drawWheel);
+        initColumnResizer('wheel-module', 'wheel-resize-handle', safeDrawWheel);
         initColumnResizer('gacha-module', 'gacha-resize-handle', drawGacha);
         initWheelDrag(); 
         initWheelHover();
@@ -949,7 +974,7 @@
 
         const observer = new ResizeObserver(() => {
             if(!document.body.classList.contains('wheel-resizing')) {
-                requestAnimationFrame(drawWheel);
+                safeDrawWheel();
                 requestAnimationFrame(drawGacha);
             }
         });
@@ -996,7 +1021,7 @@
         card.classList.toggle('minimized'); 
         btn.innerText = card.classList.contains('minimized') ? '+' : '-'; 
         if (!card.classList.contains('minimized')) {
-            requestAnimationFrame(drawWheel); 
+            safeDrawWheel(); 
             requestAnimationFrame(drawGacha);
         }
     }
@@ -1006,7 +1031,7 @@
             c.style.display = ''; c.classList.remove('minimized');
             const btn = c.querySelector('.card-btn'); if(btn && btn.innerText === '+') btn.innerText = '-';
         });
-        requestAnimationFrame(drawWheel); requestAnimationFrame(drawGacha);
+        safeDrawWheel(); requestAnimationFrame(drawGacha);
     }
 
     function initColumnResizer(cardId, handleId, drawCallback) {
@@ -1047,7 +1072,8 @@
 
     function initScrollerDrag() {
         const slider = document.getElementById('scroller-window'); if (!slider) return;
-        let isDown = false, startX, scrollLeft, velX = 0, momentumID, lastTime = 0, lastX = 0;
+        let isDown = false, startX, scrollLeft, velX = 0, momentumID;
+        let dragTracker = [];
 
         const getPos = (e) => e.touches && e.touches.length > 0 ? e.touches[0].pageX : e.pageX;
 
@@ -1056,26 +1082,52 @@
             let pageX = getPos(e);
             isDown = true; slider.style.cursor = 'grabbing';
             startX = pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft;
-            lastX = pageX; velX = 0; lastTime = performance.now();
+            dragTracker = [{x: pageX, time: performance.now()}];
+            velX = 0;
             cancelAnimationFrame(momentumID);
         };
-        const stopDrag = () => { if (!isDown) return; isDown = false; slider.style.cursor = 'grab'; beginMomentum(); };
+        const stopDrag = () => {
+            if (!isDown) return; 
+            isDown = false; slider.style.cursor = 'grab';
+            
+            let now = performance.now();
+            let validTrack = dragTracker.filter(t => now - t.time < 100);
+            if (validTrack.length > 1) {
+                let first = validTrack[0];
+                let last = validTrack[validTrack.length - 1];
+                let dt = last.time - first.time;
+                let dx = last.x - first.x;
+                velX = -(dx / Math.max(1, dt)) * 25; 
+            } else {
+                velX = 0;
+            }
+            beginMomentum(); 
+        };
         const moveDrag = (e) => {
             if (!isDown || isSpinning) return;
             let pageX = getPos(e);
             const x = pageX - slider.offsetLeft; const walk = (x - startX); 
             slider.scrollLeft = scrollLeft - walk;
-            let now = performance.now(); let dt = Math.max(1, now - lastTime); let dx = pageX - lastX;
-            velX = -dx / dt * 50; lastX = pageX; lastTime = now; checkScrollerHaptic();
+            
+            let now = performance.now();
+            dragTracker.push({x: pageX, time: now});
+            if (dragTracker.length > 10) dragTracker.shift();
+            
+            checkScrollerHaptic();
         };
 
         slider.addEventListener('mousedown', startDrag);
         slider.addEventListener('mouseleave', stopDrag);
         slider.addEventListener('mouseup', stopDrag);
         slider.addEventListener('mousemove', (e) => { e.preventDefault(); moveDrag(e); });
+        
         slider.addEventListener('touchstart', startDrag, {passive: true});
-        slider.addEventListener('touchend', stopDrag); slider.addEventListener('touchcancel', stopDrag);
-        slider.addEventListener('touchmove', moveDrag, {passive: true});
+        slider.addEventListener('touchend', stopDrag); 
+        slider.addEventListener('touchcancel', stopDrag);
+        slider.addEventListener('touchmove', (e) => {
+            if (isDown) e.preventDefault(); 
+            moveDrag(e); 
+        }, {passive: false});
 
         function beginMomentum() {
             function loop() {
@@ -1083,9 +1135,10 @@
                 if (slider.scrollLeft < setWidth * 1.5) slider.scrollLeft += setWidth;
                 if (slider.scrollLeft > setWidth * 3.5) slider.scrollLeft -= setWidth;
 
-                if (!isDown && Math.abs(velX) > 0.5 && !isSpinning) {
-                    slider.scrollLeft += velX; velX *= 0.98; 
-                    checkScrollerHaptic(); momentumID = requestAnimationFrame(loop);
+                if (!isDown && Math.abs(velX) > 0.1 && !isSpinning) {
+                    slider.scrollLeft += velX; velX *= 0.95; 
+                    checkScrollerHaptic(); 
+                    momentumID = requestAnimationFrame(loop);
                 }
             }
             momentumID = requestAnimationFrame(loop);
@@ -1093,14 +1146,13 @@
     }
 
     function simulateResult() {
-        if (isSpinning) return;
         const slots = []; inventory.forEach((item, index) => { for(let n=0; n<item.remaining; n++) slots.push(index); });
         if (slots.length === 0) return;
         const randomIndex = Math.floor(Math.random() * slots.length);
         recordSpin(slots[randomIndex], true);
     }
     function rerollSimulation() {
-        if (isSpinning || history.length === 0) return;
+        if (history.length === 0) return;
         undoLastSpin(); setTimeout(() => { simulateResult(); }, 50);
     }
 
@@ -1118,7 +1170,6 @@
         };
         
         const handleDown = e => {
-            if (isSpinning) return;
             const {clientX, clientY} = getPos(e);
             
             const rect = canvas.getBoundingClientRect(); const ratio = window.devicePixelRatio || 1;
@@ -1174,13 +1225,13 @@
             const sizePx = canvas.width / ratio; const R = sizePx / 3.4; 
             const cx = sizePx / 2, domeCy = sizePx * 0.33, knobY = domeCy + R * 1.1;
 
-            if (Math.hypot(drawMouseX - cx, drawMouseY - knobY) < R * 0.4 && !isSpinning && !gachaState.isMachineGrabbed && !gachaState.draggedBall) {
+            if (Math.hypot(drawMouseX - cx, drawMouseY - knobY) < R * 0.4 && !gachaState.isMachineGrabbed && !gachaState.draggedBall) {
                 canvas.style.cursor = 'pointer';
             } else if (!gachaState.isMachineGrabbed && !gachaState.draggedBall && !gachaState.isKnobGrabbed) {
                 canvas.style.cursor = 'grab';
             }
 
-            if (gachaState.isKnobGrabbed && !isSpinning) {
+            if (gachaState.isKnobGrabbed) {
                 if (e.cancelable) e.preventDefault();
                 canvas.style.cursor = 'grabbing';
                 
@@ -1204,7 +1255,7 @@
                 wakeUpGacha(); return;
             }
 
-            if (gachaState.isMachineGrabbed && !isSpinning) {
+            if (gachaState.isMachineGrabbed) {
                 if (e.cancelable) e.preventDefault();
                 canvas.style.cursor = 'grabbing';
                 let dx = clientX - gachaState.lastMouse.x, dy = clientY - gachaState.lastMouse.y;
@@ -1568,24 +1619,6 @@
                     };
                     dispensedBalls.push(dispensingBall);
                     if (dispensedBalls.length > 10) dispensedBalls.shift();
-                    
-                    if (gachaState.targetItem.prized) {
-                        gachaState.prizeConfetti = [];
-                        gachaState.sparkles = [];
-                        const colors = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316', '#ec4899'];
-                        for (let i=0; i<150; i++) {
-                            let a = Math.random() * Math.PI * 2;
-                            let v = Math.random() * 15 + 5;
-                            gachaState.prizeConfetti.push({
-                                x: cx, y: domeCy,
-                                vx: Math.cos(a)*v, vy: Math.sin(a)*v,
-                                rot: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.5,
-                                w: Math.random() * 8 + 4, h: Math.random() * 12 + 6,
-                                color: colors[Math.floor(Math.random() * colors.length)],
-                                life: 1.0, decay: 0.005 + Math.random()*0.01
-                            });
-                        }
-                    }
                 }
             }
         } else {
@@ -1891,6 +1924,29 @@
         });
     }
 
+    function triggerGachaConfetti() {
+        const canvas = document.getElementById('gachaCanvas'); if (!canvas) return;
+        const ratio = window.devicePixelRatio || 1; const sizePx = canvas.width / ratio;
+        const cx = sizePx / 2, domeCy = sizePx * 0.33;
+
+        gachaState.prizeConfetti = [];
+        gachaState.sparkles = [];
+        const colors = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316', '#ec4899'];
+        for (let i=0; i<150; i++) {
+            let a = Math.random() * Math.PI * 2;
+            let v = Math.random() * 15 + 5;
+            gachaState.prizeConfetti.push({
+                x: cx, y: domeCy,
+                vx: Math.cos(a)*v, vy: Math.sin(a)*v,
+                rot: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.5,
+                w: Math.random() * 8 + 4, h: Math.random() * 12 + 6,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                life: 1.0, decay: 0.005 + Math.random()*0.01
+            });
+        }
+        wakeUpGacha();
+    }
+
     function triggerWheelWinGlow() {
         wheelWinTime = performance.now();
         wheelSparkles = [];
@@ -1903,19 +1959,11 @@
         const colors = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316', '#ec4899'];
         
         for(let i=0; i<200; i++) {
-            let edge = Math.floor(Math.random() * 4);
-            let startX, startY;
-            let angleToCenter;
-            if (edge === 0) { startX = Math.random() * sizePx; startY = 0; angleToCenter = Math.PI / 2; } 
-            else if (edge === 1) { startX = sizePx; startY = Math.random() * sizePx; angleToCenter = Math.PI; } 
-            else if (edge === 2) { startX = Math.random() * sizePx; startY = sizePx; angleToCenter = -Math.PI / 2; } 
-            else { startX = 0; startY = Math.random() * sizePx; angleToCenter = 0; } 
-
-            let angle = angleToCenter + (Math.random() - 0.5) * 1.2; 
-            let velocity = Math.random() * 18 + 8; 
+            let angle = Math.random() * Math.PI * 2; 
+            let velocity = Math.random() * 14 + 7; // Slightly more explosive confetti spread
             
             wheelConfetti.push({
-                x: startX, y: startY,
+                x: cx, y: cy,
                 vx: Math.cos(angle) * velocity,
                 vy: Math.sin(angle) * velocity, 
                 rot: Math.random() * Math.PI * 2,
@@ -1939,7 +1987,7 @@
                 sizeMult: Math.random() * 2 + 1 
             });
         }
-        requestAnimationFrame(drawWheel);
+        safeDrawWheel();
     }
 
     function drawWheel() {
@@ -2126,7 +2174,7 @@
         }
 
         if (isWheelGlowing || Math.abs(flipperAngle) > 0.5 || Math.abs(flipperV) > 0.5 || isSpinning || wheelDragState || Math.abs(smoothedVel) > 0.001) { 
-            requestAnimationFrame(drawWheel); 
+            safeDrawWheel(); 
         }
     }
 
@@ -2148,7 +2196,7 @@
             isDown = true; wheelDragState = true; canvas.style.cursor = 'grabbing';
             lastAngle = getAngle(e); vAngle = 0; lastTime = performance.now();
             cancelAnimationFrame(momentumID); hoveredSegmentIndex = -1; 
-            requestAnimationFrame(drawWheel);
+            safeDrawWheel();
         };
 
         const moveDrag = (e) => {
@@ -2201,16 +2249,18 @@
                     while (offsetAngle < 0) offsetAngle += Math.PI * 2;
                     while (offsetAngle >= Math.PI * 2) offsetAngle -= Math.PI * 2;
                     const index = Math.floor(offsetAngle / step);
-                    if (index !== hoveredSegmentIndex) { hoveredSegmentIndex = index; requestAnimationFrame(drawWheel); }
+                    if (index !== hoveredSegmentIndex) { hoveredSegmentIndex = index; safeDrawWheel(); }
                 }
-            } else if (hoveredSegmentIndex !== -1) { hoveredSegmentIndex = -1; requestAnimationFrame(drawWheel); }
+            } else if (hoveredSegmentIndex !== -1) { hoveredSegmentIndex = -1; safeDrawWheel(); }
         });
-        canvas.addEventListener('mouseleave', () => { hoveredSegmentIndex = -1; requestAnimationFrame(drawWheel); });
+        canvas.addEventListener('mouseleave', () => { hoveredSegmentIndex = -1; safeDrawWheel(); });
     }
 
+    let activeScrollerSpinId = 0;
     function prepareScrollerSpin(targetItem) {
         const track = document.getElementById('scroller-track'); const windowEl = document.getElementById('scroller-window');
         if (!track || !windowEl) return;
+        let myId = ++activeScrollerSpinId;
         const slots = getDistributedSlots();
         let html = ''; const totalItems = 500; 
         
@@ -2232,23 +2282,13 @@
         const startScroll = windowEl.scrollLeft; const distance = targetScroll - startScroll; const duration = 4000; let startTime = null;
 
         function animateScroll(time) {
-            if (!isSpinning) return;
+            if (activeScrollerSpinId !== myId) return;
             if (!startTime) startTime = time;
             let t = (time - startTime) / duration; if (t > 1) t = 1;
             const ease = 1 - Math.pow(1 - t, 4); 
             windowEl.scrollLeft = startScroll + distance * ease;
             
-            // Check haptics using updated function
-            if (!scrollerMuted) {
-                let idx = Math.floor((windowEl.scrollLeft + centerOffset) / 166);
-                if (idx !== lastHapticScroll) { 
-                    if (lastHapticScroll !== -1) {
-                        triggerHaptic(); 
-                        playScrollerClick();
-                    }
-                    lastHapticScroll = idx; 
-                }
-            }
+            checkScrollerHaptic();
 
             if (t < 1) requestAnimationFrame(animateScroll);
         }
@@ -2274,6 +2314,7 @@
         wakeUpGacha();
     }
 
+    let activeWheelSpinId = 0;
     function prepareWheelSpin(targetItem) {
         const slots = getDistributedSlots(); const targetIndices = [];
         slots.forEach((s, idx) => { if(s.id === targetItem.id) targetIndices.push(idx); });
@@ -2281,44 +2322,32 @@
         const step = (Math.PI * 2) / Math.max(1, slots.length);
         let baseRotIndex = slots.findIndex(s => s.prized); if (baseRotIndex === -1) baseRotIndex = 0;
         
+        let myId = ++activeWheelSpinId;
         const dist = (actualTargetIndex - baseRotIndex) * step; const spins = Math.PI * 2 * 6; 
         const startAngle = (isNaN(wheelSpinAngle) ? 0 : wheelSpinAngle) % (Math.PI * 2);
         const targetAngle = spins - dist; 
         
         let startTime = null;
         function animateWheel(time) {
+            if (activeWheelSpinId !== myId) return;
             if (!startTime) startTime = time; 
             let t = (time - startTime) / 4000; if (t > 1) t = 1;
             const ease = 1 - Math.pow(1 - t, 4); 
             wheelSpinAngle = startAngle + (targetAngle - startAngle) * ease;
-            requestAnimationFrame(drawWheel);
-            if (t < 1 && isSpinning) requestAnimationFrame(animateWheel);
+            safeDrawWheel();
+            if (t < 1) requestAnimationFrame(animateWheel);
         }
         requestAnimationFrame(animateWheel);
     }
 
+    let currentSpinId = 0;
+    
     async function recordSpin(id, isUser) {
-        if (isSpinning) return; 
         const item = inventory[id];
         if (!item || item.remaining <= 0) return;
         
+        let mySpinId = ++currentSpinId;
         isSpinning = true; hoveredSegmentIndex = -1;
-        
-        const btnRoll = document.getElementById('btn-sim-roll');
-        const btnReroll = document.getElementById('btn-sim-reroll');
-        const origRollTxt = btnRoll ? btnRoll.innerText : "SIMULATE ROLL";
-        const origRerollTxt = btnReroll ? btnReroll.innerText : "REROLL";
-        
-        let rollTimer = item.prized ? 7 : 4;
-        const updateBtns = (t) => {
-            if(btnRoll) btnRoll.innerText = `ROLLING... ${t}`;
-            if(btnReroll) btnReroll.innerText = `ROLLING... ${t}`;
-        };
-        updateBtns(rollTimer);
-        let countdownInterval = setInterval(() => {
-            rollTimer--;
-            if (rollTimer >= 0) updateBtns(rollTimer);
-        }, 1000);
         
         try {
             prepareScrollerSpin(item); prepareGachaSpin(item); prepareWheelSpin(item);
@@ -2335,34 +2364,36 @@
 
             await new Promise(r => setTimeout(r, 4000));
             
+            if (currentSpinId !== mySpinId) return;
+            isSpinning = false;
+            
             if (item.prized) {
                 playWin();
                 gachaState.prizeDropTime = performance.now();
+                triggerGachaConfetti();
                 triggerWheelWinGlow();
                 const wrapper = document.getElementById('main-scroller-wrapper');
                 if (wrapper && !wrapper.closest('.card').classList.contains('minimized')) {
                     wrapper.classList.add('prize-glow');
-                    setTimeout(() => wrapper.classList.remove('prize-glow'), 3000);
+                    setTimeout(() => { if (wrapper) wrapper.classList.remove('prize-glow'); }, 3000);
                 }
                 await new Promise(r => setTimeout(r, 3000));
             }
 
         } finally {
-            clearInterval(countdownInterval);
-            isSpinning = false; 
-            if(btnRoll) btnRoll.innerText = origRollTxt;
-            if(btnReroll) btnReroll.innerText = origRerollTxt;
-            
-            if (isNaN(wheelSpinAngle)) wheelSpinAngle = 0; wheelSpinAngle = wheelSpinAngle % (Math.PI * 2); 
-            rebuildDOMFromInventory(); syncAndUI();
-            
-            const autoRollCb = document.getElementById('auto-roll-checkbox');
-            if (autoRollCb && autoRollCb.checked) {
-                const totalLeft = inventory.reduce((sum, i) => sum + i.remaining, 0);
-                if (totalLeft > 0) {
-                    setTimeout(simulateResult, 200);
-                } else {
-                    autoRollCb.checked = false;
+            if (currentSpinId === mySpinId) {
+                isSpinning = false; 
+                if (isNaN(wheelSpinAngle)) wheelSpinAngle = 0; wheelSpinAngle = wheelSpinAngle % (Math.PI * 2); 
+                rebuildDOMFromInventory(); syncAndUI();
+                
+                const autoRollCb = document.getElementById('auto-roll-checkbox');
+                if (autoRollCb && autoRollCb.checked) {
+                    const totalLeft = inventory.reduce((sum, i) => sum + i.remaining, 0);
+                    if (totalLeft > 0) {
+                        setTimeout(simulateResult, 200);
+                    } else {
+                        autoRollCb.checked = false;
+                    }
                 }
             }
         }
@@ -2489,7 +2520,7 @@
 
             window.removeEventListener('mousemove', dragMove); window.removeEventListener('mouseup', dragEnd);
             window.removeEventListener('touchmove', dragMove); window.removeEventListener('touchend', dragEnd);
-            requestAnimationFrame(drawWheel); requestAnimationFrame(drawGacha);
+            safeDrawWheel(); requestAnimationFrame(drawGacha);
         }
     }
 
@@ -2704,7 +2735,7 @@
                 }
             }
             
-            wakeUpGacha(); requestAnimationFrame(drawWheel);
+            wakeUpGacha(); safeDrawWheel();
         }
 
         updateHistoryUI(); updateOddsTable(); updateHeatmap();
@@ -2793,7 +2824,7 @@
     function clearHistory() { history = []; sessionStats = { spent: 0, won: 0 }; syncAndUI(); }
     
     function undoLastSpin() {
-        if (history.length === 0 || isSpinning) return; const last = history.shift();
+        if (history.length === 0) return; const last = history.shift();
         const item = inventory.find(i => i.label === last.label); if (item) item.remaining++;
         if (last.isUser) { sessionStats.spent -= parseFloat(last.bidValue || 0); sessionStats.won -= last.hitValue; }
         rebuildDOMFromInventory(); syncAndUI();
