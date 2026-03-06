@@ -14,7 +14,7 @@
             --bg: #fff5f5;
         }
 
-        .inventory-grid-config{display:grid;grid-template-columns:35px 1.3fr 65px 110px 25px;gap:8px;align-items:center}
+        .inventory-grid-config{display:grid;grid-template-columns:32px 1fr 50px 80px 20px;gap:6px;align-items:center}
         *{box-sizing:border-box}
         html,body{min-height:100vh;overflow-y:auto;overflow-x:hidden; transition: background-color 0.3s;}
         body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.4;display:block;user-select:none;padding-bottom:40px; -webkit-user-select: none; -webkit-touch-callout: none;}
@@ -44,17 +44,28 @@
         .mode-label.active.seller { color: #ef4444; }
 
         .dashboard{display:flex;flex-direction:row;align-items:flex-start;gap:16px;width:100%;}
-        .dashboard-col{display:flex;flex-direction:column;gap:16px;flex:1 1 0;min-width:280px;height:max-content;padding-bottom:60px;transition:flex 0.2s ease}
+        .dashboard-col{display:flex;flex-direction:column;gap:16px;flex:1 1 0;min-width:340px;height:max-content;padding-bottom:60px;transition:flex 0.2s ease}
         @media(max-width:800px){.dashboard{flex-wrap:wrap}.dashboard-col{flex:1 1 100%}}
         
-        .card{background:var(--card-bg);padding:16px 20px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border:1px solid var(--border);position:relative;transition:border-color 0.2s,box-shadow 0.2s;cursor:grab;width:100%;flex:0 0 auto; -webkit-user-select: none; -webkit-touch-callout: none;}
+        .card{background:var(--card-bg);padding:16px 20px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border:1px solid var(--border);position:relative;transition:border-color 0.2s,box-shadow 0.2s;cursor:grab;width:100%;flex:0 0 auto; -webkit-user-select: none; -webkit-touch-callout: none; min-width: 340px; min-height: min-content; overflow: hidden;}
         .card:hover{border-color:#cbd5e1}
         
         .card.dragging-active-card{opacity:1!important;box-shadow:0 25px 50px -12px rgba(0,0,0,0.3)!important;z-index:999999!important;cursor:grabbing!important; transform:scale(1.02) rotate(1deg);}
         .card.placeholder{background-color:#f1f5f9;border:2px dashed #cbd5e1;opacity:0.5;box-shadow:none;pointer-events:none;visibility:visible!important;}
         
-        .col-left .resizable-card,.col-right .resizable-card{width:100%!important;height:auto!important;aspect-ratio:1}
-        .col-left .resize-handle,.col-right .resize-handle{display:none!important}
+        /* 4-Corner Resizers */
+        .resize-corner { position: absolute; width: 24px; height: 24px; z-index: 20; touch-action: none; opacity: 0; transition: opacity 0.2s; }
+        .card:hover .resize-corner { opacity: 0.4; }
+        .resize-corner:hover { opacity: 1 !important; }
+        .resize-br { bottom: 0; right: 0; cursor: nwse-resize; }
+        .resize-br::after { content: ''; position: absolute; bottom: 6px; right: 6px; width: 8px; height: 8px; border-right: 2px solid var(--primary); border-bottom: 2px solid var(--primary); border-radius: 1px; }
+        .resize-bl { bottom: 0; left: 0; cursor: nesw-resize; }
+        .resize-bl::after { content: ''; position: absolute; bottom: 6px; left: 6px; width: 8px; height: 8px; border-left: 2px solid var(--primary); border-bottom: 2px solid var(--primary); border-radius: 1px; }
+        .resize-tr { top: 0; right: 0; cursor: nesw-resize; }
+        .resize-tr::after { content: ''; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-right: 2px solid var(--primary); border-top: 2px solid var(--primary); border-radius: 1px; }
+        .resize-tl { top: 0; left: 0; cursor: nwse-resize; }
+        .resize-tl::after { content: ''; position: absolute; top: 6px; left: 6px; width: 8px; height: 8px; border-left: 2px solid var(--primary); border-top: 2px solid var(--primary); border-radius: 1px; }
+
         .section-title{font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;cursor:inherit; touch-action:none;}
         .section-title span:first-child { cursor: text; }
         .sub-text{font-size:0.5rem;opacity:0.6;text-transform:lowercase;font-weight:600}
@@ -64,15 +75,12 @@
         .card-btn.close:hover{color:var(--danger)}
         .card.minimized{height:auto!important;min-height:0!important;padding-bottom:16px}
         .card.minimized>*:not(.section-title){display:none!important}
-        .vis-content{aspect-ratio:1;width:100%;height:auto;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;padding:10px;position:relative;overflow:hidden}
         
-        .vis-canvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:default; touch-action:none; user-select:none; -webkit-user-select:none;}
+        /* Auto-height properly constraints the container and stops overflows */
+        .vis-content{aspect-ratio:1;width:100%;height:auto;min-height:200px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;padding:10px;position:relative;overflow:hidden}
+        
+        .vis-canvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:default; touch-action:none; user-select:none; -webkit-user-select:none; max-width: 100%; max-height: 100%;}
         #wheelCanvas{cursor:grab}#wheelCanvas:active{cursor:grabbing}#gachaCanvas{cursor:grab}#gachaCanvas:active{cursor:grabbing}
-        
-        .resize-handle{position:absolute;bottom:4px;right:4px;width:32px;height:32px;background:radial-gradient(circle at center,#94a3b8 2.5px,transparent 2.5px);background-size:8px 8px;z-index:10;pointer-events:auto;opacity:0.4;transition:opacity 0.2s;cursor:nwse-resize}
-        .resize-handle:hover{opacity:1}
-        
-        .wheel-pointer{position:absolute;right:0px;top:50%;width:35px;height:14px;margin-top:-7px;transform-origin:30px 7px;z-index:10;will-change:transform;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3));}
         
         .prob-bar-wrapper{width:100%;height:24px;border-radius:6px;overflow:hidden;display:flex;background:#e2e8f0;border:1px solid rgba(0,0,0,0.05)}
         .prob-segment{height:100%;transition:width 0.4s cubic-bezier(0.4,0,0.2,1);border-right:1px solid rgba(255,255,255,0.2);position:relative}
@@ -145,7 +153,7 @@
         <h1>Wheel Spin Odds Calculator</h1>
         <div class="header-controls-row">
             <div class="header-btn-row">
-                <button class="btn-reset-ui" onclick="resetToInitialState()">RESET UI / GRID</button>
+                <button class="btn-reset-ui" onclick="resetUIDefaults()">RESET UI / GRID</button>
                 <button class="btn-reset-ui" onclick="restoreCards()">RESTORE CARDS</button>
             </div>
             <div class="switch-container">
@@ -321,10 +329,6 @@
                 </div>
                 <div class="vis-content">
                     <canvas id="wheelCanvas" class="vis-canvas"></canvas>
-                    <svg class="wheel-pointer" viewBox="0 0 40 14" xmlns="http://www.w3.org/2000/svg">
-                        <polygon points="12,7 38,2 38,12" fill="var(--primary)" stroke="white" stroke-width="2" stroke-linejoin="round"/>
-                    </svg>
-                    <div class="resize-handle" id="wheel-resize-handle"></div>
                 </div>
             </div>
 
@@ -342,7 +346,6 @@
                 </div>
                 <div class="vis-content">
                     <canvas id="gachaCanvas" class="vis-canvas"></canvas>
-                    <div class="resize-handle" id="gacha-resize-handle"></div>
                 </div>
             </div>
 
@@ -915,7 +918,9 @@
         targetItem: null,
         sparkles: [],
         prizeConfetti: [],
-        prizeDropTime: null
+        prizeDropTime: null,
+        smoothedWheelVel: 0,
+        lastAbsPeg: undefined
     };
 
     let lastHapticSeg = -1;
@@ -959,8 +964,7 @@
         });
 
         initCustomCardDrag(); 
-        initColumnResizer('wheel-module', 'wheel-resize-handle', safeDrawWheel);
-        initColumnResizer('gacha-module', 'gacha-resize-handle', drawGacha);
+        initUniversalResize();
         initWheelDrag(); 
         initWheelHover();
         initGachaInteraction();
@@ -1004,6 +1008,96 @@
         syncAndUI();
     }
 
+    function initUniversalResize() {
+        document.querySelectorAll('.card').forEach(card => {
+            const corners = ['br', 'bl', 'tr', 'tl'];
+            corners.forEach(corner => {
+                let handle = document.createElement('div');
+                handle.className = `resize-corner resize-${corner}`;
+                card.appendChild(handle);
+                
+                let startX, startY, startColW, startCardW, startCardH;
+                let col;
+                let rafId = null;
+                
+                const doDrag = (e) => {
+                    if (rafId) return;
+                    let cx = e.touches ? e.touches[0].clientX : e.clientX;
+                    let cy = e.touches ? e.touches[0].clientY : e.clientY;
+                    
+                    rafId = requestAnimationFrame(() => {
+                        let dx = cx - startX;
+                        let dy = cy - startY;
+                        
+                        let signW = (corner === 'br' || corner === 'tr') ? 1 : -1;
+                        let signH = (corner === 'br' || corner === 'bl') ? 1 : -1;
+                        
+                        let moveW = dx * signW;
+                        let moveH = dy * signH;
+                        
+                        let ratio = startCardW / startCardH;
+                        let inferredW = moveH * ratio;
+                        
+                        let deltaW = Math.abs(moveW) > Math.abs(inferredW) ? moveW : inferredW;
+                        
+                        let newColW = Math.max(340, startColW + deltaW);
+                        
+                        if (col) {
+                            col.style.transition = 'none'; 
+                            col.style.flex = `0 0 ${newColW}px`;
+                        } else {
+                            card.style.transition = 'none';
+                            card.style.width = Math.max(340, startCardW + deltaW) + 'px';
+                        }
+                        
+                        safeDrawWheel();
+                        requestAnimationFrame(drawGacha);
+                        rafId = null;
+                    });
+                    e.preventDefault();
+                };
+                
+                const stopDrag = () => {
+                    window.removeEventListener('mousemove', doDrag);
+                    window.removeEventListener('mouseup', stopDrag);
+                    window.removeEventListener('touchmove', doDrag);
+                    window.removeEventListener('touchcancel', stopDrag);
+                    window.removeEventListener('touchend', stopDrag);
+                    document.body.style.cursor = '';
+                    if (col) col.style.transition = '';
+                    else card.style.transition = '';
+                };
+                
+                const startDrag = (e) => {
+                    e.stopPropagation();
+                    if (e.type === 'mousedown') {
+                        startX = e.clientX; startY = e.clientY;
+                    } else {
+                        startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+                    }
+                    col = card.closest('.dashboard-col');
+                    startColW = col ? col.getBoundingClientRect().width : card.offsetWidth;
+                    startCardW = card.offsetWidth;
+                    startCardH = card.offsetHeight;
+                    
+                    document.body.style.cursor = window.getComputedStyle(handle).cursor;
+                    
+                    if (e.type === 'mousedown') {
+                        window.addEventListener('mousemove', doDrag);
+                        window.addEventListener('mouseup', stopDrag);
+                    } else {
+                        window.addEventListener('touchmove', doDrag, {passive: false});
+                        window.addEventListener('touchcancel', stopDrag);
+                        window.addEventListener('touchend', stopDrag);
+                    }
+                };
+
+                handle.addEventListener('mousedown', startDrag);
+                handle.addEventListener('touchstart', startDrag, {passive: false});
+            });
+        });
+    }
+
     function startAdjust(e, btn, delta, inputElem) {
         e.preventDefault();
         stopAdjust(); 
@@ -1034,32 +1128,22 @@
         safeDrawWheel(); requestAnimationFrame(drawGacha);
     }
 
-    function initColumnResizer(cardId, handleId, drawCallback) {
-        const handle = document.getElementById(handleId); const card = document.getElementById(cardId);
-        if(!handle || !card) return;
-        let startX, startW;
-        const startDrag = (e) => {
-            document.body.classList.add('wheel-resizing'); startX = e.clientX;
-            startW = card.closest('.dashboard-col').offsetWidth;
-            e.stopPropagation(); e.preventDefault();
-        };
-        handle.addEventListener('mousedown', startDrag);
-        const onMouseMove = (e) => {
-            if (startX === undefined) return;
-            const dx = e.clientX - startX; const newW = Math.max(280, startW + dx);
-            const col = card.closest('.dashboard-col');
-            if (col) col.style.flex = `0 0 ${newW}px`;
-            if (drawCallback) requestAnimationFrame(drawCallback);
-        };
-        const onMouseUp = () => {
-            if (startX !== undefined) { startX = undefined; document.body.classList.remove('wheel-resizing'); if (drawCallback) requestAnimationFrame(drawCallback); }
-        };
-        document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
-    }
-
     function resetUIDefaults() {
         const c1 = document.getElementById('col-1'); const c2 = document.getElementById('col-2'); const c3 = document.getElementById('col-3');
-        ['col-1','col-2','col-3'].forEach(id => document.getElementById(id).style.flex = '');
+        ['col-1','col-2','col-3'].forEach(id => {
+            let col = document.getElementById(id);
+            if(col) {
+                col.style.flex = '';
+                col.style.transition = '';
+            }
+        });
+        document.querySelectorAll('.card').forEach(c => { 
+            c.style.width = ''; 
+            c.style.height = ''; 
+            c.style.flex = ''; 
+            c.style.aspectRatio = '';
+            c.style.transition = '';
+        });
         c1.appendChild(document.getElementById('card-setup')); c1.appendChild(document.getElementById('card-heatmap'));
         c2.appendChild(document.getElementById('card-ev')); c2.appendChild(document.getElementById('card-analytics'));
         c2.appendChild(document.getElementById('card-bid')); c2.appendChild(document.getElementById('card-spin')); c2.appendChild(document.getElementById('card-sim-controls'));
@@ -1097,7 +1181,7 @@
                 let last = validTrack[validTrack.length - 1];
                 let dt = last.time - first.time;
                 let dx = last.x - first.x;
-                velX = -(dx / Math.max(1, dt)) * 25; 
+                velX = -(dx / Math.max(1, dt)) * 50; 
             } else {
                 velX = 0;
             }
@@ -1136,7 +1220,7 @@
                 if (slider.scrollLeft > setWidth * 3.5) slider.scrollLeft -= setWidth;
 
                 if (!isDown && Math.abs(velX) > 0.1 && !isSpinning) {
-                    slider.scrollLeft += velX; velX *= 0.95; 
+                    slider.scrollLeft += velX; velX *= 0.98; 
                     checkScrollerHaptic(); 
                     momentumID = requestAnimationFrame(loop);
                 }
@@ -1855,6 +1939,7 @@
 
         ctx.fillStyle = '#ef4444';
         ctx.beginPath();
+        // Base structure
         ctx.arc(cx, domeCy, R + 2, Math.PI * 1.333, Math.PI * 1.666);
         ctx.lineTo(cx + R*0.35, domeCy - R*1.15);
         ctx.lineTo(cx - R*0.35, domeCy - R*1.15);
@@ -1872,9 +1957,12 @@
         if (gachaState.prizeConfetti && gachaState.prizeConfetti.length > 0) {
             for (let i = gachaState.prizeConfetti.length - 1; i >= 0; i--) {
                 let c = gachaState.prizeConfetti[i];
-                c.x += c.vx; c.y += c.vy; c.vy += 0.4; 
+                c.x += c.vx;
+                c.y += c.vy;
+                c.vy += 0.4; 
                 c.vx *= 0.96; c.vy *= 0.96;
-                c.rot += c.rotSpeed; c.life -= c.decay;
+                c.rot += c.rotSpeed;
+                c.life -= c.decay;
                 if (c.life <= 0 || c.y > sizePx + 50) { gachaState.prizeConfetti.splice(i, 1); continue; }
                 ctx.save();
                 ctx.globalAlpha = Math.max(0, c.life);
@@ -1972,7 +2060,7 @@
         
         for(let i=0; i<200; i++) {
             let angle = Math.random() * Math.PI * 2; 
-            let velocity = Math.random() * 14 + 7; // Slightly more explosive confetti spread
+            let velocity = Math.random() * 14 + 7; 
             
             wheelConfetti.push({
                 x: cx, y: cy,
@@ -2127,9 +2215,10 @@
             isWheelGlowing = true;
         }
 
-        // Flipper Spring Physics
+        // Flipper Spring Physics - Redesigned to strict physical pixel coordinates
         let wheelVel = currentRotationOffset - lastWheelRot;
-        if (Math.abs(wheelVel) > Math.PI) wheelVel = 0; 
+        if (wheelVel > Math.PI) wheelVel -= Math.PI * 2;
+        if (wheelVel < -Math.PI) wheelVel += Math.PI * 2;
         lastWheelRot = currentRotationOffset;
         
         let smoothedVel = gachaState.smoothedWheelVel || 0;
@@ -2138,24 +2227,27 @@
 
         let forceDeflect = 0;
         let isForced = false;
-        let approachRad = 0.08; 
-
-        let closestPegAngle = currentRotationOffset % step;
-        if (closestPegAngle < 0) closestPegAngle += step;
         
-        let peg1 = closestPegAngle;         
-        let peg2 = closestPegAngle - step;  
+        // Exact pixel geometry of the flipper and pegs
+        let rPegs = Math.max(10, (sizePx / 2) - 10); // Safe peg radius track
+        let contactAngle = Math.min(2.5 / rPegs, step * 0.3); // Touches 2.5px before center
+        let slipOffset = contactAngle + Math.min(8 / rPegs, step * 0.5); // Slides 8px total before slipping
+        
+        // Map nearest peg strictly to [-step/2, step/2]
+        let localPeg = currentRotationOffset % step;
+        if (localPeg < 0) localPeg += step;
+        if (localPeg > step / 2) localPeg -= step;
 
         if (smoothedVel >= 0) { // Clockwise
-            if (peg2 > -approachRad) {
-                // Peg dragging pointer DOWN -> Positive Flipper Angle
-                forceDeflect = (1 - (Math.abs(peg2) / approachRad)) * 40; 
+            if (localPeg >= -contactAngle && localPeg <= slipOffset) {
+                let progress = (localPeg + contactAngle) / (contactAngle + slipOffset);
+                forceDeflect = progress * -40; 
                 isForced = true;
             }
         } else { // Anti-Clockwise
-            if (peg1 < approachRad) {
-                // Peg dragging pointer UP -> Negative Flipper Angle
-                forceDeflect = (1 - (peg1 / approachRad)) * -40; 
+            if (localPeg <= contactAngle && localPeg >= -slipOffset) {
+                let progress = (contactAngle - localPeg) / (contactAngle + slipOffset);
+                forceDeflect = progress * 40; 
                 isForced = true;
             }
         }
@@ -2164,26 +2256,58 @@
             flipperAngle = forceDeflect;
             flipperV = 0;
         } else {
-            flipperV += (0 - flipperAngle) * 0.4; 
-            flipperV *= 0.65; 
+            flipperV += (0 - flipperAngle) * 0.5; 
+            flipperV *= 0.6; 
             flipperAngle += flipperV;
         }
         
-        let segIndex = Math.floor(currentRotationOffset / step);
-        if (lastHapticSeg !== -1 && segIndex !== lastHapticSeg) {
-            if (isSpinning || wheelDragState || Math.abs(smoothedVel) > 0.01) {
-                triggerHaptic();
-                playPegHit();
-                // Spring violently kicks back in opposite direction on slip
-                flipperV = (smoothedVel >= 0) ? -40 : 40; 
+        // Pure O(1) mathematical continuous slip tracking independent of framerate
+        let absPeg = currentRotationOffset / step;
+        let slipped = false;
+        if (gachaState.lastAbsPeg !== undefined) {
+            let vel = absPeg - gachaState.lastAbsPeg;
+            if (vel > 0) { // CW movement over frame
+                let slipPoint = slipOffset / step;
+                if (Math.floor(gachaState.lastAbsPeg - slipPoint) < Math.floor(absPeg - slipPoint)) slipped = true;
+            } else if (vel < 0) { // ACW movement over frame
+                let slipPoint = -slipOffset / step;
+                if (Math.ceil(gachaState.lastAbsPeg - slipPoint) > Math.ceil(absPeg - slipPoint)) slipped = true;
             }
         }
-        lastHapticSeg = segIndex;
+        gachaState.lastAbsPeg = absPeg;
 
-        const pointerEl = document.querySelector('.wheel-pointer');
-        if (pointerEl) {
-            pointerEl.style.transform = `translateY(-50%) rotate(${flipperAngle}deg)`;
+        if (slipped) {
+            if (isSpinning || wheelDragState || Math.abs(smoothedVel) > 0.005) {
+                triggerHaptic();
+                playPegHit();
+                // Apply visual kick if it was spinning so fast it completely skipped the contact frame
+                if (!isForced && Math.abs(flipperAngle) < 15) {
+                    flipperV = (smoothedVel >= 0) ? -45 : 45; 
+                }
+            }
         }
+
+        // Draw physical flipper strictly mapped to canvas geometry to guarantee perfect touch alignment
+        ctx.save();
+        ctx.translate(cx + rPegs + 12, cy); // Anchor point exactly 12px right of peg circle
+        ctx.rotate(flipperAngle * Math.PI / 180);
+        ctx.beginPath();
+        ctx.moveTo(-14, 0); // Tip reaches exactly to `rPegs - 2`, perfectly intercepting 3px peg radius
+        ctx.lineTo(10, -6);
+        ctx.lineTo(10, 6);
+        ctx.closePath();
+        ctx.fillStyle = '#3b82f6';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#1e293b';
+        ctx.stroke();
+        
+        // Flipper pivot dot
+        ctx.beginPath();
+        ctx.arc(6, 0, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#1e293b';
+        ctx.fill();
+        ctx.restore();
 
         if (isWheelGlowing || Math.abs(flipperAngle) > 0.5 || Math.abs(flipperV) > 0.5 || isSpinning || wheelDragState || Math.abs(smoothedVel) > 0.001) { 
             safeDrawWheel(); 
@@ -2433,7 +2557,7 @@
         function startCustomDrag(e) {
             if (dragCard) return; 
             
-            const interactiveSelectors = 'button, input, .card-controls, span, td, th, tr, tbody, table, b, .mini-value, .mini-label, .ev-value, .history-item, canvas, .resize-handle, .scroller-window, .scroller-wrapper';
+            const interactiveSelectors = 'button, input, .card-controls, span, td, th, tr, tbody, table, b, .mini-value, .mini-label, .ev-value, .history-item, canvas, .scroller-window, .scroller-wrapper, .universal-resize, .resize-corner';
             if(e.target.closest(interactiveSelectors)) return; 
             
             let clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
