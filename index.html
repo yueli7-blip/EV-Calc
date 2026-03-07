@@ -53,6 +53,8 @@
         .card.dragging-active-card{opacity:1!important;box-shadow:0 25px 50px -12px rgba(0,0,0,0.3)!important;z-index:999999!important;cursor:grabbing!important; transform:scale(1.02) rotate(1deg);}
         .card.placeholder{background-color:#f1f5f9;border:2px dashed #cbd5e1;opacity:0.5;box-shadow:none;pointer-events:none;visibility:visible!important;}
         
+        .col-left .resizable-card,.col-right .resizable-card{width:100%!important;height:auto!important;aspect-ratio:1}
+        
         /* 4-Corner Resizers */
         .resize-corner { position: absolute; width: 24px; height: 24px; z-index: 20; touch-action: none; opacity: 0; transition: opacity 0.2s; }
         .card:hover .resize-corner { opacity: 0.4; }
@@ -76,7 +78,6 @@
         .card.minimized{height:auto!important;min-height:0!important;padding-bottom:16px}
         .card.minimized>*:not(.section-title){display:none!important}
         
-        /* Auto-height properly constraints the container and stops overflows */
         .vis-content{aspect-ratio:1;width:100%;height:auto;min-height:200px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;padding:10px;position:relative;overflow:hidden}
         
         .vis-canvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:default; touch-action:none; user-select:none; -webkit-user-select:none; max-width: 100%; max-height: 100%;}
@@ -674,7 +675,8 @@
         const centerOffset = windowEl.clientWidth / 2;
         let idx = Math.floor((windowEl.scrollLeft + centerOffset) / 166);
         if (idx !== lastHapticScroll) {
-            if (lastHapticScroll !== -1) {
+            // Delta limit prevents phantom loop clicks
+            if (lastHapticScroll !== -1 && Math.abs(idx - lastHapticScroll) < 10) {
                 triggerHaptic();
                 playScrollerClick();
             }
@@ -1016,38 +1018,27 @@
                 handle.className = `resize-corner resize-${corner}`;
                 card.appendChild(handle);
                 
-                let startX, startY, startColW, startCardW, startCardH;
+                let startX, startColW;
                 let col;
                 let rafId = null;
                 
                 const doDrag = (e) => {
                     if (rafId) return;
                     let cx = e.touches ? e.touches[0].clientX : e.clientX;
-                    let cy = e.touches ? e.touches[0].clientY : e.clientY;
                     
                     rafId = requestAnimationFrame(() => {
                         let dx = cx - startX;
-                        let dy = cy - startY;
-                        
                         let signW = (corner === 'br' || corner === 'tr') ? 1 : -1;
-                        let signH = (corner === 'br' || corner === 'bl') ? 1 : -1;
-                        
                         let moveW = dx * signW;
-                        let moveH = dy * signH;
                         
-                        let ratio = startCardW / startCardH;
-                        let inferredW = moveH * ratio;
-                        
-                        let deltaW = Math.abs(moveW) > Math.abs(inferredW) ? moveW : inferredW;
-                        
-                        let newColW = Math.max(340, startColW + deltaW);
+                        let newColW = Math.max(340, startColW + moveW);
                         
                         if (col) {
                             col.style.transition = 'none'; 
                             col.style.flex = `0 0 ${newColW}px`;
                         } else {
                             card.style.transition = 'none';
-                            card.style.width = Math.max(340, startCardW + deltaW) + 'px';
+                            card.style.width = newColW + 'px';
                         }
                         
                         safeDrawWheel();
@@ -1071,14 +1062,12 @@
                 const startDrag = (e) => {
                     e.stopPropagation();
                     if (e.type === 'mousedown') {
-                        startX = e.clientX; startY = e.clientY;
+                        startX = e.clientX;
                     } else {
-                        startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+                        startX = e.touches[0].clientX;
                     }
                     col = card.closest('.dashboard-col');
                     startColW = col ? col.getBoundingClientRect().width : card.offsetWidth;
-                    startCardW = card.offsetWidth;
-                    startCardH = card.offsetHeight;
                     
                     document.body.style.cursor = window.getComputedStyle(handle).cursor;
                     
@@ -2888,8 +2877,11 @@
         const total = inventory.reduce((a, b) => a + b.remaining, 0), sum = inventory.reduce((a, b) => a + (b.value * b.remaining), 0);
         const ev = total > 0 ? sum / total : 0; grid.innerHTML = '';
         
+        let step = Math.max(1, Math.ceil(ev * 0.01)); // Dynamically scale steps to prevent millions of rows crashing the browser
+        
         if (appMode === 'buyer') {
-            for (let price = Math.floor(ev); price > 0; price--) {
+            let startPrice = Math.floor(ev);
+            for (let price = startPrice; price > 0; price -= step) {
                 const roi = ((ev - price) / price * 100); if (roi < 0) continue; 
                 const row = document.createElement('div'); row.className = 'heatmap-row heatmap-grid-layout';
                 row.style.background = roi >= 20 ? '#dcfce7' : (roi >= 10 ? '#f0fdf4' : '#fffbeb');
@@ -2898,7 +2890,9 @@
                 grid.appendChild(row); if (roi > 28) break;
             }
         } else {
-            for (let price = Math.max(1, Math.floor(ev * 0.5)); price <= Math.ceil(ev * 1.5); price++) {
+            let startPrice = Math.max(1, Math.floor(ev * 0.5));
+            let endPrice = Math.ceil(ev * 1.5);
+            for (let price = startPrice; price <= endPrice; price += step) {
                 if (price === 0) continue;
                 const roi = ev > 0 ? ((price - ev) / ev * 100) : 0; 
                 if (roi < -20.5 || roi > 20.5) continue; 
