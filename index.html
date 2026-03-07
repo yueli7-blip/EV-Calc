@@ -14,7 +14,7 @@
             --bg: #fff5f5;
         }
 
-        .inventory-grid-config{display:grid;grid-template-columns:32px 1fr 50px 80px 20px;gap:6px;align-items:center}
+        .inventory-grid-config{display:grid;grid-template-columns:32px 1fr 70px 110px 24px;gap:6px;align-items:center}
         *{box-sizing:border-box}
         html,body{min-height:100vh;overflow-y:auto;overflow-x:hidden; transition: background-color 0.3s;}
         body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.4;display:block;user-select:none;padding-bottom:40px; -webkit-user-select: none; -webkit-touch-callout: none;}
@@ -25,11 +25,10 @@
         .app-header { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 8px 0 24px; text-align: center; width: 100%; }
         .app-header h1 { font-size: 1.8rem; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.03em; }
         .header-controls-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .header-btn-row { display: flex; gap: 8px; }
+        .header-btn-row { display: flex; gap: 8px; align-items: center; }
 
         .btn-reset-ui{width:fit-content;padding:6px 14px;font-size:0.7rem;font-weight:800;background:#fff;border:1.5px solid #cbd5e1;color:#64748b;border-radius:8px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
         .btn-reset-ui:hover{border-color:var(--primary);color:var(--primary);background:#f8fafc;transform:translateY(-1px)}
-        body.wheel-resizing,body.wheel-resizing *{cursor:col-resize!important}
         
         /* Toggle Switch Styles */
         .switch-container { display: flex; align-items: center; justify-content: center; gap: 10px; background: #fff; padding: 6px 16px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border); margin: 0; }
@@ -78,6 +77,7 @@
         .card.minimized{height:auto!important;min-height:0!important;padding-bottom:16px}
         .card.minimized>*:not(.section-title){display:none!important}
         
+        /* Auto-height properly constraints the container and stops overflows */
         .vis-content{aspect-ratio:1;width:100%;height:auto;min-height:200px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;padding:10px;position:relative;overflow:hidden}
         
         .vis-canvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:default; touch-action:none; user-select:none; -webkit-user-select:none; max-width: 100%; max-height: 100%;}
@@ -154,8 +154,11 @@
         <h1>Wheel Spin Odds Calculator</h1>
         <div class="header-controls-row">
             <div class="header-btn-row">
+                <button class="btn-reset-ui" onclick="saveDashboardLayout()">SAVE LAYOUT</button>
+                <button class="btn-reset-ui" onclick="loadDashboardLayout()">LOAD LAYOUT</button>
                 <button class="btn-reset-ui" onclick="resetUIDefaults()">RESET UI / GRID</button>
                 <button class="btn-reset-ui" onclick="restoreCards()">RESTORE CARDS</button>
+                <span id="layout-status" style="font-size:0.6rem; font-weight:800; opacity:0; transition:opacity 0.3s; margin-left:4px;"></span>
             </div>
             <div class="switch-container">
                 <span id="label-buyer" class="mode-label active buyer" onclick="document.getElementById('mode-checkbox').click()">BUYER</span>
@@ -177,9 +180,9 @@
                     <span>1. Setup Inventory</span>
                     <div style="display:flex; align-items:center; gap:4px;">
                         <span id="save-status">SAVED</span>
-                        <button onclick="saveLayout()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">SAVE</button>
-                        <button onclick="loadLayout()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">LOAD</button>
-                        <button onclick="resetToInitialState()" style="background:#f8d7da; color:#721c24; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">RESET</button>
+                        <button onclick="saveInventory()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">SAVE SLOTS</button>
+                        <button onclick="loadInventory()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">LOAD SLOTS</button>
+                        <button onclick="resetToInitialState()" style="background:#f8d7da; color:#721c24; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">RESET SLOTS</button>
                         <div class="card-controls" style="margin-left: 8px;">
                             <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
                             <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
@@ -482,6 +485,12 @@
         syncAndUI();
     }
 
+    function showHeaderStatus(text, color) {
+        const el = document.getElementById('layout-status'); if (!el) return;
+        el.innerText = text; el.style.color = color; el.style.opacity = '1';
+        setTimeout(() => { el.style.opacity = '0'; }, 1500);
+    }
+
     // --- TEMPLATE ENGINE ---
     let templates = [];
     const defaultTemplates = [
@@ -494,6 +503,9 @@
         { label: 'Ascended ETB', value: 80, color: '#10b981', prized: true },
         { label: 'Ascended PC ETB', value: 200, color: '#6366f1', prized: true },
         { label: 'Brilliant Stars PC ETB', value: 120, color: '#eab308', prized: true },
+        { label: 'Surging Sparks Booster Bundle', value: 40, color: '#ef4444', prized: true },
+        { label: 'Destined Rivals Booster Bundle', value: 50, color: '#3b82f6', prized: true },
+        { label: 'Surging Sparks ETB', value: 75, color: '#22c55e', prized: true },
         { label: 'Energy', value: 0, color: '#94a3b8', prized: false }
     ];
 
@@ -1018,31 +1030,41 @@
                 handle.className = `resize-corner resize-${corner}`;
                 card.appendChild(handle);
                 
-                let startX, startColW;
+                let startX, startY, startColW, startCardW, startCardH;
                 let col;
+                let cardRatios = [];
                 let rafId = null;
                 
                 const doDrag = (e) => {
                     if (rafId) return;
                     let cx = e.touches ? e.touches[0].clientX : e.clientX;
+                    let cy = e.touches ? e.touches[0].clientY : e.clientY;
                     
                     rafId = requestAnimationFrame(() => {
                         let dx = cx - startX;
-                        let signW = (corner === 'br' || corner === 'tr') ? 1 : -1;
-                        let moveW = dx * signW;
+                        let dy = cy - startY;
                         
-                        let newColW = Math.max(340, startColW + moveW);
+                        let signW = (corner === 'br' || corner === 'tr') ? 1 : -1;
+                        let signH = (corner === 'br' || corner === 'bl') ? 1 : -1;
+                        
+                        let moveX = dx * signW;
+                        let moveY = dy * signH;
+                        
+                        let scaleX = (startCardW + moveX) / startCardW;
+                        let scaleY = (startCardH + moveY) / startCardH;
+                        let scale = Math.max(scaleX, scaleY);
+                        
+                        let newColW = Math.max(340, startColW * scale);
                         
                         if (col) {
-                            col.style.transition = 'none'; 
                             col.style.flex = `0 0 ${newColW}px`;
-                        } else {
-                            card.style.transition = 'none';
-                            card.style.width = newColW + 'px';
+                            col.querySelectorAll('.card').forEach((c, index) => {
+                                if (cardRatios[index]) {
+                                    c.style.width = '100%';
+                                    c.style.height = (newColW / cardRatios[index]) + 'px';
+                                }
+                            });
                         }
-                        
-                        safeDrawWheel();
-                        requestAnimationFrame(drawGacha);
                         rafId = null;
                     });
                     e.preventDefault();
@@ -1055,19 +1077,26 @@
                     window.removeEventListener('touchcancel', stopDrag);
                     window.removeEventListener('touchend', stopDrag);
                     document.body.style.cursor = '';
-                    if (col) col.style.transition = '';
-                    else card.style.transition = '';
                 };
                 
                 const startDrag = (e) => {
                     e.stopPropagation();
                     if (e.type === 'mousedown') {
-                        startX = e.clientX;
+                        startX = e.clientX; startY = e.clientY;
                     } else {
-                        startX = e.touches[0].clientX;
+                        startX = e.touches[0].clientX; startY = e.touches[0].clientY;
                     }
                     col = card.closest('.dashboard-col');
-                    startColW = col ? col.getBoundingClientRect().width : card.offsetWidth;
+                    startColW = col ? col.offsetWidth : card.offsetWidth;
+                    startCardW = card.offsetWidth;
+                    startCardH = card.offsetHeight;
+                    
+                    if (col) {
+                        cardRatios = [];
+                        col.querySelectorAll('.card').forEach(c => {
+                            cardRatios.push(c.offsetWidth / c.offsetHeight);
+                        });
+                    }
                     
                     document.body.style.cursor = window.getComputedStyle(handle).cursor;
                     
@@ -1140,7 +1169,9 @@
         c3.appendChild(document.getElementById('card-scroller')); c3.appendChild(document.getElementById('card-prob'));
         c3.appendChild(document.getElementById('card-odds')); c3.appendChild(document.getElementById('card-summary'));
         c3.appendChild(document.getElementById('card-history')); c3.appendChild(document.getElementById('card-chart'));
-        restoreCards(); showStatus("UI / GRID RESET", "var(--primary)");
+        
+        restoreCards();
+        showHeaderStatus("UI / GRID RESET", "var(--primary)");
     }
 
     function initScrollerDrag() {
@@ -1605,7 +1636,7 @@
                         let tx = -ny, ty = nx;
                         let tanDot = b.vx * tx + b.vy * ty;
                         b.vx -= tanDot * tx * 0.05;
-                        b.vy -= tanDot * ty * 0.05;
+                        b.vx -= tanDot * ty * 0.05;
 
                         if (!isMinimized && Math.abs(dot) > 0.8) {
                             b.bounceCount = (b.bounceCount || 0) + 1;
@@ -2864,7 +2895,6 @@
         }
 
         updateHistoryUI(); updateOddsTable(); updateHeatmap();
-        localStorage.setItem('wheel_session', JSON.stringify({ inventory, history, sessionStats }));
     }
 
     function updateOddsTable() {
@@ -2963,9 +2993,13 @@
     function initializeSession() { 
         history = []; 
         sessionStats = { spent: 0, won: 0 }; 
-        localStorage.setItem('wheel_init_snapshot', JSON.stringify(inventory));
+        try {
+            localStorage.setItem('wheel_init_snapshot', JSON.stringify(inventory));
+            showStatus("SESSION INIT", "var(--success)");
+        } catch(e) {
+            showStatus("ERROR", "var(--danger)");
+        }
         syncAndUI();
-        showStatus("SESSION INIT", "var(--success)");
     }
     
     function pcmToWav(b, s) { const l = b.byteLength, f = new ArrayBuffer(44 + l), v = new DataView(f); v.setUint32(0, 0x52494646, false); v.setUint32(4, 36 + l, true); v.setUint32(8, 0x57415645, false); v.setUint32(12, 0x666d7420, false); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, s, true); v.setUint32(28, s * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); v.setUint32(36, 0x64617461, false); v.setUint32(40, l, true); new Uint8Array(f, 44).set(new Uint8Array(b)); return f; }
@@ -2984,8 +3018,127 @@
         }
     }
     
-    function saveLayout() { localStorage.setItem('wheel_layout', JSON.stringify(inventory)); showStatus("SAVED", "var(--success)"); }
-    function loadLayout() { const d = localStorage.getItem('wheel_layout'); if (d) { inventory = JSON.parse(d); rebuildDOMFromInventory(); syncAndUI(); showStatus("LOADED", "var(--primary)"); } }
+    function saveInventory() { 
+        try {
+            localStorage.setItem('wheel_inventory_setup', JSON.stringify(inventory)); 
+            showStatus("SAVED", "var(--success)"); 
+        } catch (e) {
+            console.error(e);
+            showStatus("ERROR", "var(--danger)");
+        }
+    }
+    
+    function loadInventory() { 
+        try {
+            let d = localStorage.getItem('wheel_inventory_setup');
+            if (!d) {
+                // Fallback to legacy save
+                let legacyD = localStorage.getItem('wheel_layout');
+                if (legacyD) {
+                    const parsed = JSON.parse(legacyD);
+                    inventory = parsed.inventory ? parsed.inventory : (Array.isArray(parsed) ? parsed : inventory);
+                    rebuildDOMFromInventory(); 
+                    syncAndUI(); 
+                    showStatus("LOADED (LEG)", "var(--primary)"); 
+                    return;
+                }
+                return; 
+            }
+            const parsed = JSON.parse(d);
+            inventory = Array.isArray(parsed) ? parsed : (parsed.inventory || parsed);
+            rebuildDOMFromInventory(); 
+            syncAndUI(); 
+            showStatus("LOADED", "var(--primary)"); 
+        } catch (e) {
+            console.error(e);
+            showStatus("ERROR", "var(--danger)");
+        }
+    }
+
+    function saveDashboardLayout() {
+        try {
+            const layout = {
+                columns: {},
+                cards: {}
+            };
+            ['col-1', 'col-2', 'col-3'].forEach(colId => {
+                const col = document.getElementById(colId);
+                if (col) {
+                    const cardIds = Array.from(col.querySelectorAll('.card'))
+                        .filter(c => !c.classList.contains('placeholder') && c.id)
+                        .map(c => c.id);
+                    layout.columns[colId] = {
+                        flex: col.style.flex,
+                        cardIds: cardIds
+                    };
+                }
+            });
+            document.querySelectorAll('.card').forEach(card => {
+                if (!card.id || card.classList.contains('placeholder')) return;
+                layout.cards[card.id] = {
+                    width: card.style.width,
+                    height: card.style.height,
+                    flex: card.style.flex,
+                    aspectRatio: card.style.aspectRatio,
+                    minimized: card.classList.contains('minimized')
+                };
+            });
+            localStorage.setItem('wheel_dashboard_layout', JSON.stringify(layout)); 
+            showHeaderStatus("LAYOUT SAVED", "var(--success)"); 
+        } catch(e) {
+            console.error(e);
+            showHeaderStatus("ERROR SAVING", "var(--danger)"); 
+        }
+    }
+
+    function loadDashboardLayout() {
+        try {
+            const d = localStorage.getItem('wheel_dashboard_layout'); 
+            if (d) { 
+                const layout = JSON.parse(d);
+                if (layout.columns) {
+                    ['col-1', 'col-2', 'col-3'].forEach(colId => {
+                        const col = document.getElementById(colId);
+                        if (layout.columns[colId] && col) {
+                            col.style.flex = layout.columns[colId].flex || '';
+                            layout.columns[colId].cardIds.forEach(cardId => {
+                                const card = document.getElementById(cardId);
+                                if (card) col.appendChild(card);
+                            });
+                        }
+                    });
+                }
+                if (layout.cards) {
+                    Object.keys(layout.cards).forEach(cardId => {
+                        const card = document.getElementById(cardId);
+                        const state = layout.cards[cardId];
+                        if (card && state) {
+                            card.style.width = state.width || '';
+                            card.style.height = state.height || '';
+                            card.style.flex = state.flex || '';
+                            card.style.aspectRatio = state.aspectRatio || '';
+                            if (state.minimized) {
+                                card.classList.add('minimized');
+                                const btn = card.querySelector('.card-btn');
+                                if (btn && btn.innerText === '-') btn.innerText = '+';
+                            } else {
+                                card.classList.remove('minimized');
+                                const btn = card.querySelector('.card-btn');
+                                if (btn && btn.innerText === '+') btn.innerText = '-';
+                            }
+                        }
+                    });
+                }
+                showHeaderStatus("LAYOUT LOADED", "var(--primary)"); 
+                safeDrawWheel();
+                requestAnimationFrame(drawGacha);
+            }
+        } catch (e) {
+            console.error(e);
+            showHeaderStatus("ERROR LOADING", "var(--danger)"); 
+        }
+    }
+
     function exportCSV() { const csv = "Time,Label,Value\n" + history.map(h => `${h.time},${h.label},${h.hitValue}`).join('\n'); const b = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'wheel_log.csv'; a.click(); }
 </script>
 </body>
