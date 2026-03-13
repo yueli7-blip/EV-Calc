@@ -103,7 +103,7 @@
         .qty-stepper{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:2px}
         .step-btn{width:24px;height:24px;border-radius:4px;border:none;background:#f1f5f9;color:#475569;font-weight:800;font-size:1rem;cursor:pointer;user-select:none; -webkit-user-select: none;}
         .step-btn:active{background:#e2e8f0}
-        .btn-init{background:#1e293b;color:white;width:100%;padding:10px;font-size:0.75rem;font-weight:800;border-radius:8px;text-transform:uppercase;border:none;margin-top:4px;cursor:pointer}
+        .btn-init{background:#1e293b;color:white;width:100%;padding:10px;font-size:0.75rem;font-weight:800;border-radius:8px;text-transform:uppercase;border:none;cursor:pointer}
         .prominent-ev-card{background:linear-gradient(135deg,#fff9e6 0%,#fffbeb 100%);border:1.5px solid var(--prize-color)}
         .ev-value{font-size:2.2rem;font-weight:900;color:#1a1a1a;display:block;line-height:1;letter-spacing:-0.02em;margin-bottom:4px}
         .header-ai-box{background:rgba(255,255,255,0.7);border:1px solid #ddd6fe;border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px;flex-grow:1;max-width:420px;position:relative;cursor:default}
@@ -180,9 +180,9 @@
                     <span>1. Setup Inventory</span>
                     <div style="display:flex; align-items:center; gap:4px;">
                         <span id="save-status">SAVED</span>
-                        <button onclick="saveInventory()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">SAVE SLOTS</button>
-                        <button onclick="loadInventory()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">LOAD SLOTS</button>
-                        <button onclick="resetToInitialState()" style="background:#f8d7da; color:#721c24; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">RESET SLOTS</button>
+                        <button onclick="saveInventory()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">SAVE LAYOUT</button>
+                        <button onclick="loadInventory()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">LOAD LAYOUT</button>
+                        <button onclick="resetInventoryLayout()" style="background:#f8d7da; color:#721c24; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">RESET LAYOUT</button>
                         <div class="card-controls" style="margin-left: 8px;">
                             <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
                             <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
@@ -195,7 +195,10 @@
                     <span>Prize</span><span>Name/Label</span><span>Val</span><span>Qty</span><span></span>
                 </div>
                 <div id="outcomes-container"></div>
-                <button id="init-btn" class="btn-init" onclick="initializeSession()">Initialise New Session</button>
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <button id="init-btn" class="btn-init" style="flex: 1; margin-top: 0;" onclick="initializeSession()">Initialise New Session</button>
+                    <button id="reset-session-btn" class="btn-init" style="flex: 1; margin-top: 0; background: #f8fafc; color: #475569; border: 1px solid #cbd5e1;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'" onclick="resetSession()">Reset Session</button>
+                </div>
             </div>
 
             <div class="card" id="card-heatmap">
@@ -1017,7 +1020,9 @@
             { label: "Charizard X UPC", value: 140, remaining: 1, prized: true },
             { label: "Energy", value: 0, remaining: 9, prized: false }
         ];
-        localStorage.setItem('wheel_init_snapshot', JSON.stringify(inventory));
+        if (!localStorage.getItem('wheel_init_snapshot')) {
+            localStorage.setItem('wheel_init_snapshot', JSON.stringify(inventory));
+        }
         rebuildDOMFromInventory();
         syncAndUI();
     }
@@ -1413,6 +1418,7 @@
         window.addEventListener('mouseup', handleUp);
         
         canvas.addEventListener('touchstart', handleDown, {passive: false});
+        window.addEventListener('touchmove', handleMove, {passive: false});
         window.addEventListener('touchmove', handleMove, {passive: false});
         window.addEventListener('touchend', handleUp);
     }
@@ -2965,22 +2971,15 @@
         inventory.forEach(item => c.appendChild(createRowElement(item.label, item.value, item.remaining, item.prized)));
     }
     
-    function resetToInitialState() {
-        const snap = localStorage.getItem('wheel_init_snapshot');
-        if (snap) {
-            inventory = JSON.parse(snap);
-        } else {
-            localStorage.removeItem('wheel_session');
-            loadDefaults();
-            return; 
-        }
-        history = []; 
-        sessionStats = { spent: 0, won: 0 }; 
+    function resetInventoryLayout() {
+        inventory = [
+            { label: "Charizard X UPC", value: 140, remaining: 1, prized: true },
+            { label: "Energy", value: 0, remaining: 9, prized: false }
+        ];
         rebuildDOMFromInventory();
         syncAndUI();
         showStatus("RESET", "var(--danger)");
     }
-    function resetLayoutDefault() { localStorage.removeItem('wheel_session'); loadDefaults(); }
     function clearHistory() { history = []; sessionStats = { spent: 0, won: 0 }; syncAndUI(); }
     
     function undoLastSpin() {
@@ -3000,6 +2999,24 @@
             showStatus("ERROR", "var(--danger)");
         }
         syncAndUI();
+    }
+
+    function resetSession() {
+        const snap = localStorage.getItem('wheel_init_snapshot');
+        if (snap) {
+            try {
+                inventory = JSON.parse(snap);
+                history = []; 
+                sessionStats = { spent: 0, won: 0 }; 
+                rebuildDOMFromInventory();
+                syncAndUI();
+                showStatus("SESSION RESET", "var(--warning)");
+            } catch(e) {
+                showStatus("ERROR", "var(--danger)");
+            }
+        } else {
+            showStatus("NO SESSION", "var(--danger)");
+        }
     }
     
     function pcmToWav(b, s) { const l = b.byteLength, f = new ArrayBuffer(44 + l), v = new DataView(f); v.setUint32(0, 0x52494646, false); v.setUint32(4, 36 + l, true); v.setUint32(8, 0x57415645, false); v.setUint32(12, 0x666d7420, false); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, s, true); v.setUint32(28, s * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); v.setUint32(36, 0x64617461, false); v.setUint32(40, l, true); new Uint8Array(f, 44).set(new Uint8Array(b)); return f; }
