@@ -792,26 +792,34 @@
     let circuitBreakerUntil = 0;
     const clackTimes = [];
     
-    function playMarbleClack(v, bounceCount = 0, isBallOnBall = false) {
+    function playMarbleClack(v, isBallOnBall = false) {
         if (isBallOnBall && gachaMuted) return;
         if (!actx || !audioInit) return;
         
         let now = performance.now();
         if (now < circuitBreakerUntil) return;
         
+        // Remove tracking of sounds older than 100ms
         while(clackTimes.length > 0 && now - clackTimes[0] > 100) { clackTimes.shift(); }
-        if (clackTimes.length >= 8) { 
-            circuitBreakerUntil = now + 400; 
+        // Allowed concurrent hits increased to 10
+        if (clackTimes.length >= 10) { 
+            circuitBreakerUntil = now + 200; 
             return;
         }
         
-        if (clackTimes.length > 0 && now - clackTimes[clackTimes.length - 1] < 15) return; 
+        // Tightened minimum debounce strictly for machine-gun glitch prevention (down to 5ms)
+        if (clackTimes.length > 0 && now - clackTimes[clackTimes.length - 1] < 5) return; 
 
         clackTimes.push(now);
         
-        let ampMod = Math.pow(0.85, Math.min(bounceCount, 12));
-        let vol = Math.min(0.4, v * 0.05) * ampMod; 
-        if (vol < 0.005) return;
+        // Hertz contact approximation:
+        let impactV = Math.max(v, 0.1);
+        let contactTime = 0.015 * Math.pow(impactV, -0.2); 
+        contactTime = Math.max(0.005, Math.min(contactTime, 0.03)); 
+        
+        let force = Math.pow(impactV, 1.2);
+        let vol = Math.min(0.4, force * 0.015);
+        if (vol < 0.005) return; 
 
         if (actx.state === 'suspended') actx.resume();
 
@@ -819,26 +827,26 @@
             let t = actx.currentTime;
             if (t <= 0) t = 0.01;
             
-            let pitchMod = Math.pow(1.06, Math.min(bounceCount, 12));
-            let baseFreq = (1600 + Math.random() * 400) * pitchMod; 
+            let baseFreq = isBallOnBall ? 3500 : 2500;
+            baseFreq += (Math.random() - 0.5) * 400; // Phase cancellation prevention
             
             let osc1 = actx.createOscillator(); let gain1 = actx.createGain();
             osc1.type = 'sine';
             osc1.frequency.setValueAtTime(baseFreq, t);
             gain1.gain.setValueAtTime(vol, t);
-            gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+            gain1.gain.exponentialRampToValueAtTime(0.001, t + contactTime);
             
             let osc2 = actx.createOscillator(); let gain2 = actx.createGain();
             osc2.type = 'triangle'; 
-            osc2.frequency.setValueAtTime(baseFreq * 1.5, t); 
-            gain2.gain.setValueAtTime(vol * 0.3, t);
-            gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+            osc2.frequency.setValueAtTime(baseFreq * 1.6, t); 
+            gain2.gain.setValueAtTime(vol * 0.4, t);
+            gain2.gain.exponentialRampToValueAtTime(0.001, t + contactTime * 0.7);
             
             osc1.connect(gain1); gain1.connect(actx.destination);
             osc2.connect(gain2); gain2.connect(actx.destination);
             
-            osc1.start(t); osc1.stop(t + 0.03);
-            osc2.start(t); osc2.stop(t + 0.02);
+            osc1.start(t); osc1.stop(t + contactTime + 0.01);
+            osc2.start(t); osc2.stop(t + contactTime + 0.01);
         } catch (e) {}
     }
 
@@ -1419,7 +1427,6 @@
         
         canvas.addEventListener('touchstart', handleDown, {passive: false});
         window.addEventListener('touchmove', handleMove, {passive: false});
-        window.addEventListener('touchmove', handleMove, {passive: false});
         window.addEventListener('touchend', handleUp);
     }
 
@@ -1435,7 +1442,7 @@
 
             let speed = Math.hypot(b.vx, b.vy);
             if (phase === "settle") {
-                if (speed < 0.25 && b.y > innerR * 0.2) b.sleepFrames = (b.sleepFrames || 0) + 1;
+                if (speed < 0.15 && b.y > innerR * 0.25) b.sleepFrames = (b.sleepFrames || 0) + 1;
                 else b.sleepFrames = 0;
                 b.isSleeping = b.sleepFrames > 15;
             } else {
@@ -1446,11 +1453,11 @@
 
             if (phase === "chaos") {
                 if (b.y > innerR * 0.4 && Math.random() < 0.2) { b.vy -= Math.random() * 2.5 + 0.5; b.vx += (Math.random() - 0.5) * 1.5; b.vz += (Math.random() - 0.5) * 2.5; }
-                b.vy += 0.22; let drag = 0.95; b.vx *= drag; b.vy *= drag; b.vz *= drag;
+                b.vy += 0.35; let drag = 0.95; b.vx *= drag; b.vy *= drag; b.vz *= drag;
             } else {
                 if (!b.isSleeping) {
-                    b.vy += 0.25; 
-                    let drag = 0.98; 
+                    b.vy += 0.45; 
+                    let drag = 0.99; 
                     b.vx *= drag; b.vy *= drag; 
                 } else {
                     b.vx = 0; b.vy = 0; 
@@ -1469,18 +1476,16 @@
                 b.x = nx * innerR; b.y = ny * innerR;
                 let dot = b.vx * nx + b.vy * ny;
                 if (dot > 0) { 
-                    // Higher threshold for sounds, lower friction for rolling off
-                    let wallBounce = dot > 0.8 ? b.restitution : 0.05;
+                    let wallBounce = dot > 0.5 ? b.restitution : 0.1;
                     b.vx -= (1 + wallBounce) * dot * nx; 
                     b.vy -= (1 + wallBounce) * dot * ny; 
                     
-                    b.vx *= 0.99; // Rolling physics
-                    b.vy *= 0.99; 
+                    b.vx *= 0.992;
+                    b.vy *= 0.992; 
                     
                     if (dot > 0.5) { b.sleepFrames = 0; b.isSleeping = false; }
-                    if (!isMinimized && dot > 4.0 && !b.isSleeping) {
-                        b.bounceCount = (b.bounceCount || 0) + 1;
-                        playMarbleClack(dot, b.bounceCount, false);
+                    if (!isMinimized && dot > 0.5 && !b.isSleeping) {
+                        playMarbleClack(dot, false);
                     }
                 } 
             }
@@ -1516,13 +1521,12 @@
                                 if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
                                 if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
 
-                                // High-energy collisions slide off, low energy ones drain more to rolloff
                                 if (Math.abs(nx) < 0.2 && Math.abs(velAlongNormal) < 1.0) {
                                     let slide = (Math.random() - 0.5) * 0.3;
                                     b1.vx += slide; b2.vx -= slide;
                                 }
                                 
-                                if (Math.abs(velAlongNormal) < 0.8) {
+                                if (Math.abs(velAlongNormal) < 0.4) {
                                     if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.85; b1.vy *= 0.85; }
                                     if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.85; b2.vy *= 0.85; }
                                 } else {
@@ -1535,10 +1539,8 @@
                                     b1.isSleeping = false; b2.isSleeping = false;
                                 }
 
-                                // Increased threshold for audio feedback
-                                if (!isMinimized && Math.abs(velAlongNormal) > 6.0 && overlap < 2.0 && (!b1.isSleeping || !b2.isSleeping)) {
-                                    b1.bounceCount = (b1.bounceCount || 0) + 1;
-                                    playMarbleClack(Math.abs(velAlongNormal), b1.bounceCount, true);
+                                if (!isMinimized && Math.abs(velAlongNormal) > 1.5 && overlap < 2.0 && (!b1.isSleeping || !b2.isSleeping)) {
+                                    playMarbleClack(Math.abs(velAlongNormal), true);
                                 }
                             }
                         }
@@ -1560,27 +1562,25 @@
             if (b.prized) b.starRotation = (b.starRotation || 0) + 0.015;
             if (b === gachaState.draggedBall) return;
             
-            b.vy += 0.25; 
+            b.vy += 0.45; 
             b.x += b.vx; b.y += b.vy;
             b.rotation += b.vx * 0.08; 
             
             let floorY = sizePx - bR;
             if (b.y > floorY) {
                 b.y = floorY; 
-                if (!isMinimized && b.vy > 0.8) {
-                    b.bounceCount = (b.bounceCount || 0) + 1;
-                    playMarbleClack(b.vy * 2, b.bounceCount, false);
-                } else if (b.vy <= 0.5) b.bounceCount = 0;
+                if (!isMinimized && b.vy > 0.5) {
+                    playMarbleClack(b.vy, false);
+                }
                 
                 b.vy *= -b.restitution; 
-                if (Math.abs(b.vy) < 0.35) b.vy = 0; 
+                if (Math.abs(b.vy) < 0.4) b.vy = 0; 
                 b.vx *= 0.95; 
             }
             if (b.y < bR) {
                 b.y = bR;
-                if (!isMinimized && Math.abs(b.vy) > 0.8) {
-                    b.bounceCount = (b.bounceCount || 0) + 1;
-                    playMarbleClack(Math.abs(b.vy) * 2, b.bounceCount, false);
+                if (!isMinimized && Math.abs(b.vy) > 0.5) {
+                    playMarbleClack(Math.abs(b.vy), false);
                 }
                 b.vy *= -b.restitution;
             }
@@ -1588,17 +1588,15 @@
             const maxTrayX = sizePx - bR, minTrayX = bR;
             if (b.x > maxTrayX) { 
                 b.x = maxTrayX; 
-                if (!isMinimized && Math.abs(b.vx) > 0.8) {
-                    b.bounceCount = (b.bounceCount || 0) + 1;
-                    playMarbleClack(Math.abs(b.vx) * 2, b.bounceCount, false);
+                if (!isMinimized && Math.abs(b.vx) > 0.5) {
+                    playMarbleClack(Math.abs(b.vx), false);
                 }
                 b.vx *= -b.restitution; 
             }
             if (b.x < minTrayX) { 
                 b.x = minTrayX; 
-                if (!isMinimized && Math.abs(b.vx) > 0.8) {
-                    b.bounceCount = (b.bounceCount || 0) + 1;
-                    playMarbleClack(Math.abs(b.vx) * 2, b.bounceCount, false);
+                if (!isMinimized && Math.abs(b.vx) > 0.5) {
+                    playMarbleClack(Math.abs(b.vx), false);
                 }
                 b.vx *= -b.restitution; 
             }
@@ -1624,7 +1622,6 @@
 
             if (distance <= bR) {
                 if (distance < 0.001) {
-                    // Safety catch: Center of ball deeply penetrated the platform. Pop it to the top.
                     b.y = baseTop - bR;
                     if (b.vy > 0) b.vy *= -b.restitution;
                 } else {
@@ -1642,11 +1639,10 @@
                         let tx = -ny, ty = nx;
                         let tanDot = b.vx * tx + b.vy * ty;
                         b.vx -= tanDot * tx * 0.05;
-                        b.vx -= tanDot * ty * 0.05;
+                        b.vy -= tanDot * ty * 0.05;
 
-                        if (!isMinimized && Math.abs(dot) > 0.8) {
-                            b.bounceCount = (b.bounceCount || 0) + 1;
-                            playMarbleClack(Math.abs(dot) * 2, b.bounceCount, false);
+                        if (!isMinimized && Math.abs(dot) > 0.5) {
+                            playMarbleClack(Math.abs(dot), false);
                         }
                     }
                 }
@@ -1688,8 +1684,7 @@
                         }
                         
                         if (!isMinimized && Math.abs(velAlongNormal) > 1.5 && overlap < 2.0) {
-                            b1.bounceCount = (b1.bounceCount || 0) + 1;
-                            playMarbleClack(Math.abs(velAlongNormal), b1.bounceCount, true);
+                            playMarbleClack(Math.abs(velAlongNormal), true);
                         }
                     }
                 }
@@ -1737,7 +1732,7 @@
                         vx: (Math.random() - 0.5) * 2 + (gachaState.machineX ? gachaState.machineX * 0.01 : 0), 
                         vy: R * 0.01 + (gachaState.machineY ? gachaState.machineY * 0.01 : 0), 
                         rotation: 0, starRotation: 0, scale: 1,
-                        restitution: 0.63 + Math.random() * 0.21, bounceCount: 0 
+                        restitution: 0.72 + Math.random() * 0.18, bounceCount: 0 
                     };
                     dispensedBalls.push(dispensingBall);
                     if (dispensedBalls.length > 10) dispensedBalls.shift();
@@ -1770,7 +1765,7 @@
             if (b.prized) hasEffects = true;
         });
 
-        if (maxSpeed < 0.5 && !trayMoving && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasEffects) {
+        if (maxSpeed < 0.15 && !trayMoving && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasEffects) {
             gachaState.idleFrames++;
             if (gachaState.idleFrames > 30) { 
                 if (window.cachedGacha) { window.cachedGacha.forEach(b => { b.vx = 0; b.vy = 0; b.vz = 0; }); }
@@ -1851,7 +1846,7 @@
                         x: pos[i].x, y: pos[i].y, z: 0, vx: 0, vy: 0, vz: 0, r: r, 
                         prized: sample[i].prized, isDispensing: false, 
                         rotation: Math.random() * Math.PI * 2, starRotation: Math.random() * Math.PI * 2,
-                        restitution: 0.63 + Math.random() * 0.21, bounceCount: 0 
+                        restitution: 0.72 + Math.random() * 0.18, bounceCount: 0 
                     });
                 }
             }
@@ -2565,6 +2560,8 @@
         let dragCard = null, dragPlaceholder = null, startX, startY, initialMouseX, initialMouseY, dragAnimationFrame = null;
         let dragScrollRAF = null;
         let autoScrollSpeed = 0;
+        let touchTimer = null;
+        let touchStartX = 0, touchStartY = 0;
 
         function updateAutoScroll() {
             if (autoScrollSpeed !== 0) {
@@ -2577,7 +2574,20 @@
 
         document.querySelectorAll('.card').forEach(handle => {
             handle.addEventListener('mousedown', startCustomDrag);
-            handle.addEventListener('touchstart', startCustomDrag, {passive: false});
+            handle.addEventListener('touchstart', startCustomDrag, {passive: true});
+            
+            handle.addEventListener('touchmove', (e) => {
+                if (touchTimer) {
+                    let dy = e.touches[0].clientY - touchStartY;
+                    if (Math.abs(dy) > 10) { 
+                        clearTimeout(touchTimer);
+                        touchTimer = null;
+                    }
+                }
+            }, {passive: true});
+            
+            handle.addEventListener('touchend', () => { if (touchTimer) clearTimeout(touchTimer); }, {passive: true});
+            handle.addEventListener('touchcancel', () => { if (touchTimer) clearTimeout(touchTimer); }, {passive: true});
         });
 
         function startCustomDrag(e) {
@@ -2586,34 +2596,50 @@
             const interactiveSelectors = 'button, input, .card-controls, span, td, th, tr, tbody, table, b, .mini-value, .mini-label, .ev-value, .history-item, canvas, .scroller-window, .scroller-wrapper, .universal-resize, .resize-corner';
             if(e.target.closest(interactiveSelectors)) return; 
             
+            const card = e.target.closest('.card'); 
+            if (!card) return;
+
             let clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
             let clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
-            
-            if (e.cancelable) e.preventDefault(); 
-            if (window.getSelection) { window.getSelection().removeAllRanges(); }
 
-            const card = e.target.closest('.card'); 
-            const rect = card.getBoundingClientRect();
-            
-            dragCard = card; 
-            initialMouseX = clientX; 
-            initialMouseY = clientY;
-            startX = rect.left; 
-            startY = rect.top;
+            const initiateDrag = () => {
+                if (e.cancelable && e.type !== 'touchstart') e.preventDefault(); 
+                if (window.getSelection) { window.getSelection().removeAllRanges(); }
+                
+                const rect = card.getBoundingClientRect();
+                
+                dragCard = card; 
+                initialMouseX = clientX; 
+                initialMouseY = clientY;
+                startX = rect.left; 
+                startY = rect.top;
 
-            dragPlaceholder = document.createElement('div'); dragPlaceholder.className = 'card placeholder';
-            dragPlaceholder.style.width = rect.width + 'px'; dragPlaceholder.style.height = rect.height + 'px';
-            card.parentNode.insertBefore(dragPlaceholder, card);
+                dragPlaceholder = document.createElement('div'); dragPlaceholder.className = 'card placeholder';
+                dragPlaceholder.style.width = rect.width + 'px'; dragPlaceholder.style.height = rect.height + 'px';
+                card.parentNode.insertBefore(dragPlaceholder, card);
 
-            card.style.position = 'fixed'; card.style.left = startX + 'px'; card.style.top = startY + 'px';
-            card.style.width = rect.width + 'px'; card.style.height = rect.height + 'px';
-            card.classList.add('dragging-active-card'); document.body.classList.add('dragging-active');
+                card.style.position = 'fixed'; card.style.left = startX + 'px'; card.style.top = startY + 'px';
+                card.style.width = rect.width + 'px'; card.style.height = rect.height + 'px';
+                card.classList.add('dragging-active-card'); document.body.classList.add('dragging-active');
 
-            autoScrollSpeed = 0;
-            dragScrollRAF = requestAnimationFrame(updateAutoScroll);
+                autoScrollSpeed = 0;
+                dragScrollRAF = requestAnimationFrame(updateAutoScroll);
 
-            window.addEventListener('mousemove', dragMove, {passive: false}); window.addEventListener('mouseup', dragEnd);
-            window.addEventListener('touchmove', dragMove, {passive: false}); window.addEventListener('touchend', dragEnd);
+                window.addEventListener('mousemove', dragMove, {passive: false}); window.addEventListener('mouseup', dragEnd);
+                window.addEventListener('touchmove', dragMove, {passive: false}); window.addEventListener('touchend', dragEnd);
+                window.addEventListener('touchcancel', dragEnd);
+            };
+
+            if (e.type === 'touchstart') {
+                touchStartX = clientX;
+                touchStartY = clientY;
+                touchTimer = setTimeout(() => {
+                    touchTimer = null;
+                    initiateDrag();
+                }, 150); 
+            } else {
+                initiateDrag();
+            }
         }
 
         let lastClientX, lastClientY;
@@ -2682,6 +2708,7 @@
 
             window.removeEventListener('mousemove', dragMove); window.removeEventListener('mouseup', dragEnd);
             window.removeEventListener('touchmove', dragMove); window.removeEventListener('touchend', dragEnd);
+            window.removeEventListener('touchcancel', dragEnd);
             safeDrawWheel(); requestAnimationFrame(drawGacha);
         }
     }
@@ -2913,7 +2940,7 @@
         const total = inventory.reduce((a, b) => a + b.remaining, 0), sum = inventory.reduce((a, b) => a + (b.value * b.remaining), 0);
         const ev = total > 0 ? sum / total : 0; grid.innerHTML = '';
         
-        let step = Math.max(1, Math.ceil(ev * 0.01)); // Dynamically scale steps to prevent millions of rows crashing the browser
+        let step = Math.max(1, Math.ceil(ev * 0.01)); 
         
         if (appMode === 'buyer') {
             let startPrice = Math.floor(ev);
