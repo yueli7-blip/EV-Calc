@@ -29,7 +29,6 @@
 
         .btn-reset-ui{width:fit-content;padding:6px 14px;font-size:0.7rem;font-weight:800;background:#fff;border:1.5px solid #cbd5e1;color:#64748b;border-radius:8px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
         .btn-reset-ui:hover{border-color:var(--primary);color:var(--primary);background:#f8fafc;transform:translateY(-1px)}
-        body.wheel-resizing,body.wheel-resizing *{cursor:col-resize!important}
         
         /* Toggle Switch Styles */
         .switch-container { display: flex; align-items: center; justify-content: center; gap: 10px; background: #fff; padding: 6px 16px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border); margin: 0; }
@@ -1439,14 +1438,27 @@
         balls.forEach(b => {
             if (b.prized) b.starRotation = (b.starRotation || 0) + 0.015;
 
+            let speed = Math.hypot(b.vx, b.vy);
+            if (phase === "settle") {
+                if (speed < 0.25 && b.y > innerR * 0.25) b.sleepFrames = (b.sleepFrames || 0) + 1;
+                else b.sleepFrames = 0;
+                b.isSleeping = b.sleepFrames > 12;
+            } else {
+                b.sleepFrames = 0; b.isSleeping = false;
+            }
+
+            if (b === gachaState.draggedBall) return; 
+
             if (phase === "chaos") {
                 if (b.y > innerR * 0.4 && Math.random() < 0.2) { b.vy -= Math.random() * 2.5 + 0.5; b.vx += (Math.random() - 0.5) * 1.5; b.vz += (Math.random() - 0.5) * 2.5; }
                 b.vy += 0.35; let drag = 0.95; b.vx *= drag; b.vy *= drag; b.vz *= drag;
             } else {
                 if (!b.isSleeping) {
-                    b.vy += 0.35; 
+                    b.vy += 0.45; 
                     let drag = 0.99; 
                     b.vx *= drag; b.vy *= drag; 
+                } else {
+                    b.vx = 0; b.vy = 0; 
                 }
                 b.rotation = 0; 
                 let targetZ = b.prized ? 10 : 0; b.vz += (targetZ - (b.z || 0)) * 0.05; b.vz *= 0.8;
@@ -1559,7 +1571,7 @@
                 return;
             }
             if (!b.isSleeping) {
-                b.vy += 0.35; 
+                b.vy += 0.45; 
             }
             b.x += b.vx; 
             b.y += b.vy;
@@ -1656,6 +1668,7 @@
                 if (distance <= bR) {
                     if (distance < 0.001) {
                         b.y = baseTop - bR;
+                        if (iter === 0 && b.vy > 0) b.vy *= -b.restitution;
                     } else {
                         let nx = distX / distance;
                         let ny = distY / distance;
@@ -1665,9 +1678,9 @@
                         if (iter === 0) {
                             let dot = b.vx * nx + b.vy * ny;
                             if (dot < 0) {
-                                let bounce = Math.abs(dot) > 1.5 ? b.restitution : 0.05; 
-                                b.vx -= (1 + bounce) * dot * nx;
-                                b.vy -= (1 + bounce) * dot * ny;
+                                let restitution = b.restitution; 
+                                b.vx -= (1 + restitution) * dot * nx;
+                                b.vy -= (1 + restitution) * dot * ny;
                                 
                                 let tx = -ny, ty = nx;
                                 let tanDot = b.vx * tx + b.vy * ty;
@@ -2854,9 +2867,17 @@
         let totalSlots = 0, sumValues = 0, prizeVal = 0, prizeQty = 0;
         const bid = parseFloat(document.getElementById('bid-input').value || 0);
         const container = document.getElementById('spin-buttons'); container.innerHTML = '';
+        
+        // Pass 1: Calculate totals
         inventory.forEach(item => {
             totalSlots += item.remaining; sumValues += (item.value * item.remaining);
             if (item.prized) { prizeQty += item.remaining; prizeVal += (item.value * item.remaining); }
+        });
+        
+        const ev = totalSlots > 0 ? sumValues / totalSlots : 0;
+
+        // Pass 2: Generate UI elements with Next EV Prediction
+        inventory.forEach(item => {
             if (item.remaining > 0) {
                 const group = document.createElement('div'); group.className = 'hit-group';
                 
@@ -2868,14 +2889,18 @@
                 
                 const boughtBtnHTML = appMode === 'buyer' ? `<button class="btn-hit-me" style="background:${itemColor}" onclick="recordSpin(${item.id}, true)">BOUGHT</button>` : '';
                 
-                group.innerHTML = `<b style="font-size:0.75rem">${starHTML}${item.label}</b><br><span style="font-size:0.6rem; color:#64748b">${item.remaining} left</span>${boughtBtnHTML}<button class="btn-hit-other" onclick="recordSpin(${item.id}, false)">ROLLED</button>`;
+                let nextEv = totalSlots > 1 ? (sumValues - item.value) / (totalSlots - 1) : 0;
+                let evDiff = nextEv - ev;
+                let evColor = evDiff > 0.01 ? 'var(--success)' : (evDiff < -0.01 ? 'var(--danger)' : '#64748b');
+                let evIcon = evDiff > 0.01 ? '▲' : (evDiff < -0.01 ? '▼' : '-');
+                
+                group.innerHTML = `<b style="font-size:0.75rem">${starHTML}${item.label}</b><br><span style="font-size:0.6rem; color:#64748b">${item.remaining} left</span><div style="font-size:0.55rem; color:${evColor}; margin: 4px 0; font-weight: 800; background: #f8fafc; padding: 2px 0; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05);">Next EV: £${nextEv.toFixed(2)} <span style="font-size:0.5rem">${evIcon}</span></div>${boughtBtnHTML}<button class="btn-hit-other" onclick="recordSpin(${item.id}, false)">ROLLED</button>`;
                 container.appendChild(group);
             }
         });
         
         if (container.innerHTML === '') container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; font-size: 0.75rem; color: #94a3b8; padding: 12px; font-style: italic;">Empty</div>';
 
-        const ev = totalSlots > 0 ? sumValues / totalSlots : 0;
         safeSet('stat-ev', `£${ev.toFixed(2)}`); safeSet('stat-slots', totalSlots);
         safeSet('stat-prize-prob', `${totalSlots > 0 ? (prizeQty / totalSlots * 100).toFixed(0) : 0}%`);
         safeSet('stat-avg-prize', `£${prizeQty > 0 ? (prizeVal / prizeQty).toFixed(2) : '0.00'}`);
