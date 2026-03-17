@@ -110,7 +110,8 @@
         .header-ai-label{font-size:0.55rem;color:var(--ai-glow);font-weight:900;text-transform:uppercase}
         .header-ai-tip{font-size:0.75rem;font-style:italic;color:#475569;line-height:1.3;max-height:2.6em;overflow:hidden}
         .hit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:8px}
-        .hit-group{background:#fff;border:1px solid var(--border);padding:6px;border-radius:8px;text-align:center}
+        .hit-group{background:#fff;border:1px solid var(--border);padding:6px;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.2s}
+        .hit-group:hover{border-color:#cbd5e1;box-shadow:0 2px 4px rgba(0,0,0,0.05);transform:translateY(-1px)}
         .btn-hit-me{background:var(--primary);color:white;width:100%;padding:4px;margin-top:6px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer; transition: filter 0.3s;}
         .btn-hit-me:hover{filter:brightness(1.1);}
         .btn-hit-other{background:#94a3b8;color:white;width:100%;padding:4px;margin-top:3px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer}
@@ -1440,9 +1441,9 @@
 
             let speed = Math.hypot(b.vx, b.vy);
             if (phase === "settle") {
-                if (speed < 0.25 && b.y > innerR * 0.25) b.sleepFrames = (b.sleepFrames || 0) + 1;
+                if (speed < 0.25 && b.y > innerR * 0.2) b.sleepFrames = (b.sleepFrames || 0) + 1;
                 else b.sleepFrames = 0;
-                b.isSleeping = b.sleepFrames > 12;
+                b.isSleeping = b.sleepFrames > 15;
             } else {
                 b.sleepFrames = 0; b.isSleeping = false;
             }
@@ -1451,11 +1452,11 @@
 
             if (phase === "chaos") {
                 if (b.y > innerR * 0.4 && Math.random() < 0.2) { b.vy -= Math.random() * 2.5 + 0.5; b.vx += (Math.random() - 0.5) * 1.5; b.vz += (Math.random() - 0.5) * 2.5; }
-                b.vy += 0.35; let drag = 0.95; b.vx *= drag; b.vy *= drag; b.vz *= drag;
+                b.vy += 0.22; let drag = 0.95; b.vx *= drag; b.vy *= drag; b.vz *= drag;
             } else {
                 if (!b.isSleeping) {
-                    b.vy += 0.45; 
-                    let drag = 0.99; 
+                    b.vy += 0.35; 
+                    let drag = 0.98; 
                     b.vx *= drag; b.vy *= drag; 
                 } else {
                     b.vx = 0; b.vy = 0; 
@@ -1468,39 +1469,77 @@
             if(phase === "chaos") b.rotation = (b.rotation || 0) + (Math.abs(b.vx) + Math.abs(b.vy)) * 0.05 * (b.vx > 0 ? 1 : -1);
             
             let maxZ = R * 0.6; if (b.z > maxZ) { b.z = maxZ; b.vz *= -0.5; } if (b.z < -maxZ) { b.z = -maxZ; b.vz *= -0.5; }
+            
+            let currentDist = Math.sqrt(b.x*b.x + b.y*b.y);
+            if (currentDist > innerR && currentDist > 0) {
+                let nx = b.x / currentDist, ny = b.y / currentDist;
+                b.x = nx * innerR; b.y = ny * innerR;
+                let dot = b.vx * nx + b.vy * ny;
+                if (dot > 0) { 
+                    let wallBounce = dot > 0.8 ? b.restitution : 0.05;
+                    b.vx -= (1 + wallBounce) * dot * nx; 
+                    b.vy -= (1 + wallBounce) * dot * ny; 
+                    
+                    b.vx *= 0.95; 
+                    b.vy *= 0.95; 
+                    
+                    if (dot > 0.5) { b.sleepFrames = 0; b.isSleeping = false; }
+                    if (!isMinimized && dot > 4.0 && !b.isSleeping) {
+                        playMarbleClack(dot, false);
+                    }
+                } 
+            }
         });
 
-        for (let iter = 0; iter < 3; iter++) {
+        for (let iter = 0; iter < 2; iter++) {
             for(let i=0; i<balls.length; i++) {
                 let b1 = balls[i];
                 for(let j=i+1; j<balls.length; j++) {
                     let b2 = balls[j];
-                    let dx = b2.x - b1.x; let dy = b2.y - b1.y; let dz = (b2.z || 0) - (b1.z || 0);
-                    let distSq = dx*dx + dy*dy + dz*dz;
+                    if (b1.isSleeping && b2.isSleeping) continue;
+                    
                     let minDistSq = (b1.r + b2.r) * (b1.r + b2.r);
+                    let dx = b2.x - b1.x; if (dx * dx > minDistSq) continue;
+                    let dy = b2.y - b1.y; if (dy * dy > minDistSq) continue;
+                    let dz = (b2.z || 0) - (b1.z || 0);
+                    let distSq = dx*dx + dy*dy + dz*dz;
                     
                     if (distSq < minDistSq && distSq > 0.0001) {
                         let dist = Math.sqrt(distSq); let overlap = ((b1.r + b2.r) - dist) * 0.5; let nx = dx/dist, ny = dy/dist, nz = dz/dist;
-                        
-                        if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap; b1.y -= ny * overlap; b1.z -= nz * overlap; }
-                        if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap; b2.y += ny * overlap; b2.z += nz * overlap; }
-                        
+                        if (overlap > 0.05) {
+                            if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.x -= nx * overlap; b1.y -= ny * overlap; b1.z -= nz * overlap; }
+                            if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.x += nx * overlap; b2.y += ny * overlap; b2.z += nz * overlap; }
+                        }
                         if (iter === 0) {
                             let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy, rvz = (b2.vz || 0) - (b1.vz || 0);
                             let velAlongNormal = rvx * nx + rvy * ny + rvz * nz;
-                            if (velAlongNormal < 0) { 
-                                let bounce = (Math.abs(velAlongNormal) > 1.5) ? ((b1.restitution + b2.restitution) / 2) : 0.05; 
+                            if (velAlongNormal < -0.1) { 
+                                let combinedRestitution = (b1.restitution + b2.restitution) / 2;
+                                let bounce = (Math.abs(velAlongNormal) > 0.8) ? combinedRestitution : 0.05; 
                                 let impulse = -(1 + bounce) * velAlongNormal / 2; 
                                 
-                                if (b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
-                                if (b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
+                                if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
+                                if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
 
-                                if (Math.abs(velAlongNormal) < 0.5) {
-                                    b1.vx *= 0.9; b1.vy *= 0.9;
-                                    b2.vx *= 0.9; b2.vy *= 0.9;
+                                if (Math.abs(nx) < 0.2 && Math.abs(velAlongNormal) < 1.0) {
+                                    let slide = (Math.random() - 0.5) * 0.3;
+                                    b1.vx += slide; b2.vx -= slide;
+                                }
+                                
+                                if (Math.abs(velAlongNormal) < 0.8) {
+                                    if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.85; b1.vy *= 0.85; }
+                                    if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.85; b2.vy *= 0.85; }
+                                } else {
+                                    if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.99; b1.vy *= 0.99; }
+                                    if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.99; b2.vy *= 0.99; }
                                 }
 
-                                if (!isMinimized && Math.abs(velAlongNormal) > 2.0 && overlap < 2.0) {
+                                if (Math.abs(velAlongNormal) > 0.5) {
+                                    b1.sleepFrames = 0; b2.sleepFrames = 0;
+                                    b1.isSleeping = false; b2.isSleeping = false;
+                                }
+
+                                if (!isMinimized && Math.abs(velAlongNormal) > 6.0 && overlap < 2.0 && (!b1.isSleeping || !b2.isSleeping)) {
                                     playMarbleClack(Math.abs(velAlongNormal), true);
                                 }
                             }
@@ -1508,47 +1547,7 @@
                     }
                 }
             }
-            balls.forEach(b => {
-                if (b === gachaState.draggedBall) return;
-                let currentDist = Math.sqrt(b.x*b.x + b.y*b.y);
-                if (currentDist > innerR && currentDist > 0) { 
-                    let nx = b.x / currentDist, ny = b.y / currentDist;
-                    b.x = nx * innerR; b.y = ny * innerR; 
-                    if (iter === 0) {
-                        let dot = b.vx * nx + b.vy * ny;
-                        if (dot > 0) { 
-                            let wallBounce = dot > 1.5 ? b.restitution : 0.05;
-                            b.vx -= (1 + wallBounce) * dot * nx; 
-                            b.vy -= (1 + wallBounce) * dot * ny; 
-                            b.vx *= 0.98; b.vy *= 0.98; 
-                            
-                            if (!isMinimized && dot > 2.0) {
-                                playMarbleClack(dot, false);
-                            }
-                        } 
-                    }
-                }
-            });
         }
-
-        balls.forEach(b => {
-            if (b === gachaState.draggedBall || phase === "chaos") {
-                b.sleepFrames = 0; b.isSleeping = false;
-                return;
-            }
-            let speed = Math.hypot(b.vx, b.vy);
-            if (speed < 0.3 && b.y > innerR * 0.25) {
-                b.sleepFrames = (b.sleepFrames || 0) + 1;
-            } else {
-                b.sleepFrames = 0;
-            }
-            if (b.sleepFrames > 10) {
-                b.vx = 0; b.vy = 0;
-                b.isSleeping = true;
-            } else {
-                b.isSleeping = false;
-            }
-        });
     }
 
     function updateTrayBalls(sizePx, bR, isMinimized) {
@@ -1566,150 +1565,126 @@
 
         dispensedBalls.forEach(b => {
             if (b.prized) b.starRotation = (b.starRotation || 0) + 0.015;
-            if (b === gachaState.draggedBall) {
-                b.sleepFrames = 0; b.isSleeping = false;
-                return;
-            }
-            if (!b.isSleeping) {
-                b.vy += 0.45; 
-            }
-            b.x += b.vx; 
-            b.y += b.vy;
+            if (b === gachaState.draggedBall) return;
+            
+            b.vy += 0.35; 
+            b.x += b.vx; b.y += b.vy;
             b.rotation += b.vx * 0.08; 
+            
+            if (b.y > floorY) {
+                b.y = floorY; 
+                if (!isMinimized && b.vy > 0.8) {
+                    playMarbleClack(b.vy * 2, false);
+                }
+                
+                b.vy *= -b.restitution; 
+                if (Math.abs(b.vy) < 0.35) b.vy = 0; 
+                b.vx *= 0.95; 
+            }
+            if (b.y < bR) {
+                b.y = bR;
+                if (!isMinimized && Math.abs(b.vy) > 0.8) {
+                    playMarbleClack(Math.abs(b.vy) * 2, false);
+                }
+                b.vy *= -b.restitution;
+            }
+
+            if (b.x > maxTrayX) { 
+                b.x = maxTrayX; 
+                if (!isMinimized && Math.abs(b.vx) > 0.8) {
+                    playMarbleClack(Math.abs(b.vx) * 2, false);
+                }
+                b.vx *= -b.restitution; 
+            }
+            if (b.x < minTrayX) { 
+                b.x = minTrayX; 
+                if (!isMinimized && Math.abs(b.vx) > 0.8) {
+                    playMarbleClack(Math.abs(b.vx) * 2, false);
+                }
+                b.vx *= -b.restitution; 
+            }
+
+            let testX = b.x;
+            let testY = b.y;
+            if (b.x < baseLeft) testX = baseLeft;
+            else if (b.x > baseRight) testX = baseRight;
+            if (b.y < baseTop) testY = baseTop;
+            else if (b.y > baseBottom) testY = baseBottom;
+
+            let distX = b.x - testX;
+            let distY = b.y - testY;
+            let distance = Math.sqrt((distX*distX) + (distY*distY));
+
+            if (distance <= bR) {
+                if (distance < 0.001) {
+                    b.y = baseTop - bR;
+                    if (b.vy > 0) b.vy *= -b.restitution;
+                } else {
+                    let nx = distX / distance;
+                    let ny = distY / distance;
+                    b.x = testX + nx * bR;
+                    b.y = testY + ny * bR;
+
+                    let dot = b.vx * nx + b.vy * ny;
+                    if (dot < 0) {
+                        let restitution = b.restitution; 
+                        b.vx -= (1 + restitution) * dot * nx;
+                        b.vy -= (1 + restitution) * dot * ny;
+                        
+                        let tx = -ny, ty = nx;
+                        let tanDot = b.vx * tx + b.vy * ty;
+                        b.vx -= tanDot * tx * 0.05;
+                        b.vy -= tanDot * ty * 0.05;
+
+                        if (!isMinimized && Math.abs(dot) > 0.8) {
+                            playMarbleClack(Math.abs(dot) * 2, false);
+                        }
+                    }
+                }
+            }
         });
 
-        for (let iter = 0; iter < 3; iter++) {
-            for (let i = 0; i < dispensedBalls.length; i++) {
-                for (let j = i + 1; j < dispensedBalls.length; j++) {
-                    let b1 = dispensedBalls[i];
-                    let b2 = dispensedBalls[j];
-                    let dx = b2.x - b1.x; let dy = b2.y - b1.y;
-                    let distSq = dx*dx + dy*dy; let minDistSq = (bR + bR) * (bR + bR);
-                    if (distSq < minDistSq && distSq > 0.0001) {
-                        let dist = Math.sqrt(distSq); let overlap = ((bR + bR) - dist) * 0.5; 
-                        let nx = dx/dist, ny = dy/dist;
-
+        // Inter-tray collision
+        for (let i = 0; i < dispensedBalls.length; i++) {
+            for (let j = i + 1; j < dispensedBalls.length; j++) {
+                let b1 = dispensedBalls[i];
+                let b2 = dispensedBalls[j];
+                let dx = b2.x - b1.x; let dy = b2.y - b1.y;
+                let distSq = dx*dx + dy*dy; let minDistSq = (bR + bR) * (bR + bR);
+                if (distSq < minDistSq && distSq > 0.0001) {
+                    let dist = Math.sqrt(distSq); let overlap = ((bR + bR) - dist) * 0.5; 
+                    let nx = dx/dist, ny = dy/dist;
+                    if (overlap > 0.05) {
                         if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap; b1.y -= ny * overlap; }
                         if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap; b2.y += ny * overlap; }
-
-                        if (iter === 0) {
-                            let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy;
-                            let velAlongNormal = rvx * nx + rvy * ny;
-                            if (velAlongNormal < 0) {
-                                let bounce = (Math.abs(velAlongNormal) > 1.5) ? ((b1.restitution + b2.restitution)/2) : 0.05;
-                                let impulse = -(1 + bounce) * velAlongNormal / 2; 
-                                
-                                if (b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
-                                if (b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
-                                
-                                if (Math.abs(velAlongNormal) < 0.5) {
-                                    b1.vx *= 0.9; b1.vy *= 0.9;
-                                    b2.vx *= 0.9; b2.vy *= 0.9;
-                                }
-                                
-                                if (!isMinimized && Math.abs(velAlongNormal) > 2.0 && overlap < 2.0) {
-                                    playMarbleClack(Math.abs(velAlongNormal), true);
-                                }
-                            }
+                    }
+                    let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy;
+                    let velAlongNormal = rvx * nx + rvy * ny;
+                    if (velAlongNormal < -0.1) {
+                        let combinedRestitution = (b1.restitution + b2.restitution) / 2;
+                        let bounce = (Math.abs(velAlongNormal) > 0.8) ? combinedRestitution : 0.1;
+                        let impulse = -(1 + bounce) * velAlongNormal / 2; 
+                        
+                        if (b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
+                        if (b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
+                        
+                        if (Math.abs(nx) < 0.2 && Math.abs(velAlongNormal) < 1.0) {
+                            let slide = (Math.random() - 0.5) * 0.3;
+                            b1.vx += slide; b2.vx -= slide;
+                        }
+                        
+                        if (Math.abs(velAlongNormal) < 0.8) {
+                            if (b1 !== gachaState.draggedBall) { b1.vx *= 0.85; b1.vy *= 0.85; }
+                            if (b2 !== gachaState.draggedBall) { b2.vx *= 0.85; b2.vy *= 0.85; }
+                        }
+                        
+                        if (!isMinimized && Math.abs(velAlongNormal) > 1.5 && overlap < 2.0) {
+                            playMarbleClack(Math.abs(velAlongNormal), true);
                         }
                     }
                 }
             }
-
-            dispensedBalls.forEach(b => {
-                if (b === gachaState.draggedBall) return;
-                
-                if (b.y > floorY) {
-                    b.y = floorY; 
-                    if (iter === 0 && b.vy > 0) {
-                        let bounce = b.vy > 1.5 ? b.restitution : 0.05;
-                        if (!isMinimized && b.vy > 1.5) playMarbleClack(b.vy * 2, false);
-                        b.vy *= -bounce; 
-                        b.vx *= 0.9; 
-                    }
-                }
-                if (b.y < bR) {
-                    b.y = bR;
-                    if (iter === 0 && b.vy < 0) {
-                        let bounce = Math.abs(b.vy) > 1.5 ? b.restitution : 0.05;
-                        if (!isMinimized && Math.abs(b.vy) > 1.5) playMarbleClack(Math.abs(b.vy) * 2, false);
-                        b.vy *= -bounce;
-                    }
-                }
-
-                if (b.x > maxTrayX) { 
-                    b.x = maxTrayX; 
-                    if (iter === 0 && b.vx > 0) {
-                        let bounce = Math.abs(b.vx) > 1.5 ? b.restitution : 0.05;
-                        if (!isMinimized && Math.abs(b.vx) > 1.5) playMarbleClack(Math.abs(b.vx) * 2, false);
-                        b.vx *= -bounce; 
-                    }
-                }
-                if (b.x < minTrayX) { 
-                    b.x = minTrayX; 
-                    if (iter === 0 && b.vx < 0) {
-                        let bounce = Math.abs(b.vx) > 1.5 ? b.restitution : 0.05;
-                        if (!isMinimized && Math.abs(b.vx) > 1.5) playMarbleClack(Math.abs(b.vx) * 2, false);
-                        b.vx *= -bounce; 
-                    }
-                }
-
-                let testX = b.x;
-                let testY = b.y;
-                if (b.x < baseLeft) testX = baseLeft;
-                else if (b.x > baseRight) testX = baseRight;
-                if (b.y < baseTop) testY = baseTop;
-                else if (b.y > baseBottom) testY = baseBottom;
-
-                let distX = b.x - testX;
-                let distY = b.y - testY;
-                let distance = Math.sqrt((distX*distX) + (distY*distY));
-
-                if (distance <= bR) {
-                    if (distance < 0.001) {
-                        b.y = baseTop - bR;
-                        if (iter === 0 && b.vy > 0) b.vy *= -b.restitution;
-                    } else {
-                        let nx = distX / distance;
-                        let ny = distY / distance;
-                        b.x = testX + nx * bR;
-                        b.y = testY + ny * bR;
-
-                        if (iter === 0) {
-                            let dot = b.vx * nx + b.vy * ny;
-                            if (dot < 0) {
-                                let restitution = b.restitution; 
-                                b.vx -= (1 + restitution) * dot * nx;
-                                b.vy -= (1 + restitution) * dot * ny;
-                                
-                                let tx = -ny, ty = nx;
-                                let tanDot = b.vx * tx + b.vy * ty;
-                                b.vx -= tanDot * tx * 0.1;
-                                b.vy -= tanDot * ty * 0.1;
-
-                                if (!isMinimized && Math.abs(dot) > 1.5) {
-                                    playMarbleClack(Math.abs(dot) * 2, false);
-                                }
-                            }
-                        }
-                    }
-                }
-            });
         }
-        
-        dispensedBalls.forEach(b => {
-            if (b === gachaState.draggedBall) return;
-            let speed = Math.hypot(b.vx, b.vy);
-            if (speed < 0.3) b.sleepFrames = (b.sleepFrames || 0) + 1;
-            else b.sleepFrames = 0;
-
-            if (b.sleepFrames > 10) {
-                b.vx = 0; b.vy = 0;
-                b.isSleeping = true;
-            } else {
-                b.isSleeping = false;
-            }
-        });
     }
 
     function gachaLoop() {
@@ -1771,19 +1746,24 @@
         if (!isMinimized) drawGacha();
 
         let allSleeping = true;
+        let maxSpeed = 0;
         if (window.cachedGacha) {
             window.cachedGacha.forEach(b => {
                 if (!b.isSleeping) allSleeping = false;
+                let speed = Math.abs(b.vx) + Math.abs(b.vy);
+                if (speed > maxSpeed) maxSpeed = speed;
             });
         }
 
         let hasEffects = (gachaState.sparkles && gachaState.sparkles.length > 0) || (gachaState.prizeConfetti && gachaState.prizeConfetti.length > 0);
+        let trayMoving = false;
         dispensedBalls.forEach(b => {
             if (!b.isSleeping) allSleeping = false;
+            if (Math.abs(b.vx) > 0.25 || Math.abs(b.vy) > 0.25 || gachaState.draggedBall === b) trayMoving = true;
             if (b.prized) hasEffects = true;
         });
 
-        if (allSleeping && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasEffects) {
+        if (maxSpeed < 0.15 && !trayMoving && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasEffects) {
             gachaState.idleFrames++;
             if (gachaState.idleFrames > 30) { 
                 if (window.cachedGacha) { window.cachedGacha.forEach(b => { b.vx = 0; b.vy = 0; b.vz = 0; }); }
@@ -2615,7 +2595,7 @@
         function startCustomDrag(e) {
             if (dragCard) return; 
             
-            const interactiveSelectors = 'button, input, .card-controls, span, td, th, tr, tbody, table, b, .mini-value, .mini-label, .ev-value, .history-item, canvas, .scroller-window, .scroller-wrapper, .universal-resize, .resize-corner';
+            const interactiveSelectors = 'button, input, .card-controls, span, td, th, tr, tbody, table, b, .mini-value, .mini-label, .ev-value, .history-item, canvas, .scroller-window, .scroller-wrapper, .universal-resize, .resize-corner, .hit-group';
             if(e.target.closest(interactiveSelectors)) return; 
             
             const card = e.target.closest('.card'); 
@@ -2887,14 +2867,15 @@
                 
                 const starHTML = item.prized ? '<span style="color:var(--prize-color); text-shadow: 0 0 2px rgba(255,193,7,0.5);">★</span> ' : '';
                 
-                const boughtBtnHTML = appMode === 'buyer' ? `<button class="btn-hit-me" style="background:${itemColor}" onclick="recordSpin(${item.id}, true)">BOUGHT</button>` : '';
+                const boughtBtnHTML = appMode === 'buyer' ? `<button class="btn-hit-me" style="background:${itemColor}" onclick="event.stopPropagation(); recordSpin(${item.id}, true)">BOUGHT</button>` : '';
                 
                 let nextEv = totalSlots > 1 ? (sumValues - item.value) / (totalSlots - 1) : 0;
                 let evDiff = nextEv - ev;
                 let evColor = evDiff > 0.01 ? 'var(--success)' : (evDiff < -0.01 ? 'var(--danger)' : '#64748b');
                 let evIcon = evDiff > 0.01 ? '▲' : (evDiff < -0.01 ? '▼' : '-');
                 
-                group.innerHTML = `<b style="font-size:0.75rem">${starHTML}${item.label}</b><br><span style="font-size:0.6rem; color:#64748b">${item.remaining} left</span><div style="font-size:0.55rem; color:${evColor}; margin: 4px 0; font-weight: 800; background: #f8fafc; padding: 2px 0; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05);">Next EV: £${nextEv.toFixed(2)} <span style="font-size:0.5rem">${evIcon}</span></div>${boughtBtnHTML}<button class="btn-hit-other" onclick="recordSpin(${item.id}, false)">ROLLED</button>`;
+                group.onclick = () => recordSpin(item.id, false);
+                group.innerHTML = `<b style="font-size:0.75rem">${starHTML}${item.label}</b><br><span style="font-size:0.6rem; color:#64748b">${item.remaining} left</span><div style="font-size:0.55rem; color:${evColor}; margin: 4px 0; font-weight: 800; background: #f8fafc; padding: 2px 0; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05);">Next EV: £${nextEv.toFixed(2)} <span style="font-size:0.5rem">${evIcon}</span></div>${boughtBtnHTML}<button class="btn-hit-other" onclick="event.stopPropagation(); recordSpin(${item.id}, false)">ROLLED</button>`;
                 container.appendChild(group);
             }
         });
