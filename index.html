@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Wheel Spin Odds Calculator | Pro Strategy Suite</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
     <style>
         :root{--primary:#007BFF;--success:#28a745;--danger:#dc3545;--warning:#ffc107;--bg:#f4f7f9;--card-bg:#ffffff;--text:#2d3436;--prize-color:#ffc107;--other:#6c757d;--ai-glow:#7c3aed;--border:#e1e8ed;--color-spc:#0ea5e9;--color-etb:#a855f7;--color-upc:#f97316;--color-ex:#0d9488;--color-warriors:#ca8a04;--color-tusk:#991b1b;--color-energy:#94a3b8;--color-ah-etb:#10b981;--color-ah-pc:#6366f1}
         
@@ -29,6 +30,7 @@
 
         .btn-reset-ui{width:fit-content;padding:6px 14px;font-size:0.7rem;font-weight:800;background:#fff;border:1.5px solid #cbd5e1;color:#64748b;border-radius:8px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
         .btn-reset-ui:hover{border-color:var(--primary);color:var(--primary);background:#f8fafc;transform:translateY(-1px)}
+        body.wheel-resizing,body.wheel-resizing *{cursor:col-resize!important}
         
         /* Toggle Switch Styles */
         .switch-container { display: flex; align-items: center; justify-content: center; gap: 10px; background: #fff; padding: 6px 16px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border); margin: 0; }
@@ -159,6 +161,7 @@
                 <button class="btn-reset-ui" onclick="loadDashboardLayout()">LOAD UI</button>
                 <button class="btn-reset-ui" onclick="resetUIDefaults()">RESET UI</button>
                 <button class="btn-reset-ui" onclick="restoreCards()">RESTORE CARDS</button>
+                <button class="btn-reset-ui" onclick="openIOModal()">EXPORT/IMPORT</button>
                 <span id="layout-status" style="font-size:0.6rem; font-weight:800; opacity:0; transition:opacity 0.3s; margin-left:4px;"></span>
             </div>
             <div class="switch-container">
@@ -181,9 +184,11 @@
                     <span>1. Setup Inventory</span>
                     <div style="display:flex; align-items:center; gap:4px;">
                         <span id="save-status">SAVED</span>
-                        <button onclick="saveInventory()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">SAVE LAYOUT</button>
-                        <button onclick="loadInventory()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">LOAD LAYOUT</button>
-                        <button onclick="resetInventoryLayout()" style="background:#f8d7da; color:#721c24; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">RESET LAYOUT</button>
+                        <button onclick="saveInventory()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">SAVE</button>
+                        <button onclick="loadInventory()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">LOAD</button>
+                        <button onclick="resetInventoryLayout()" style="background:#f8d7da; color:#721c24; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">RESET</button>
+                        <button onclick="openSetupIOModal()" style="background:#e0e7ff; color:#4338ca; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">EXPORT</button>
+                        <button onclick="openSetupIOModal()" style="background:#e0e7ff; color:#4338ca; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">IMPORT</button>
                         <div class="card-controls" style="margin-left: 8px;">
                             <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
                             <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
@@ -464,6 +469,40 @@
     </div>
 </div>
 
+<!-- SETUP EXPORT/IMPORT MODAL -->
+<div id="setup-io-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="margin:0; font-size:1rem; color:#1e293b; font-weight:800;">Export / Import Wheel Setup</h3>
+        <p style="font-size:0.7rem; color:#64748b; margin: 0 0 8px 0;">Generate a short code to share your wheel, or copy the raw local code. Paste a code below to restore.</p>
+        <textarea id="setup-io-textarea" rows="4" style="width:100%; font-family:monospace; font-size:0.65rem; padding:8px; border-radius:6px; border:1px solid #cbd5e1; resize:vertical; background:#f8fafc; text-transform:uppercase;" placeholder="Paste setup code here..."></textarea>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+            <button onclick="generateSetupExportCode()" class="btn-hit-me" style="margin:0; background:#94a3b8; flex:1;">COPY LOCAL CODE</button>
+            <button onclick="saveSetupToCloud()" class="btn-hit-me" style="margin:0; background:#3b82f6; flex:1;">GENERATE SHORT CODE</button>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+            <button onclick="smartImportSetup()" class="btn-hit-me" style="margin:0; background:var(--success); width:100%;">IMPORT (Short or Local Code)</button>
+        </div>
+        <button onclick="closeSetupIOModal()" class="btn-reset-ui" style="width:100%; margin-top:8px;">CLOSE</button>
+    </div>
+</div>
+
+<!-- MAIN SESSION EXPORT/IMPORT MODAL -->
+<div id="io-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="margin:0; font-size:1rem; color:#1e293b; font-weight:800;">Export / Import Session</h3>
+        <p style="font-size:0.7rem; color:#64748b; margin: 0 0 8px 0;">Generate a short code to save your entire session (layout, stats, setup), or use a local code.</p>
+        <textarea id="io-textarea" rows="6" style="width:100%; font-family:monospace; font-size:0.65rem; padding:8px; border-radius:6px; border:1px solid #cbd5e1; resize:vertical; background:#f8fafc; text-transform:uppercase;" placeholder="Paste session code here..."></textarea>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+            <button onclick="generateExportCode()" class="btn-hit-me" style="margin:0; background:#94a3b8; flex:1;">COPY LOCAL CODE</button>
+            <button onclick="saveSessionToCloud()" class="btn-hit-me" style="margin:0; background:#3b82f6; flex:1;">GENERATE SHORT CODE</button>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+            <button onclick="smartImportSession()" class="btn-hit-me" style="margin:0; background:var(--success); width:100%;">IMPORT (Short or Local Code)</button>
+        </div>
+        <button onclick="closeIOModal()" class="btn-reset-ui" style="width:100%; margin-top:8px;">CLOSE</button>
+    </div>
+</div>
+
 <script>
     let apiKey = "";
     try { 
@@ -686,7 +725,8 @@
 
     function checkScrollerHaptic() {
         const windowEl = document.getElementById('scroller-window');
-        if (!windowEl || scrollerMuted) return;
+        const scrollerCard = document.getElementById('card-scroller');
+        if (!windowEl || scrollerMuted || (scrollerCard && scrollerCard.classList.contains('minimized'))) return;
         const centerOffset = windowEl.clientWidth / 2;
         let idx = Math.floor((windowEl.scrollLeft + centerOffset) / 166);
         if (idx !== lastHapticScroll) {
@@ -977,8 +1017,49 @@
         return array;
     }
 
+    // --- CLOUD STORAGE ---
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+    async function initFirebase() {
+        try {
+            if (typeof __firebase_config === 'undefined') return;
+            const firebaseConfig = JSON.parse(__firebase_config);
+            const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+            const { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
+            const { getFirestore } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+            });
+        } catch (e) {
+            console.error("Firebase init error", e);
+        }
+    }
+
+    function showCustomAlert(msg) {
+        const m = document.createElement('div');
+        m.style.cssText = "position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#ef4444;color:white;padding:10px 20px;border-radius:8px;z-index:999999;font-weight:bold;font-size:0.8rem;box-shadow:0 4px 6px rgba(0,0,0,0.1);";
+        m.innerText = msg;
+        document.body.appendChild(m);
+        setTimeout(()=>m.remove(), 3000);
+    }
+
     // --- INITIALIZATION ---
     window.onload = () => {
+        initFirebase();
         initTemplates();
         
         const ctx = document.getElementById('roiChart').getContext('2d');
@@ -1439,24 +1520,15 @@
         balls.forEach(b => {
             if (b.prized) b.starRotation = (b.starRotation || 0) + 0.015;
 
-            let speed = Math.hypot(b.vx, b.vy);
-            if (phase === "settle") {
-                if (speed < 0.25 && b.y > innerR * 0.2) b.sleepFrames = (b.sleepFrames || 0) + 1;
-                else b.sleepFrames = 0;
-                b.isSleeping = b.sleepFrames > 15;
-            } else {
-                b.sleepFrames = 0; b.isSleeping = false;
-            }
-
             if (b === gachaState.draggedBall) return; 
 
             if (phase === "chaos") {
                 if (b.y > innerR * 0.4 && Math.random() < 0.2) { b.vy -= Math.random() * 2.5 + 0.5; b.vx += (Math.random() - 0.5) * 1.5; b.vz += (Math.random() - 0.5) * 2.5; }
-                b.vy += 0.22; let drag = 0.95; b.vx *= drag; b.vy *= drag; b.vz *= drag;
+                b.vy += 0.35; let drag = 0.95; b.vx *= drag; b.vy *= drag; b.vz *= drag;
             } else {
                 if (!b.isSleeping) {
-                    b.vy += 0.35; 
-                    let drag = 0.98; 
+                    b.vy += 0.45; 
+                    let drag = 0.99; 
                     b.vx *= drag; b.vy *= drag; 
                 } else {
                     b.vx = 0; b.vy = 0; 
@@ -1469,77 +1541,56 @@
             if(phase === "chaos") b.rotation = (b.rotation || 0) + (Math.abs(b.vx) + Math.abs(b.vy)) * 0.05 * (b.vx > 0 ? 1 : -1);
             
             let maxZ = R * 0.6; if (b.z > maxZ) { b.z = maxZ; b.vz *= -0.5; } if (b.z < -maxZ) { b.z = -maxZ; b.vz *= -0.5; }
-            
-            let currentDist = Math.sqrt(b.x*b.x + b.y*b.y);
-            if (currentDist > innerR && currentDist > 0) {
-                let nx = b.x / currentDist, ny = b.y / currentDist;
-                b.x = nx * innerR; b.y = ny * innerR;
-                let dot = b.vx * nx + b.vy * ny;
-                if (dot > 0) { 
-                    let wallBounce = dot > 0.8 ? b.restitution : 0.05;
-                    b.vx -= (1 + wallBounce) * dot * nx; 
-                    b.vy -= (1 + wallBounce) * dot * ny; 
-                    
-                    b.vx *= 0.95; 
-                    b.vy *= 0.95; 
-                    
-                    if (dot > 0.5) { b.sleepFrames = 0; b.isSleeping = false; }
-                    if (!isMinimized && dot > 4.0 && !b.isSleeping) {
-                        playMarbleClack(dot, false);
-                    }
-                } 
-            }
         });
 
-        for (let iter = 0; iter < 2; iter++) {
+        for (let iter = 0; iter < 3; iter++) {
             for(let i=0; i<balls.length; i++) {
                 let b1 = balls[i];
                 for(let j=i+1; j<balls.length; j++) {
                     let b2 = balls[j];
-                    if (b1.isSleeping && b2.isSleeping) continue;
-                    
-                    let minDistSq = (b1.r + b2.r) * (b1.r + b2.r);
-                    let dx = b2.x - b1.x; if (dx * dx > minDistSq) continue;
-                    let dy = b2.y - b1.y; if (dy * dy > minDistSq) continue;
-                    let dz = (b2.z || 0) - (b1.z || 0);
+                    let dx = b2.x - b1.x; let dy = b2.y - b1.y; let dz = (b2.z || 0) - (b1.z || 0);
                     let distSq = dx*dx + dy*dy + dz*dz;
+                    let minDistSq = (b1.r + b2.r) * (b1.r + b2.r);
                     
                     if (distSq < minDistSq && distSq > 0.0001) {
                         let dist = Math.sqrt(distSq); let overlap = ((b1.r + b2.r) - dist) * 0.5; let nx = dx/dist, ny = dy/dist, nz = dz/dist;
-                        if (overlap > 0.05) {
-                            if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.x -= nx * overlap; b1.y -= ny * overlap; b1.z -= nz * overlap; }
-                            if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.x += nx * overlap; b2.y += ny * overlap; b2.z += nz * overlap; }
+
+                        let mass1 = b1.isSleeping ? 0 : 1;
+                        let mass2 = b2.isSleeping ? 0 : 1;
+                        
+                        if (mass1 === 0 && mass2 > 0) {
+                            if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap * 2; b2.y += ny * overlap * 2; b2.z += nz * overlap * 2; }
+                        } else if (mass2 === 0 && mass1 > 0) {
+                            if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap * 2; b1.y -= ny * overlap * 2; b1.z -= nz * overlap * 2; }
+                        } else if (mass1 > 0 && mass2 > 0) {
+                            if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap; b1.y -= ny * overlap; b1.z -= nz * overlap; }
+                            if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap; b2.y += ny * overlap; b2.z += nz * overlap; }
                         }
+                        
                         if (iter === 0) {
                             let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy, rvz = (b2.vz || 0) - (b1.vz || 0);
                             let velAlongNormal = rvx * nx + rvy * ny + rvz * nz;
-                            if (velAlongNormal < -0.1) { 
-                                let combinedRestitution = (b1.restitution + b2.restitution) / 2;
-                                let bounce = (Math.abs(velAlongNormal) > 0.8) ? combinedRestitution : 0.05; 
-                                let impulse = -(1 + bounce) * velAlongNormal / 2; 
+                            if (velAlongNormal < 0) { 
+                                if (velAlongNormal < -1.5) {
+                                    b1.isSleeping = false; b1.sleepFrames = 0;
+                                    b2.isSleeping = false; b2.sleepFrames = 0;
+                                    mass1 = 1; mass2 = 1;
+                                }
+
+                                let bounce = (Math.abs(velAlongNormal) > 1.5) ? ((b1.restitution + b2.restitution) / 2) : 0.0; 
+                                let impulseMultiplier = (mass1 === 0 || mass2 === 0) ? 1 : 0.5;
+                                let impulse = -(1 + bounce) * velAlongNormal * impulseMultiplier; 
                                 
-                                if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
-                                if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
+                                if (mass1 > 0 && b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
+                                if (mass2 > 0 && b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
 
-                                if (Math.abs(nx) < 0.2 && Math.abs(velAlongNormal) < 1.0) {
-                                    let slide = (Math.random() - 0.5) * 0.3;
-                                    b1.vx += slide; b2.vx -= slide;
-                                }
-                                
-                                if (Math.abs(velAlongNormal) < 0.8) {
-                                    if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.85; b1.vy *= 0.85; }
-                                    if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.85; b2.vy *= 0.85; }
-                                } else {
-                                    if (b1 !== gachaState.draggedBall && !b1.isSleeping) { b1.vx *= 0.99; b1.vy *= 0.99; }
-                                    if (b2 !== gachaState.draggedBall && !b2.isSleeping) { b2.vx *= 0.99; b2.vy *= 0.99; }
-                                }
+                                let tx = -ny, ty = nx;
+                                let tanDot = (b2.vx - b1.vx) * tx + (b2.vy - b1.vy) * ty;
+                                let friction = 0.1;
+                                if (mass1 > 0 && b1 !== gachaState.draggedBall) { b1.vx += tx * tanDot * friction * impulseMultiplier; b1.vy += ty * tanDot * friction * impulseMultiplier; }
+                                if (mass2 > 0 && b2 !== gachaState.draggedBall) { b2.vx -= tx * tanDot * friction * impulseMultiplier; b2.vy -= ty * tanDot * friction * impulseMultiplier; }
 
-                                if (Math.abs(velAlongNormal) > 0.5) {
-                                    b1.sleepFrames = 0; b2.sleepFrames = 0;
-                                    b1.isSleeping = false; b2.isSleeping = false;
-                                }
-
-                                if (!isMinimized && Math.abs(velAlongNormal) > 6.0 && overlap < 2.0 && (!b1.isSleeping || !b2.isSleeping)) {
+                                if (!isMinimized && Math.abs(velAlongNormal) > 2.0 && overlap < 2.0) {
                                     playMarbleClack(Math.abs(velAlongNormal), true);
                                 }
                             }
@@ -1547,7 +1598,47 @@
                     }
                 }
             }
+            balls.forEach(b => {
+                if (b === gachaState.draggedBall) return;
+                let currentDist = Math.sqrt(b.x*b.x + b.y*b.y);
+                if (currentDist > innerR && currentDist > 0) { 
+                    let nx = b.x / currentDist, ny = b.y / currentDist;
+                    b.x = nx * innerR; b.y = ny * innerR; 
+                    if (iter === 0) {
+                        let dot = b.vx * nx + b.vy * ny;
+                        if (dot > 0) { 
+                            let wallBounce = dot > 1.5 ? b.restitution : 0.0;
+                            b.vx -= (1 + wallBounce) * dot * nx; 
+                            b.vy -= (1 + wallBounce) * dot * ny; 
+                            b.vx *= 0.995; b.vy *= 0.995; 
+                            
+                            if (!isMinimized && dot > 2.0) {
+                                playMarbleClack(dot, false);
+                            }
+                        } 
+                    }
+                }
+            });
         }
+
+        balls.forEach(b => {
+            if (b === gachaState.draggedBall || phase === "chaos") {
+                b.sleepFrames = 0; b.isSleeping = false;
+                return;
+            }
+            let speed = Math.hypot(b.vx, b.vy);
+            if (speed < 0.3) {
+                b.sleepFrames = (b.sleepFrames || 0) + 1;
+            } else {
+                b.sleepFrames = 0;
+            }
+            if (b.sleepFrames > 15) {
+                b.vx = 0; b.vy = 0;
+                b.isSleeping = true;
+            } else {
+                b.isSleeping = false;
+            }
+        });
     }
 
     function updateTrayBalls(sizePx, bR, isMinimized) {
@@ -1565,126 +1656,167 @@
 
         dispensedBalls.forEach(b => {
             if (b.prized) b.starRotation = (b.starRotation || 0) + 0.015;
-            if (b === gachaState.draggedBall) return;
-            
-            b.vy += 0.35; 
-            b.x += b.vx; b.y += b.vy;
+            if (b === gachaState.draggedBall) {
+                b.sleepFrames = 0; b.isSleeping = false;
+                return;
+            }
+            if (!b.isSleeping) {
+                b.vy += 0.45; 
+            }
+            b.x += b.vx; 
+            b.y += b.vy;
             b.rotation += b.vx * 0.08; 
-            
-            if (b.y > floorY) {
-                b.y = floorY; 
-                if (!isMinimized && b.vy > 0.8) {
-                    playMarbleClack(b.vy * 2, false);
-                }
-                
-                b.vy *= -b.restitution; 
-                if (Math.abs(b.vy) < 0.35) b.vy = 0; 
-                b.vx *= 0.95; 
-            }
-            if (b.y < bR) {
-                b.y = bR;
-                if (!isMinimized && Math.abs(b.vy) > 0.8) {
-                    playMarbleClack(Math.abs(b.vy) * 2, false);
-                }
-                b.vy *= -b.restitution;
-            }
-
-            if (b.x > maxTrayX) { 
-                b.x = maxTrayX; 
-                if (!isMinimized && Math.abs(b.vx) > 0.8) {
-                    playMarbleClack(Math.abs(b.vx) * 2, false);
-                }
-                b.vx *= -b.restitution; 
-            }
-            if (b.x < minTrayX) { 
-                b.x = minTrayX; 
-                if (!isMinimized && Math.abs(b.vx) > 0.8) {
-                    playMarbleClack(Math.abs(b.vx) * 2, false);
-                }
-                b.vx *= -b.restitution; 
-            }
-
-            let testX = b.x;
-            let testY = b.y;
-            if (b.x < baseLeft) testX = baseLeft;
-            else if (b.x > baseRight) testX = baseRight;
-            if (b.y < baseTop) testY = baseTop;
-            else if (b.y > baseBottom) testY = baseBottom;
-
-            let distX = b.x - testX;
-            let distY = b.y - testY;
-            let distance = Math.sqrt((distX*distX) + (distY*distY));
-
-            if (distance <= bR) {
-                if (distance < 0.001) {
-                    b.y = baseTop - bR;
-                    if (b.vy > 0) b.vy *= -b.restitution;
-                } else {
-                    let nx = distX / distance;
-                    let ny = distY / distance;
-                    b.x = testX + nx * bR;
-                    b.y = testY + ny * bR;
-
-                    let dot = b.vx * nx + b.vy * ny;
-                    if (dot < 0) {
-                        let restitution = b.restitution; 
-                        b.vx -= (1 + restitution) * dot * nx;
-                        b.vy -= (1 + restitution) * dot * ny;
-                        
-                        let tx = -ny, ty = nx;
-                        let tanDot = b.vx * tx + b.vy * ty;
-                        b.vx -= tanDot * tx * 0.05;
-                        b.vy -= tanDot * ty * 0.05;
-
-                        if (!isMinimized && Math.abs(dot) > 0.8) {
-                            playMarbleClack(Math.abs(dot) * 2, false);
-                        }
-                    }
-                }
-            }
         });
 
-        // Inter-tray collision
-        for (let i = 0; i < dispensedBalls.length; i++) {
-            for (let j = i + 1; j < dispensedBalls.length; j++) {
-                let b1 = dispensedBalls[i];
-                let b2 = dispensedBalls[j];
-                let dx = b2.x - b1.x; let dy = b2.y - b1.y;
-                let distSq = dx*dx + dy*dy; let minDistSq = (bR + bR) * (bR + bR);
-                if (distSq < minDistSq && distSq > 0.0001) {
-                    let dist = Math.sqrt(distSq); let overlap = ((bR + bR) - dist) * 0.5; 
-                    let nx = dx/dist, ny = dy/dist;
-                    if (overlap > 0.05) {
-                        if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap; b1.y -= ny * overlap; }
-                        if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap; b2.y += ny * overlap; }
-                    }
-                    let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy;
-                    let velAlongNormal = rvx * nx + rvy * ny;
-                    if (velAlongNormal < -0.1) {
-                        let combinedRestitution = (b1.restitution + b2.restitution) / 2;
-                        let bounce = (Math.abs(velAlongNormal) > 0.8) ? combinedRestitution : 0.1;
-                        let impulse = -(1 + bounce) * velAlongNormal / 2; 
-                        
-                        if (b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
-                        if (b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
-                        
-                        if (Math.abs(nx) < 0.2 && Math.abs(velAlongNormal) < 1.0) {
-                            let slide = (Math.random() - 0.5) * 0.3;
-                            b1.vx += slide; b2.vx -= slide;
+        for (let iter = 0; iter < 3; iter++) {
+            for (let i = 0; i < dispensedBalls.length; i++) {
+                for (let j = i + 1; j < dispensedBalls.length; j++) {
+                    let b1 = dispensedBalls[i];
+                    let b2 = dispensedBalls[j];
+                    let dx = b2.x - b1.x; let dy = b2.y - b1.y;
+                    let distSq = dx*dx + dy*dy; let minDistSq = (bR + bR) * (bR + bR);
+                    if (distSq < minDistSq && distSq > 0.0001) {
+                        let dist = Math.sqrt(distSq); let overlap = ((bR + bR) - dist) * 0.5; 
+                        let nx = dx/dist, ny = dy/dist;
+
+                        let mass1 = b1.isSleeping ? 0 : 1;
+                        let mass2 = b2.isSleeping ? 0 : 1;
+
+                        if (mass1 === 0 && mass2 > 0) {
+                            if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap * 2; b2.y += ny * overlap * 2; }
+                        } else if (mass2 === 0 && mass1 > 0) {
+                            if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap * 2; b1.y -= ny * overlap * 2; }
+                        } else if (mass1 > 0 && mass2 > 0) {
+                            if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap; b1.y -= ny * overlap; }
+                            if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap; b2.y += ny * overlap; }
                         }
-                        
-                        if (Math.abs(velAlongNormal) < 0.8) {
-                            if (b1 !== gachaState.draggedBall) { b1.vx *= 0.85; b1.vy *= 0.85; }
-                            if (b2 !== gachaState.draggedBall) { b2.vx *= 0.85; b2.vy *= 0.85; }
-                        }
-                        
-                        if (!isMinimized && Math.abs(velAlongNormal) > 1.5 && overlap < 2.0) {
-                            playMarbleClack(Math.abs(velAlongNormal), true);
+
+                        if (iter === 0) {
+                            let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy;
+                            let velAlongNormal = rvx * nx + rvy * ny;
+                            if (velAlongNormal < 0) {
+                                if (velAlongNormal < -1.5) {
+                                    b1.isSleeping = false; b1.sleepFrames = 0;
+                                    b2.isSleeping = false; b2.sleepFrames = 0;
+                                    mass1 = 1; mass2 = 1;
+                                }
+
+                                let bounce = (Math.abs(velAlongNormal) > 1.5) ? ((b1.restitution + b2.restitution)/2) : 0.0;
+                                let impulseMultiplier = (mass1 === 0 || mass2 === 0) ? 1 : 0.5;
+                                let impulse = -(1 + bounce) * velAlongNormal * impulseMultiplier; 
+                                
+                                if (mass1 > 0 && b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
+                                if (mass2 > 0 && b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
+                                
+                                let tx = -ny, ty = nx;
+                                let tanDot = (b2.vx - b1.vx) * tx + (b2.vy - b1.vy) * ty;
+                                let friction = 0.1;
+                                if (mass1 > 0 && b1 !== gachaState.draggedBall) { b1.vx += tx * tanDot * friction * impulseMultiplier; b1.vy += ty * tanDot * friction * impulseMultiplier; }
+                                if (mass2 > 0 && b2 !== gachaState.draggedBall) { b2.vx -= tx * tanDot * friction * impulseMultiplier; b2.vy -= ty * tanDot * friction * impulseMultiplier; }
+                                
+                                if (!isMinimized && Math.abs(velAlongNormal) > 2.0 && overlap < 2.0) {
+                                    playMarbleClack(Math.abs(velAlongNormal), true);
+                                }
+                            }
                         }
                     }
                 }
             }
+
+            dispensedBalls.forEach(b => {
+                if (b === gachaState.draggedBall) return;
+                
+                if (b.y > floorY) {
+                    b.y = floorY; 
+                    if (iter === 0 && b.vy > 0) {
+                        let bounce = b.vy > 1.5 ? b.restitution : 0.0;
+                        if (!isMinimized && b.vy > 1.5) playMarbleClack(b.vy * 2, false);
+                        b.vy *= -bounce; 
+                        b.vx *= 0.98; 
+                    }
+                }
+                if (b.y < bR) {
+                    b.y = bR;
+                    if (iter === 0 && b.vy < 0) {
+                        let bounce = Math.abs(b.vy) > 1.5 ? b.restitution : 0.0;
+                        if (!isMinimized && Math.abs(b.vy) > 1.5) playMarbleClack(Math.abs(b.vy) * 2, false);
+                        b.vy *= -bounce;
+                    }
+                }
+
+                if (b.x > maxTrayX) { 
+                    b.x = maxTrayX; 
+                    if (iter === 0 && b.vx > 0) {
+                        let bounce = Math.abs(b.vx) > 1.5 ? b.restitution : 0.0;
+                        if (!isMinimized && Math.abs(b.vx) > 1.5) playMarbleClack(Math.abs(b.vx) * 2, false);
+                        b.vx *= -bounce; 
+                    }
+                }
+                if (b.x < minTrayX) { 
+                    b.x = minTrayX; 
+                    if (iter === 0 && b.vx < 0) {
+                        let bounce = Math.abs(b.vx) > 1.5 ? b.restitution : 0.0;
+                        if (!isMinimized && Math.abs(b.vx) > 1.5) playMarbleClack(Math.abs(b.vx) * 2, false);
+                        b.vx *= -bounce; 
+                    }
+                }
+
+                let testX = b.x;
+                let testY = b.y;
+                if (b.x < baseLeft) testX = baseLeft;
+                else if (b.x > baseRight) testX = baseRight;
+                if (b.y < baseTop) testY = baseTop;
+                else if (b.y > baseBottom) testY = baseBottom;
+
+                let distX = b.x - testX;
+                let distY = b.y - testY;
+                let distance = Math.sqrt((distX*distX) + (distY*distY));
+
+                if (distance <= bR) {
+                    if (distance < 0.001) {
+                        b.y = baseTop - bR;
+                        if (iter === 0 && b.vy > 0) b.vy *= -b.restitution;
+                    } else {
+                        let nx = distX / distance;
+                        let ny = distY / distance;
+                        b.x = testX + nx * bR;
+                        b.y = testY + ny * bR;
+
+                        if (iter === 0) {
+                            let dot = b.vx * nx + b.vy * ny;
+                            if (dot < 0) {
+                                let bounce = Math.abs(dot) > 1.5 ? b.restitution : 0.0; 
+                                b.vx -= (1 + bounce) * dot * nx;
+                                b.vy -= (1 + bounce) * dot * ny;
+                                
+                                let tx = -ny, ty = nx;
+                                let tanDot = b.vx * tx + b.vy * ty;
+                                b.vx -= tanDot * tx * 0.02;
+                                b.vy -= tanDot * ty * 0.02;
+
+                                if (!isMinimized && Math.abs(dot) > 1.5) {
+                                    playMarbleClack(Math.abs(dot) * 2, false);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
+        
+        dispensedBalls.forEach(b => {
+            if (b === gachaState.draggedBall) return;
+            let speed = Math.hypot(b.vx, b.vy);
+            if (speed < 0.3) b.sleepFrames = (b.sleepFrames || 0) + 1;
+            else b.sleepFrames = 0;
+
+            if (b.sleepFrames > 15) {
+                b.vx = 0; b.vy = 0;
+                b.isSleeping = true;
+            } else {
+                b.isSleeping = false;
+            }
+        });
     }
 
     function gachaLoop() {
@@ -1697,6 +1829,36 @@
         if (sizePx <= 0) return;
         
         const R = sizePx / 3.4, cx = sizePx / 2, domeCy = sizePx * 0.33, chuteY = domeCy + R * 1.5;
+
+        // --- MINIMIZED CULLING (Skip Physics & Audio) ---
+        if (isMinimized) {
+            if (isSpinning) {
+                if (gachaState.knobTarget !== null) {
+                    gachaState.knobAngle = gachaState.knobTarget;
+                    gachaState.knobTarget = null;
+                }
+                const elapsed = now - gachaState.spinStartTime;
+                if (elapsed >= 2800 && !gachaState.hasDropped) {
+                    gachaState.hasDropped = true;
+                    if (window.cachedGacha) {
+                        let dBallIdx = window.cachedGacha.findIndex(b => b.isDispensing);
+                        if (dBallIdx > -1) window.cachedGacha.splice(dBallIdx, 1);
+                    }
+                    dispensingBall = {
+                        prized: gachaState.targetItem.prized, 
+                        x: cx, y: sizePx - R/5, // instantly place at bottom
+                        vx: 0, vy: 0, rotation: 0, starRotation: 0, scale: 1,
+                        restitution: 0.72, bounceCount: 0, isSleeping: true, sleepFrames: 20
+                    };
+                    dispensedBalls.push(dispensingBall);
+                    if (dispensedBalls.length > 10) dispensedBalls.shift();
+                }
+                requestAnimationFrame(gachaLoop); // Keep tracking spin time
+            } else {
+                gachaState.awake = false; // Freeze entirely
+            }
+            return; // Skip O(N^2) Physics completely
+        }
 
         if (!gachaState.isMachineGrabbed && (Math.abs(gachaState.machineX) > 0.1 || Math.abs(gachaState.machineY) > 0.1)) {
             gachaState.machineX *= 0.8; gachaState.machineY *= 0.8; 
@@ -1763,7 +1925,7 @@
             if (b.prized) hasEffects = true;
         });
 
-        if (maxSpeed < 0.15 && !trayMoving && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasEffects) {
+        if (maxSpeed < 0.3 && !trayMoving && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasEffects) {
             gachaState.idleFrames++;
             if (gachaState.idleFrames > 30) { 
                 if (window.cachedGacha) { window.cachedGacha.forEach(b => { b.vx = 0; b.vy = 0; b.vz = 0; }); }
@@ -2943,6 +3105,279 @@
         }
 
         updateHistoryUI(); updateOddsTable(); updateHeatmap();
+    }
+    
+    function openIOModal() {
+        document.getElementById('io-textarea').value = '';
+        document.getElementById('io-modal').classList.add('active');
+    }
+    
+    function closeIOModal() {
+        document.getElementById('io-modal').classList.remove('active');
+    }
+    
+    function getLayoutData() {
+        const layout = { columns: {}, cards: {} };
+        ['col-1', 'col-2', 'col-3'].forEach(colId => {
+            const col = document.getElementById(colId);
+            if (col) {
+                const cardIds = Array.from(col.querySelectorAll('.card'))
+                    .filter(c => !c.classList.contains('placeholder') && c.id)
+                    .map(c => c.id);
+                layout.columns[colId] = { flex: col.style.flex, cardIds };
+            }
+        });
+        document.querySelectorAll('.card').forEach(card => {
+            if (!card.id || card.classList.contains('placeholder')) return;
+            layout.cards[card.id] = {
+                width: card.style.width, height: card.style.height,
+                flex: card.style.flex, aspectRatio: card.style.aspectRatio,
+                minimized: card.classList.contains('minimized')
+            };
+        });
+        return layout;
+    }
+
+    function generateExportCode() {
+        try {
+            const packedData = {
+                i: inventory.map(item => [item.label, item.value, item.remaining, item.prized ? 1 : 0]),
+                h: history.map(h => [h.label, h.hitValue, h.bidValue, h.isUser ? 1 : 0, h.time]),
+                s: [sessionStats.spent, sessionStats.won],
+                l: getLayoutData()
+            };
+            
+            const json = JSON.stringify(packedData);
+            const compressed = LZString.compressToBase64(json);
+            
+            const txt = document.getElementById('io-textarea');
+            txt.value = compressed;
+            txt.select();
+            document.execCommand('copy');
+            showHeaderStatus("CODE COPIED", "var(--success)");
+        } catch(e) {
+            showHeaderStatus("EXPORT FAILED", "var(--danger)");
+        }
+    }
+
+    async function saveSessionToCloud() {
+        if (!currentUser || !db) {
+            showCustomAlert("Cloud storage is currently connecting or unavailable.");
+            return;
+        }
+        try {
+            const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let shortCode = '';
+            for(let i=0; i<6; i++) shortCode += chars.charAt(Math.floor(Math.random() * chars.length));
+
+            const packedData = {
+                i: inventory.map(item => [item.label, item.value, item.remaining, item.prized ? 1 : 0]),
+                h: history.map(h => [h.label, h.hitValue, h.bidValue, h.isUser ? 1 : 0, h.time]),
+                s: [sessionStats.spent, sessionStats.won],
+                l: getLayoutData()
+            };
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sessions', shortCode);
+            await setDoc(docRef, { data: JSON.stringify(packedData), createdAt: new Date().toISOString() });
+
+            const txt = document.getElementById('io-textarea');
+            txt.value = shortCode;
+            txt.select();
+            document.execCommand('copy');
+            showStatus("CLOUD SAVED", "var(--success)");
+        } catch (e) {
+            console.error(e);
+            showStatus("SAVE FAILED", "var(--danger)");
+        }
+    }
+
+    async function smartImportSession() {
+        const txt = document.getElementById('io-textarea').value.trim();
+        if (!txt) return;
+
+        if (txt.length <= 10) {
+            if (!currentUser || !db) {
+                showCustomAlert("Cloud storage is currently connecting or unavailable.");
+                return;
+            }
+            try {
+                const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sessions', txt.toUpperCase());
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    let rawData = docSnap.data().data;
+                    let parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+                    
+                    if (parsed.i !== undefined) {
+                        inventory = parsed.i.map((arr, idx) => ({ id: idx, label: arr[0], value: arr[1], remaining: arr[2], prized: arr[3] === 1 }));
+                        history = parsed.h.map(arr => ({ label: arr[0], hitValue: arr[1], bidValue: arr[2], isUser: arr[3] === 1, time: arr[4] }));
+                        sessionStats = { spent: parsed.s[0], won: parsed.s[1] };
+                        if (parsed.l) {
+                            localStorage.setItem('wheel_dashboard_layout', JSON.stringify(parsed.l));
+                            loadDashboardLayout();
+                        }
+                        rebuildDOMFromInventory(); updateHistoryUI(); syncAndUI();
+                        closeIOModal();
+                        showStatus("CLOUD LOADED", "var(--success)");
+                    }
+                } else {
+                    showCustomAlert("Session code not found in cloud database.");
+                }
+            } catch (e) {
+                console.error(e);
+                showStatus("LOAD FAILED", "var(--danger)");
+            }
+        } else {
+            applyImportCode();
+        }
+    }
+
+    function applyImportCode() {
+        const txt = document.getElementById('io-textarea').value.trim();
+        if (!txt) return;
+        try {
+            let json = LZString.decompressFromBase64(txt);
+            if (!json) json = decodeURIComponent(atob(txt)); 
+            
+            const parsed = JSON.parse(json);
+            
+            if (parsed.i !== undefined) {
+                inventory = parsed.i.map((arr, idx) => ({ id: idx, label: arr[0], value: arr[1], remaining: arr[2], prized: arr[3] === 1 }));
+                history = parsed.h.map(arr => ({ label: arr[0], hitValue: arr[1], bidValue: arr[2], isUser: arr[3] === 1, time: arr[4] }));
+                sessionStats = { spent: parsed.s[0], won: parsed.s[1] };
+                if (parsed.l) {
+                    localStorage.setItem('wheel_dashboard_layout', JSON.stringify(parsed.l));
+                    loadDashboardLayout();
+                }
+            } else {
+                if (parsed.inventory) inventory = parsed.inventory;
+                if (parsed.history) history = parsed.history;
+                if (parsed.sessionStats) sessionStats = parsed.sessionStats;
+                if (parsed.layout) {
+                    localStorage.setItem('wheel_dashboard_layout', JSON.stringify(parsed.layout));
+                    loadDashboardLayout();
+                }
+            }
+            
+            rebuildDOMFromInventory(); updateHistoryUI(); syncAndUI();
+            
+            closeIOModal();
+            showHeaderStatus("IMPORTED", "var(--success)");
+        } catch (e) {
+            showCustomAlert("Invalid save code. Please make sure you copied the entire text string.");
+        }
+    }
+
+    function openSetupIOModal() {
+        document.getElementById('setup-io-textarea').value = '';
+        document.getElementById('setup-io-modal').classList.add('active');
+    }
+    
+    function closeSetupIOModal() {
+        document.getElementById('setup-io-modal').classList.remove('active');
+    }
+
+    function generateSetupExportCode() {
+        try {
+            const packed = inventory.map(i => [i.label, i.value, i.remaining, i.prized ? 1 : 0]);
+            const code = LZString.compressToBase64(JSON.stringify(packed));
+            const txt = document.getElementById('setup-io-textarea');
+            txt.value = code;
+            txt.select();
+            document.execCommand('copy');
+            showStatus("CODE COPIED", "var(--success)");
+        } catch(e) {
+            showStatus("EXPORT FAILED", "var(--danger)");
+        }
+    }
+
+    async function saveSetupToCloud() {
+        if (!currentUser || !db) {
+            showCustomAlert("Cloud storage is currently connecting or unavailable.");
+            return;
+        }
+        try {
+            const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let shortCode = '';
+            for(let i=0; i<6; i++) shortCode += chars.charAt(Math.floor(Math.random() * chars.length));
+
+            const packed = inventory.map(i => [i.label, i.value, i.remaining, i.prized ? 1 : 0]);
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'setups', shortCode);
+
+            await setDoc(docRef, { data: JSON.stringify(packed), createdAt: new Date().toISOString() });
+
+            const txt = document.getElementById('setup-io-textarea');
+            txt.value = shortCode;
+            txt.select();
+            document.execCommand('copy');
+            showStatus("CLOUD SAVED", "var(--success)");
+        } catch (e) {
+            console.error(e);
+            showStatus("SAVE FAILED", "var(--danger)");
+        }
+    }
+
+    async function smartImportSetup() {
+        const txt = document.getElementById('setup-io-textarea').value.trim();
+        if (!txt) return;
+
+        if (txt.length <= 10) {
+            // Fetch Short Code from Cloud
+            if (!currentUser || !db) {
+                showCustomAlert("Cloud storage is currently connecting or unavailable.");
+                return;
+            }
+            try {
+                const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'setups', txt.toUpperCase());
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    let rawData = docSnap.data().data;
+                    let parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+                    if (Array.isArray(parsed)) {
+                        inventory = parsed.map((arr, idx) => ({ id: idx, label: arr[0], value: arr[1], remaining: arr[2], prized: arr[3] === 1 }));
+                        rebuildDOMFromInventory(); syncAndUI();
+                        closeSetupIOModal();
+                        showStatus("CLOUD LOADED", "var(--success)");
+                    }
+                } else {
+                    showCustomAlert("Save code not found in cloud database.");
+                }
+            } catch (e) {
+                console.error(e);
+                showStatus("LOAD FAILED", "var(--danger)");
+            }
+        } else {
+            // Apply Local Fallback Code
+            applySetupImportCode();
+        }
+    }
+
+    function applySetupImportCode() {
+        const txt = document.getElementById('setup-io-textarea').value.trim();
+        if (!txt) return;
+        try {
+            let json = LZString.decompressFromBase64(txt);
+            if (!json) json = decodeURIComponent(atob(txt));
+            const parsed = JSON.parse(json);
+            
+            if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
+                inventory = parsed.map((arr, idx) => ({ id: idx, label: arr[0], value: arr[1], remaining: arr[2], prized: arr[3] === 1 }));
+            } else if (parsed.inventory) {
+                inventory = parsed.inventory; 
+            } else if (Array.isArray(parsed)) {
+                inventory = parsed;
+            }
+            
+            rebuildDOMFromInventory(); syncAndUI();
+            closeSetupIOModal();
+            showStatus("IMPORTED", "var(--success)");
+        } catch (e) {
+            showCustomAlert("Invalid local setup code.");
+        }
     }
 
     function updateOddsTable() {
