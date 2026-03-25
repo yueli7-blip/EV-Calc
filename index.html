@@ -9,12 +9,7 @@
     <style>
         :root{--primary:#007BFF;--success:#28a745;--danger:#dc3545;--warning:#ffc107;--bg:#f4f7f9;--card-bg:#ffffff;--text:#2d3436;--prize-color:#ffc107;--other:#6c757d;--ai-glow:#7c3aed;--border:#e1e8ed;--color-spc:#0ea5e9;--color-etb:#a855f7;--color-upc:#f97316;--color-ex:#0d9488;--color-warriors:#ca8a04;--color-tusk:#991b1b;--color-energy:#94a3b8;--color-ah-etb:#10b981;--color-ah-pc:#6366f1}
         
-        /* Seller Mode Visual Indicators */
-        body.seller-mode {
-            --primary: #ef4444; 
-            --bg: #fff5f5;
-        }
-
+        body.seller-mode { --primary: #ef4444; --bg: #fff5f5; }
         .inventory-grid-config{display:grid;grid-template-columns:32px 1fr 70px 110px 24px;gap:6px;align-items:center}
         *{box-sizing:border-box}
         html,body{min-height:100vh;overflow-y:auto;overflow-x:hidden; transition: background-color 0.3s;}
@@ -28,11 +23,10 @@
         .header-controls-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .header-btn-row { display: flex; gap: 8px; align-items: center; }
 
-        .btn-reset-ui{width:fit-content;padding:6px 14px;font-size:0.7rem;font-weight:800;background:#fff;border:1.5px solid #cbd5e1;color:#64748b;border-radius:8px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+        .btn-reset-ui{width:fit-content;padding:6px 14px;font-size:0.7rem;font-weight:800;background:#fff;border:1.5px solid #cbd5e1;color:#64748b;border-radius:8px;cursor:pointer;transition:all 0.2s;white-space:nowrap; user-select:none; -webkit-user-select:none;}
         .btn-reset-ui:hover{border-color:var(--primary);color:var(--primary);background:#f8fafc;transform:translateY(-1px)}
         body.wheel-resizing,body.wheel-resizing *{cursor:col-resize!important}
         
-        /* Toggle Switch Styles */
         .switch-container { display: flex; align-items: center; justify-content: center; gap: 10px; background: #fff; padding: 6px 16px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border); margin: 0; }
         .switch { position: relative; display: inline-block; width: 44px; height: 22px; margin: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -50,13 +44,10 @@
         
         .card{background:var(--card-bg);padding:16px 20px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border:1px solid var(--border);position:relative;transition:border-color 0.2s,box-shadow 0.2s;cursor:grab;width:100%;flex:0 0 auto; -webkit-user-select: none; -webkit-touch-callout: none; min-width: 340px; min-height: min-content; overflow: hidden;}
         .card:hover{border-color:#cbd5e1}
-        
         .card.dragging-active-card{opacity:1!important;box-shadow:0 25px 50px -12px rgba(0,0,0,0.3)!important;z-index:999999!important;cursor:grabbing!important; transform:scale(1.02) rotate(1deg);}
         .card.placeholder{background-color:#f1f5f9;border:2px dashed #cbd5e1;opacity:0.5;box-shadow:none;pointer-events:none;visibility:visible!important;}
-        
         .col-left .resizable-card,.col-right .resizable-card{width:100%!important;height:auto!important;aspect-ratio:1}
         
-        /* 4-Corner Resizers */
         .resize-corner { position: absolute; width: 24px; height: 24px; z-index: 20; touch-action: none; opacity: 0; transition: opacity 0.2s; }
         .card:hover .resize-corner { opacity: 0.4; }
         .resize-corner:hover { opacity: 1 !important; }
@@ -73,15 +64,13 @@
         .section-title span:first-child { cursor: text; }
         .sub-text{font-size:0.5rem;opacity:0.6;text-transform:lowercase;font-weight:600}
         .card-controls{display:flex;gap:4px;align-items:center}
-        .card-btn{background:none;border:none;color:#94a3b8;font-weight:bold;cursor:pointer;font-size:1.1rem;padding:0 4px;line-height:0.8;transition:color 0.2s}
+        .card-btn{background:none;border:none;color:#94a3b8;font-weight:bold;cursor:pointer;font-size:1.1rem;padding:0 4px;line-height:0.8;transition:color 0.2s; user-select:none;}
         .card-btn:hover{color:#1e293b}
         .card-btn.close:hover{color:var(--danger)}
         .card.minimized{height:auto!important;min-height:0!important;padding-bottom:16px}
         .card.minimized>*:not(.section-title){display:none!important}
         
-        /* Auto-height properly constraints the container and stops overflows */
         .vis-content{aspect-ratio:1;width:100%;height:auto;min-height:200px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;padding:10px;position:relative;overflow:hidden}
-        
         .vis-canvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:default; touch-action:none; user-select:none; -webkit-user-select:none; max-width: 100%; max-height: 100%;}
         #wheelCanvas{cursor:grab}#wheelCanvas:active{cursor:grabbing}#gachaCanvas{cursor:grab}#gachaCanvas:active{cursor:grabbing}
         
@@ -98,29 +87,29 @@
         .scroller-item.prized{background:linear-gradient(135deg,#fef08a,#facc15);color:#856404;border-color:#eab308;font-size:0.65rem}
         .slot-row{padding:6px 10px;border-radius:8px;background:#f8fafc;border:1px solid #f1f5f9}
         .template-area {display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px;}
-        .btn-template{border:1px solid rgba(0,0,0,0.1);padding:6px;border-radius:6px;font-size:0.65rem;font-weight:700;transition:all 0.2s;color:white;cursor:pointer}
+        .btn-template{border:1px solid rgba(0,0,0,0.1);padding:6px;border-radius:6px;font-size:0.65rem;font-weight:700;transition:all 0.2s;color:white;cursor:pointer; user-select:none; -webkit-user-select:none;}
         .btn-template:hover{filter:brightness(1.1);transform:translateY(-1px)}
-        .btn-add{background:#f1f5f9;color:var(--primary);padding:8px;width:100%;border-radius:8px;margin-top:12px;margin-bottom:8px;font-weight:800;border:1px dashed #cbd5e1;font-size:0.65rem;text-transform:uppercase;cursor:pointer; transition: color 0.3s;}
+        .btn-add{background:#f1f5f9;color:var(--primary);padding:8px;width:100%;border-radius:8px;margin-top:12px;margin-bottom:8px;font-weight:800;border:1px dashed #cbd5e1;font-size:0.65rem;text-transform:uppercase;cursor:pointer; transition: color 0.3s; user-select:none;}
         input{padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.85rem;width:100%;cursor:text;font-family:inherit}
         .qty-stepper{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:2px}
         .step-btn{width:24px;height:24px;border-radius:4px;border:none;background:#f1f5f9;color:#475569;font-weight:800;font-size:1rem;cursor:pointer;user-select:none; -webkit-user-select: none;}
         .step-btn:active{background:#e2e8f0}
-        .btn-init{background:#1e293b;color:white;width:100%;padding:10px;font-size:0.75rem;font-weight:800;border-radius:8px;text-transform:uppercase;border:none;cursor:pointer}
+        .btn-init{background:#1e293b;color:white;width:100%;padding:10px;font-size:0.75rem;font-weight:800;border-radius:8px;text-transform:uppercase;border:none;cursor:pointer; user-select:none;}
         .prominent-ev-card{background:linear-gradient(135deg,#fff9e6 0%,#fffbeb 100%);border:1.5px solid var(--prize-color)}
-        .ev-value{font-size:2.2rem;font-weight:900;color:#1a1a1a;display:block;line-height:1;letter-spacing:-0.02em;margin-bottom:4px}
+        .ev-value{font-size:2.2rem;font-weight:900;color:#1a1a1a;display:block;line-height:1;letter-spacing:-0.02em;margin-bottom:4px; transition: color 0.2s;}
         .header-ai-box{background:rgba(255,255,255,0.7);border:1px solid #ddd6fe;border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px;flex-grow:1;max-width:420px;position:relative;cursor:default}
         .header-ai-label{font-size:0.55rem;color:var(--ai-glow);font-weight:900;text-transform:uppercase}
         .header-ai-tip{font-size:0.75rem;font-style:italic;color:#475569;line-height:1.3;max-height:2.6em;overflow:hidden}
         .hit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:8px}
-        .hit-group{background:#fff;border:1px solid var(--border);padding:6px;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.2s}
+        .hit-group{background:#fff;border:1px solid var(--border);padding:6px;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.2s; user-select:none;}
         .hit-group:hover{border-color:#cbd5e1;box-shadow:0 2px 4px rgba(0,0,0,0.05);transform:translateY(-1px)}
-        .btn-hit-me{background:var(--primary);color:white;width:100%;padding:4px;margin-top:6px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer; transition: filter 0.3s;}
+        .btn-hit-me{background:var(--primary);color:white;width:100%;padding:4px;margin-top:6px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer; transition: filter 0.3s; user-select:none;}
         .btn-hit-me:hover{filter:brightness(1.1);}
-        .btn-hit-other{background:#94a3b8;color:white;width:100%;padding:4px;margin-top:3px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer}
+        .btn-hit-other{background:#94a3b8;color:white;width:100%;padding:4px;margin-top:3px;border-radius:5px;font-size:0.7rem;font-weight:bold;border:none;cursor:pointer; user-select:none;}
         .stats-sub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
         .mini-stat{padding:12px 14px;border-radius:12px;border:1px solid rgba(0,0,0,0.03)}
         .mini-label{font-size:0.58rem;display:block;text-transform:uppercase;font-weight:700;margin-bottom:4px;letter-spacing:0.05em;color:#64748b}
-        .mini-value{font-size:1.3rem;font-weight:800;line-height:1}
+        .mini-value{font-size:1.3rem;font-weight:800;line-height:1; transition: color 0.2s;}
         .theme-blue{background:#f0f9ff;color:#0369a1}.theme-slate{background:#f8fafc;color:#475569}.theme-amber{background:#fffbeb;color:#b45309}.theme-indigo{background:#f5f3ff;color:#4338ca}
         .summary-banner{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
         .summary-box{background:#f8fafc;border:1px solid var(--border);padding:8px;border-radius:8px;text-align:center}
@@ -132,19 +121,37 @@
         .chart-container{height:120px;margin-top:6px}
         .history-list{list-style:none;padding:0;margin:0;max-height:180px;overflow-y:auto}
         .history-item{padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:0.75rem;color:#475569}
-        #ai-verbose-status{font-size:0.52rem;color:var(--ai-glow);font-weight:800;text-align:right;line-height:1.4;margin-top:auto;min-height:3rem;width:100%}
-        .loading-spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(0,0,0,0.1);border-radius:50%;border-top-color:var(--ai-glow);animation:spin 0.6s linear infinite}
-        @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulseGlow { 0% {box-shadow: 0 0 10px var(--prize-color); border-color: var(--prize-color);} 50% {box-shadow: 0 0 30px var(--prize-color); border-color: #eab308;} 100% {box-shadow: 0 0 10px var(--prize-color); border-color: var(--prize-color);}}
         .prize-glow { animation: pulseGlow 1.5s infinite; border: 2px solid var(--prize-color) !important; }
         
-        .prize-toggle { color: #cbd5e1; cursor: pointer; border: none; background: transparent; transition: color 0.2s; font-size: 1.2rem; padding: 0; }
+        .prize-toggle { color: #cbd5e1; cursor: pointer; border: none; background: transparent; transition: color 0.2s; font-size: 1.2rem; padding: 0; user-select:none; }
         .prize-toggle.active { color: var(--prize-color); text-shadow: 0 0 3px rgba(255,193,7,0.4); }
 
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-card { background: white; padding: 20px; border-radius: 12px; width: 420px; max-width: 90vw; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display:flex; flex-direction:column; gap: 12px; max-height: 80vh;}
-        .modal-overlay *, .modal-card * { user-select: text !important; cursor: auto; -webkit-user-select: text !important;}
+        .modal-card h3, .modal-card p, .modal-card textarea, .modal-card input { user-select: text !important; -webkit-user-select: text !important; cursor: auto; }
+
+        /* PREVIEW STYLING */
+        body.is-previewing .ev-value, 
+        body.is-previewing .mini-value, 
+        body.is-previewing #total-spent, 
+        body.is-previewing #total-won, 
+        body.is-previewing #total-net,
+        body.is-previewing #stat-diff-perc {
+            color: var(--primary) !important;
+            text-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        body.is-previewing #card-ev,
+        body.is-previewing #card-analytics,
+        body.is-previewing #card-bid,
+        body.is-previewing #card-summary {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.15) !important;
+        }
+        body.is-previewing .prob-segment {
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
@@ -161,7 +168,8 @@
                 <button class="btn-reset-ui" onclick="loadDashboardLayout()">LOAD UI</button>
                 <button class="btn-reset-ui" onclick="resetUIDefaults()">RESET UI</button>
                 <button class="btn-reset-ui" onclick="restoreCards()">RESTORE CARDS</button>
-                <button class="btn-reset-ui" onclick="openIOModal()">EXPORT/IMPORT</button>
+                <button class="btn-reset-ui" onclick="openMainExportModal()">EXPORT</button>
+                <button class="btn-reset-ui" onclick="openMainImportModal()">IMPORT</button>
                 <span id="layout-status" style="font-size:0.6rem; font-weight:800; opacity:0; transition:opacity 0.3s; margin-left:4px;"></span>
             </div>
             <div class="switch-container">
@@ -187,8 +195,8 @@
                         <button onclick="saveInventory()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">SAVE</button>
                         <button onclick="loadInventory()" style="background:#f1f5f9; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">LOAD</button>
                         <button onclick="resetInventoryLayout()" style="background:#f8d7da; color:#721c24; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">RESET</button>
-                        <button onclick="openSetupIOModal()" style="background:#e0e7ff; color:#4338ca; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">EXPORT</button>
-                        <button onclick="openSetupIOModal()" style="background:#e0e7ff; color:#4338ca; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">IMPORT</button>
+                        <button onclick="openSetupExportModal()" style="background:#e0e7ff; color:#4338ca; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">EXPORT</button>
+                        <button onclick="openSetupImportModal()" style="background:#e0e7ff; color:#4338ca; padding:2px 4px; font-size:0.48rem; font-weight:bold; border-radius:3px; border: none; cursor:pointer;">IMPORT</button>
                         <div class="card-controls" style="margin-left: 8px;">
                             <button class="card-btn" onclick="toggleCard(this)" onmousedown="event.stopPropagation()">-</button>
                             <button class="card-btn close" onclick="closeCard(this)" onmousedown="event.stopPropagation()">×</button>
@@ -241,17 +249,6 @@
                         <span class="ev-label" style="font-size:0.65rem; color:#856404; font-weight:800; text-transform:uppercase;">Fair Expected Value</span>
                         <span id="stat-ev" class="ev-value">£0.00</span>
                         <span id="setup-total-slots-info" style="font-size: 0.55rem; color: #a16207; font-weight: 700; margin-top: 4px; display: block;">Total Slots: 0</span>
-                    </div>
-                    <div class="header-ai-box">
-                        <div style="display:flex; justify-content: space-between; align-items: center;">
-                            <span class="header-ai-label">Gemini Advisor</span>
-                            <div style="display:flex; gap:8px;">
-                                <button id="btn-listen" class="btn-tts" onclick="speakAdvice()" title="Listen to advice" style="cursor:pointer; border:1px solid #ddd6fe; border-radius:4px; padding:2px; background:white; width:24px; height:24px;">🔊</button>
-                                <button class="btn-ai" onclick="getAIGuidance()" style="background:var(--ai-glow); color:white; padding:4px 8px; border-radius:4px; font-weight:800; border:none; font-size:0.65rem; cursor:pointer;">✨ GET ADVICE</button>
-                            </div>
-                        </div>
-                        <div id="ai-coaching" class="header-ai-tip">Ready for strategy advice...</div>
-                        <div id="ai-verbose-status"></div>
                     </div>
                 </div>
             </div>
@@ -455,7 +452,7 @@
 </div>
 
 <!-- TEMPLATE MANAGER MODAL -->
-<div id="template-modal" class="modal-overlay">
+<div id="template-modal" class="modal-overlay" onmousedown="if(event.target===this) closeTemplateModal()">
     <div class="modal-card">
         <h3 style="margin:0; font-size:1rem; color:#1e293b; font-weight:800;">Manage Templates</h3>
         <div id="template-list-edit" style="display:flex; flex-direction:column; gap:6px; overflow-y:auto; flex-grow:1; padding-right:4px;"></div>
@@ -469,48 +466,18 @@
     </div>
 </div>
 
-<!-- SETUP EXPORT/IMPORT MODAL -->
-<div id="setup-io-modal" class="modal-overlay">
+<!-- DYNAMIC IO MODAL -->
+<div id="dynamic-io-modal" class="modal-overlay" onmousedown="if(event.target===this) closeDynamicIOModal()">
     <div class="modal-card">
-        <h3 style="margin:0; font-size:1rem; color:#1e293b; font-weight:800;">Export / Import Wheel Setup</h3>
-        <p style="font-size:0.7rem; color:#64748b; margin: 0 0 8px 0;">Generate a short code to share your wheel, or copy the raw local code. Paste a code below to restore.</p>
-        <textarea id="setup-io-textarea" rows="4" style="width:100%; font-family:monospace; font-size:0.65rem; padding:8px; border-radius:6px; border:1px solid #cbd5e1; resize:vertical; background:#f8fafc; text-transform:uppercase;" placeholder="Paste setup code here..."></textarea>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-            <button onclick="generateSetupExportCode()" class="btn-hit-me" style="margin:0; background:#94a3b8; flex:1;">COPY LOCAL CODE</button>
-            <button onclick="saveSetupToCloud()" class="btn-hit-me" style="margin:0; background:#3b82f6; flex:1;">GENERATE SHORT CODE</button>
-        </div>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-            <button onclick="smartImportSetup()" class="btn-hit-me" style="margin:0; background:var(--success); width:100%;">IMPORT (Short or Local Code)</button>
-        </div>
-        <button onclick="closeSetupIOModal()" class="btn-reset-ui" style="width:100%; margin-top:8px;">CLOSE</button>
-    </div>
-</div>
-
-<!-- MAIN SESSION EXPORT/IMPORT MODAL -->
-<div id="io-modal" class="modal-overlay">
-    <div class="modal-card">
-        <h3 style="margin:0; font-size:1rem; color:#1e293b; font-weight:800;">Export / Import Session</h3>
-        <p style="font-size:0.7rem; color:#64748b; margin: 0 0 8px 0;">Generate a short code to save your entire session (layout, stats, setup), or use a local code.</p>
-        <textarea id="io-textarea" rows="6" style="width:100%; font-family:monospace; font-size:0.65rem; padding:8px; border-radius:6px; border:1px solid #cbd5e1; resize:vertical; background:#f8fafc; text-transform:uppercase;" placeholder="Paste session code here..."></textarea>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-            <button onclick="generateExportCode()" class="btn-hit-me" style="margin:0; background:#94a3b8; flex:1;">COPY LOCAL CODE</button>
-            <button onclick="saveSessionToCloud()" class="btn-hit-me" style="margin:0; background:#3b82f6; flex:1;">GENERATE SHORT CODE</button>
-        </div>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-            <button onclick="smartImportSession()" class="btn-hit-me" style="margin:0; background:var(--success); width:100%;">IMPORT (Short or Local Code)</button>
-        </div>
-        <button onclick="closeIOModal()" class="btn-reset-ui" style="width:100%; margin-top:8px;">CLOSE</button>
+        <h3 id="io-modal-title" style="margin:0; font-size:1rem; color:#1e293b; font-weight:800;">Export / Import</h3>
+        <p id="io-modal-desc" style="font-size:0.7rem; color:#64748b; margin: 0 0 8px 0;">...</p>
+        <textarea id="io-modal-textarea" rows="6" style="width:100%; font-family:monospace; font-size:0.65rem; padding:8px; border-radius:6px; border:1px solid #cbd5e1; resize:vertical; background:#f8fafc; text-transform:uppercase;" placeholder="Paste code here..."></textarea>
+        <div id="io-modal-btn-row" style="display:flex; gap:8px; margin-top:8px;"></div>
+        <button onclick="closeDynamicIOModal()" class="btn-reset-ui" style="width:100%; margin-top:8px;">CLOSE</button>
     </div>
 </div>
 
 <script>
-    let apiKey = "";
-    try { 
-        if (window.self === window.top && !window.location.hostname.includes("google")) {
-            apiKey = "REPLACE_ME_WITH_KEY";
-        }
-    } catch(e) {}
-
     let appMode = 'buyer'; 
     function toggleMode() {
         const cb = document.getElementById('mode-checkbox');
@@ -518,18 +485,16 @@
         document.getElementById('label-buyer').classList.toggle('active', appMode === 'buyer');
         document.getElementById('label-seller').classList.toggle('active', appMode === 'seller');
         
-        if (appMode === 'seller') {
-            document.body.classList.add('seller-mode');
-        } else {
-            document.body.classList.remove('seller-mode');
-        }
+        if (appMode === 'seller') { document.body.classList.add('seller-mode'); } 
+        else { document.body.classList.remove('seller-mode'); }
         
         document.getElementById('bid-roi-label').innerText = appMode === 'buyer' ? 'Bid ROI' : 'Price ROI';
         syncAndUI();
     }
 
     function showHeaderStatus(text, color) {
-        const el = document.getElementById('layout-status'); if (!el) return;
+        const el = document.getElementById('layout-status'); 
+        if (!el) return;
         el.innerText = text; el.style.color = color; el.style.opacity = '1';
         setTimeout(() => { el.style.opacity = '0'; }, 1500);
     }
@@ -726,11 +691,10 @@
     function checkScrollerHaptic() {
         const windowEl = document.getElementById('scroller-window');
         const scrollerCard = document.getElementById('card-scroller');
-        if (!windowEl || scrollerMuted || (scrollerCard && scrollerCard.classList.contains('minimized'))) return;
+        if (!windowEl || scrollerMuted || (scrollerCard && (scrollerCard.classList.contains('minimized') || scrollerCard.style.display === 'none'))) return;
         const centerOffset = windowEl.clientWidth / 2;
         let idx = Math.floor((windowEl.scrollLeft + centerOffset) / 166);
         if (idx !== lastHapticScroll) {
-            // Delta limit prevents phantom loop clicks
             if (lastHapticScroll !== -1 && Math.abs(idx - lastHapticScroll) < 10) {
                 triggerHaptic();
                 playScrollerClick();
@@ -777,6 +741,9 @@
     
     function playPegHit() {
         if (wheelMuted || !actx || !audioInit) return;
+        const wheelCard = document.getElementById('wheel-module');
+        if (wheelCard && (wheelCard.classList.contains('minimized') || wheelCard.style.display === 'none')) return;
+        
         if (actx.state === 'suspended') actx.resume();
         try {
             let t = actx.currentTime;
@@ -836,23 +803,22 @@
         if (isBallOnBall && gachaMuted) return;
         if (!actx || !audioInit) return;
         
+        const gachaModule = document.getElementById('gacha-module');
+        if (gachaModule && (gachaModule.classList.contains('minimized') || gachaModule.style.display === 'none')) return;
+
         let now = performance.now();
         if (now < circuitBreakerUntil) return;
         
-        // Remove tracking of sounds older than 100ms
         while(clackTimes.length > 0 && now - clackTimes[0] > 100) { clackTimes.shift(); }
-        // Allowed concurrent hits increased to 11
         if (clackTimes.length >= 11) { 
             circuitBreakerUntil = now + 200; 
             return;
         }
         
-        // Tightened minimum debounce strictly for machine-gun glitch prevention
         if (clackTimes.length > 0 && now - clackTimes[clackTimes.length - 1] < 5) return; 
 
         clackTimes.push(now);
         
-        // Hertz contact approximation:
         let impactV = Math.max(v, 0.1);
         let contactTime = 0.015 * Math.pow(impactV, -0.2); 
         contactTime = Math.max(0.005, Math.min(contactTime, 0.03)); 
@@ -1200,7 +1166,7 @@
                     } else {
                         window.addEventListener('touchmove', doDrag, {passive: false});
                         window.addEventListener('touchcancel', stopDrag);
-                        window.addEventListener('touchend', stopDrag);
+                        window.addEventListener('touchteleport', stopDrag);
                     }
                 };
 
@@ -1374,7 +1340,7 @@
             let scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
             const mouseX = (clientX - rect.left) * scaleX, mouseY = (clientY - rect.top) * scaleY;
             const sizePx = canvas.width / ratio; const R = sizePx / 3.4; 
-            const cx = sizePx / 2, domeCy = sizePx * 0.33, knobY = domeCy + R * 1.1; 
+            const cx = sizePx / 2, domeCy = sizePx * 0.33, knobY = domeCy + R * 1.35; 
             const drawMouseX = mouseX / ratio, drawMouseY = mouseY / ratio;
 
             let foundBall = null, isTray = false;
@@ -1420,7 +1386,7 @@
             const drawMouseX = ((clientX - rect.left) * scaleX) / ratio;
             const drawMouseY = ((clientY - rect.top) * scaleY) / ratio;
             const sizePx = canvas.width / ratio; const R = sizePx / 3.4; 
-            const cx = sizePx / 2, domeCy = sizePx * 0.33, knobY = domeCy + R * 1.1;
+            const cx = sizePx / 2, domeCy = sizePx * 0.33, knobY = domeCy + R * 1.35;
 
             if (Math.hypot(drawMouseX - cx, drawMouseY - knobY) < R * 0.4 && !gachaState.isMachineGrabbed && !gachaState.draggedBall) {
                 canvas.style.cursor = 'pointer';
@@ -1457,8 +1423,12 @@
                 canvas.style.cursor = 'grabbing';
                 let dx = clientX - gachaState.lastMouse.x, dy = clientY - gachaState.lastMouse.y;
                 gachaState.machineX += dx * 0.6; gachaState.machineY += dy * 0.6;
-                if (window.cachedGacha && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
-                    window.cachedGacha.forEach(b => { b.vx -= dx * 0.25; b.vy -= dy * 0.25; }); 
+                if (window.cachedGacha) {
+                    window.cachedGacha.forEach(b => { b.vx += dx * 0.05; b.vy += dy * 0.05; }); 
+                }
+                if (dispensedBalls) { 
+                    // Physically translate tray balls with the machine so they stick to the tray!
+                    dispensedBalls.forEach(b => { b.x += dx * 0.6; b.y += dy * 0.6; b.vx += dx * 0.05; b.vy += dy * 0.05; }); 
                 }
                 gachaState.lastMouse = { x: clientX, y: clientY, time: performance.now() }; wakeUpGacha(); return;
             }
@@ -1511,11 +1481,14 @@
     }
 
     function updateGachaPhysics(R, phase) {
-        const balls = window.cachedGacha; if (!balls || balls.length === 0) return;
-        const bR = balls[0].r; const innerR = R - bR - 2;
+        const balls = window.cachedGacha; 
+        if (!balls || balls.length === 0) return;
+        
+        const bR = balls[0].r; 
+        const innerR = R - bR - 2;
 
         const gachaModule = document.getElementById('gacha-module');
-        const isMinimized = gachaModule && gachaModule.classList.contains('minimized');
+        const isHiddenOrMin = gachaModule && (gachaModule.classList.contains('minimized') || gachaModule.style.display === 'none');
 
         balls.forEach(b => {
             if (b.prized) b.starRotation = (b.starRotation || 0) + 0.015;
@@ -1523,24 +1496,39 @@
             if (b === gachaState.draggedBall) return; 
 
             if (phase === "chaos") {
-                if (b.y > innerR * 0.4 && Math.random() < 0.2) { b.vy -= Math.random() * 2.5 + 0.5; b.vx += (Math.random() - 0.5) * 1.5; b.vz += (Math.random() - 0.5) * 2.5; }
-                b.vy += 0.35; let drag = 0.95; b.vx *= drag; b.vy *= drag; b.vz *= drag;
-            } else {
-                if (!b.isSleeping) {
-                    b.vy += 0.45; 
-                    let drag = 0.99; 
-                    b.vx *= drag; b.vy *= drag; 
-                } else {
-                    b.vx = 0; b.vy = 0; 
+                if (b.y > innerR * 0.4 && Math.random() < 0.2) { 
+                    b.vy -= Math.random() * 2.5 + 0.5; 
+                    b.vx += (Math.random() - 0.5) * 1.5; 
+                    b.vz += (Math.random() - 0.5) * 2.5; 
                 }
+                b.vy += 0.15; // Realistic Gravity
+                let drag = 0.99; 
+                b.vx *= drag; 
+                b.vy *= drag; 
+                b.vz *= drag;
+            } else {
+                b.vy += 0.15; // Realistic Gravity
+                let drag = 0.99; 
+                b.vx *= drag; 
+                b.vy *= drag; 
+                
                 b.rotation = 0; 
-                let targetZ = b.prized ? 10 : 0; b.vz += (targetZ - (b.z || 0)) * 0.05; b.vz *= 0.8;
+                let targetZ = b.prized ? 10 : 0; 
+                b.vz += (targetZ - (b.z || 0)) * 0.05; 
+                b.vz *= 0.8;
             }
             
-            b.x += b.vx; b.y += b.vy; b.z = (b.z || 0) + (b.vz || 0);
-            if(phase === "chaos") b.rotation = (b.rotation || 0) + (Math.abs(b.vx) + Math.abs(b.vy)) * 0.05 * (b.vx > 0 ? 1 : -1);
+            b.x += b.vx; 
+            b.y += b.vy; 
+            b.z = (b.z || 0) + (b.vz || 0);
             
-            let maxZ = R * 0.6; if (b.z > maxZ) { b.z = maxZ; b.vz *= -0.5; } if (b.z < -maxZ) { b.z = -maxZ; b.vz *= -0.5; }
+            if (phase === "chaos") {
+                b.rotation = (b.rotation || 0) + (Math.abs(b.vx) + Math.abs(b.vy)) * 0.05 * (b.vx > 0 ? 1 : -1);
+            }
+            
+            let maxZ = R * 0.6; 
+            if (b.z > maxZ) { b.z = maxZ; b.vz *= -0.5; } 
+            if (b.z < -maxZ) { b.z = -maxZ; b.vz *= -0.5; }
         });
 
         for (let iter = 0; iter < 3; iter++) {
@@ -1548,71 +1536,103 @@
                 let b1 = balls[i];
                 for(let j=i+1; j<balls.length; j++) {
                     let b2 = balls[j];
-                    let dx = b2.x - b1.x; let dy = b2.y - b1.y; let dz = (b2.z || 0) - (b1.z || 0);
+                    let dx = b2.x - b1.x; 
+                    let dy = b2.y - b1.y; 
+                    let dz = (b2.z || 0) - (b1.z || 0);
                     let distSq = dx*dx + dy*dy + dz*dz;
                     let minDistSq = (b1.r + b2.r) * (b1.r + b2.r);
                     
                     if (distSq < minDistSq && distSq > 0.0001) {
-                        let dist = Math.sqrt(distSq); let overlap = ((b1.r + b2.r) - dist) * 0.5; let nx = dx/dist, ny = dy/dist, nz = dz/dist;
-
-                        let mass1 = b1.isSleeping ? 0 : 1;
-                        let mass2 = b2.isSleeping ? 0 : 1;
+                        let dist = Math.sqrt(distSq); 
+                        let overlap = ((b1.r + b2.r) - dist) * 0.5 * 0.8; // 20% positional dampening
                         
-                        if (mass1 === 0 && mass2 > 0) {
-                            if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap * 2; b2.y += ny * overlap * 2; b2.z += nz * overlap * 2; }
-                        } else if (mass2 === 0 && mass1 > 0) {
-                            if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap * 2; b1.y -= ny * overlap * 2; b1.z -= nz * overlap * 2; }
-                        } else if (mass1 > 0 && mass2 > 0) {
-                            if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap; b1.y -= ny * overlap; b1.z -= nz * overlap; }
-                            if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap; b2.y += ny * overlap; b2.z += nz * overlap; }
-                        }
-                        
-                        if (iter === 0) {
-                            let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy, rvz = (b2.vz || 0) - (b1.vz || 0);
-                            let velAlongNormal = rvx * nx + rvy * ny + rvz * nz;
-                            if (velAlongNormal < 0) { 
-                                if (velAlongNormal < -1.5) {
-                                    b1.isSleeping = false; b1.sleepFrames = 0;
-                                    b2.isSleeping = false; b2.sleepFrames = 0;
-                                    mass1 = 1; mass2 = 1;
-                                }
+                        if (overlap > 0.01) {
+                            let nx = dx/dist, ny = dy/dist, nz = dz/dist;
 
-                                let bounce = (Math.abs(velAlongNormal) > 1.5) ? ((b1.restitution + b2.restitution) / 2) : 0.0; 
-                                let impulseMultiplier = (mass1 === 0 || mass2 === 0) ? 1 : 0.5;
-                                let impulse = -(1 + bounce) * velAlongNormal * impulseMultiplier; 
-                                
-                                if (mass1 > 0 && b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
-                                if (mass2 > 0 && b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
+                            // Anti-stacking jitter to organically roll balls off perfectly vertical stacks
+                            if (Math.abs(nx) < 0.1 && Math.abs(nz) < 0.1) {
+                                nx += (Math.random() - 0.5) * 0.05; 
+                                nz += (Math.random() - 0.5) * 0.05;
+                                let nlen = Math.sqrt(nx*nx + ny*ny + nz*nz); 
+                                nx /= nlen; ny /= nlen; nz /= nlen;
+                            }
 
-                                let tx = -ny, ty = nx;
-                                let tanDot = (b2.vx - b1.vx) * tx + (b2.vy - b1.vy) * ty;
-                                let friction = 0.1;
-                                if (mass1 > 0 && b1 !== gachaState.draggedBall) { b1.vx += tx * tanDot * friction * impulseMultiplier; b1.vy += ty * tanDot * friction * impulseMultiplier; }
-                                if (mass2 > 0 && b2 !== gachaState.draggedBall) { b2.vx -= tx * tanDot * friction * impulseMultiplier; b2.vy -= ty * tanDot * friction * impulseMultiplier; }
+                            // Apply positional correction immediately (prevent clipping)
+                            if (b1 !== gachaState.draggedBall) { 
+                                b1.x -= nx * overlap; 
+                                b1.y -= ny * overlap; 
+                                b1.z -= nz * overlap; 
+                            }
+                            if (b2 !== gachaState.draggedBall) { 
+                                b2.x += nx * overlap; 
+                                b2.y += ny * overlap; 
+                                b2.z += nz * overlap; 
+                            }
+                            
+                            if (iter === 0) {
+                                let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy, rvz = (b2.vz || 0) - (b1.vz || 0);
+                                let velAlongNormal = rvx * nx + rvy * ny + rvz * nz;
 
-                                if (!isMinimized && Math.abs(velAlongNormal) > 2.0 && overlap < 2.0) {
-                                    playMarbleClack(Math.abs(velAlongNormal), true);
+                                if (velAlongNormal < 0) { 
+                                    // True restitution bounce calculation
+                                    let bounce = (Math.abs(velAlongNormal) > 0.5) ? ((b1.restitution + b2.restitution) / 2) : 0.0; 
+                                    let impulse = -(1 + bounce) * velAlongNormal * 0.5; 
+                                    
+                                    if (b1 !== gachaState.draggedBall) { 
+                                        b1.vx -= nx * impulse; b1.vy -= ny * impulse; 
+                                    }
+                                    if (b2 !== gachaState.draggedBall) { 
+                                        b2.vx += nx * impulse; b2.vy += ny * impulse; 
+                                    }
+
+                                    // Dynamic surface friction
+                                    let tx = -ny, ty = nx; 
+                                    let tanDot = (b2.vx - b1.vx) * tx + (b2.vy - b1.vy) * ty; 
+                                    let friction = 0.05;
+                                    
+                                    if (b1 !== gachaState.draggedBall) { 
+                                        b1.vx += tx * tanDot * friction * 0.5; 
+                                        b1.vy += ty * tanDot * friction * 0.5; 
+                                    }
+                                    if (b2 !== gachaState.draggedBall) { 
+                                        b2.vx -= tx * tanDot * friction * 0.5; 
+                                        b2.vy -= ty * tanDot * friction * 0.5; 
+                                    }
+
+                                    if (!isHiddenOrMin && Math.abs(velAlongNormal) > 3.0 && overlap < 2.0) {
+                                        playMarbleClack(Math.abs(velAlongNormal), true);
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+            
             balls.forEach(b => {
                 if (b === gachaState.draggedBall) return;
+                
                 let currentDist = Math.sqrt(b.x*b.x + b.y*b.y);
                 if (currentDist > innerR && currentDist > 0) { 
-                    let nx = b.x / currentDist, ny = b.y / currentDist;
-                    b.x = nx * innerR; b.y = ny * innerR; 
+                    let nx = b.x / currentDist, ny = b.y / currentDist; 
+                    b.x = nx * innerR; 
+                    b.y = ny * innerR; 
+                    
                     if (iter === 0) {
                         let dot = b.vx * nx + b.vy * ny;
                         if (dot > 0) { 
-                            let wallBounce = dot > 1.5 ? b.restitution : 0.0;
+                            // True wall restitution
+                            let wallBounce = dot > 0.5 ? b.restitution * 0.85 : 0.0;
                             b.vx -= (1 + wallBounce) * dot * nx; 
                             b.vy -= (1 + wallBounce) * dot * ny; 
-                            b.vx *= 0.995; b.vy *= 0.995; 
                             
-                            if (!isMinimized && dot > 2.0) {
+                            // Tangent friction applied logically to curve
+                            let tx = -ny, ty = nx;
+                            let tanDot = b.vx * tx + b.vy * ty;
+                            b.vx -= tanDot * tx * 0.02;
+                            b.vy -= tanDot * ty * 0.02;
+                            
+                            if (!isHiddenOrMin && dot > 3.0) {
                                 playMarbleClack(dot, false);
                             }
                         } 
@@ -1621,22 +1641,12 @@
             });
         }
 
+        // Kinetic energy drain to settle balls dynamically instead of freezing them mid-air
         balls.forEach(b => {
-            if (b === gachaState.draggedBall || phase === "chaos") {
-                b.sleepFrames = 0; b.isSleeping = false;
-                return;
-            }
-            let speed = Math.hypot(b.vx, b.vy);
-            if (speed < 0.3) {
-                b.sleepFrames = (b.sleepFrames || 0) + 1;
-            } else {
-                b.sleepFrames = 0;
-            }
-            if (b.sleepFrames > 15) {
-                b.vx = 0; b.vy = 0;
-                b.isSleeping = true;
-            } else {
-                b.isSleeping = false;
+            if (b === gachaState.draggedBall || phase === "chaos") return;
+            let speedSq = b.vx*b.vx + b.vy*b.vy;
+            if (speedSq < 0.05) { 
+                b.vx *= 0.8; b.vy *= 0.8; 
             }
         });
     }
@@ -1644,78 +1654,79 @@
     function updateTrayBalls(sizePx, bR, isMinimized) {
         if (!dispensedBalls || dispensedBalls.length === 0) return;
         
+        const gachaModule = document.getElementById('gacha-module');
+        const isHiddenOrMin = gachaModule && (gachaModule.classList.contains('minimized') || gachaModule.style.display === 'none');
+
         const R = sizePx / 3.4, cx = sizePx / 2, domeCy = sizePx * 0.33;
-        let mX = gachaState.machineX || 0;
+        let mX = gachaState.machineX || 0; 
         let mY = gachaState.machineY || 0;
-        let baseTop = domeCy + mY + R * 2.1;
+        let baseTop = domeCy + mY + R * 2.1; 
         let baseBottom = baseTop + R * 0.15;
-        let baseLeft = cx + mX - R * 0.8;
+        let baseLeft = cx + mX - R * 0.8; 
         let baseRight = cx + mX + R * 0.8;
+        
         const maxTrayX = sizePx - bR, minTrayX = bR; 
         let floorY = sizePx - bR;
 
         dispensedBalls.forEach(b => {
             if (b.prized) b.starRotation = (b.starRotation || 0) + 0.015;
-            if (b === gachaState.draggedBall) {
-                b.sleepFrames = 0; b.isSleeping = false;
-                return;
-            }
-            if (!b.isSleeping) {
-                b.vy += 0.45; 
-            }
+            if (b === gachaState.draggedBall) return;
+            
+            b.vy += 0.15; // Realistic gravity
             b.x += b.vx; 
             b.y += b.vy;
+            
             b.rotation += b.vx * 0.08; 
         });
 
         for (let iter = 0; iter < 3; iter++) {
             for (let i = 0; i < dispensedBalls.length; i++) {
                 for (let j = i + 1; j < dispensedBalls.length; j++) {
-                    let b1 = dispensedBalls[i];
+                    let b1 = dispensedBalls[i]; 
                     let b2 = dispensedBalls[j];
-                    let dx = b2.x - b1.x; let dy = b2.y - b1.y;
-                    let distSq = dx*dx + dy*dy; let minDistSq = (bR + bR) * (bR + bR);
+                    let dx = b2.x - b1.x; 
+                    let dy = b2.y - b1.y;
+                    let distSq = dx*dx + dy*dy; 
+                    let minDistSq = (bR + bR) * (bR + bR);
+                    
                     if (distSq < minDistSq && distSq > 0.0001) {
-                        let dist = Math.sqrt(distSq); let overlap = ((bR + bR) - dist) * 0.5; 
-                        let nx = dx/dist, ny = dy/dist;
+                        let dist = Math.sqrt(distSq); 
+                        let overlap = ((bR + bR) - dist) * 0.5 * 0.8; 
+                        
+                        if (overlap > 0.01) {
+                            let nx = dx/dist, ny = dy/dist;
 
-                        let mass1 = b1.isSleeping ? 0 : 1;
-                        let mass2 = b2.isSleeping ? 0 : 1;
+                            // Anti-stacking jitter
+                            if (Math.abs(nx) < 0.1) {
+                                nx += (Math.random() - 0.5) * 0.05;
+                                let nlen = Math.sqrt(nx*nx + ny*ny); 
+                                nx /= nlen; ny /= nlen;
+                            }
 
-                        if (mass1 === 0 && mass2 > 0) {
-                            if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap * 2; b2.y += ny * overlap * 2; }
-                        } else if (mass2 === 0 && mass1 > 0) {
-                            if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap * 2; b1.y -= ny * overlap * 2; }
-                        } else if (mass1 > 0 && mass2 > 0) {
                             if (b1 !== gachaState.draggedBall) { b1.x -= nx * overlap; b1.y -= ny * overlap; }
                             if (b2 !== gachaState.draggedBall) { b2.x += nx * overlap; b2.y += ny * overlap; }
-                        }
 
-                        if (iter === 0) {
-                            let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy;
-                            let velAlongNormal = rvx * nx + rvy * ny;
-                            if (velAlongNormal < 0) {
-                                if (velAlongNormal < -1.5) {
-                                    b1.isSleeping = false; b1.sleepFrames = 0;
-                                    b2.isSleeping = false; b2.sleepFrames = 0;
-                                    mass1 = 1; mass2 = 1;
-                                }
+                            if (iter === 0) {
+                                let rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy;
+                                let velAlongNormal = rvx * nx + rvy * ny;
 
-                                let bounce = (Math.abs(velAlongNormal) > 1.5) ? ((b1.restitution + b2.restitution)/2) : 0.0;
-                                let impulseMultiplier = (mass1 === 0 || mass2 === 0) ? 1 : 0.5;
-                                let impulse = -(1 + bounce) * velAlongNormal * impulseMultiplier; 
-                                
-                                if (mass1 > 0 && b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
-                                if (mass2 > 0 && b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
-                                
-                                let tx = -ny, ty = nx;
-                                let tanDot = (b2.vx - b1.vx) * tx + (b2.vy - b1.vy) * ty;
-                                let friction = 0.1;
-                                if (mass1 > 0 && b1 !== gachaState.draggedBall) { b1.vx += tx * tanDot * friction * impulseMultiplier; b1.vy += ty * tanDot * friction * impulseMultiplier; }
-                                if (mass2 > 0 && b2 !== gachaState.draggedBall) { b2.vx -= tx * tanDot * friction * impulseMultiplier; b2.vy -= ty * tanDot * friction * impulseMultiplier; }
-                                
-                                if (!isMinimized && Math.abs(velAlongNormal) > 2.0 && overlap < 2.0) {
-                                    playMarbleClack(Math.abs(velAlongNormal), true);
+                                if (velAlongNormal < 0) {
+                                    let bounce = (Math.abs(velAlongNormal) > 0.5) ? ((b1.restitution + b2.restitution)/2) : 0.0;
+                                    let impulse = -(1 + bounce) * velAlongNormal * 0.5; 
+                                    
+                                    if (b1 !== gachaState.draggedBall) { b1.vx -= nx * impulse; b1.vy -= ny * impulse; }
+                                    if (b2 !== gachaState.draggedBall) { b2.vx += nx * impulse; b2.vy += ny * impulse; }
+                                    
+                                    let tx = -ny, ty = nx; 
+                                    let tanDot = (b2.vx - b1.vx) * tx + (b2.vy - b1.vy) * ty; 
+                                    let friction = 0.05;
+                                    
+                                    if (b1 !== gachaState.draggedBall) { b1.vx += tx * tanDot * friction * 0.5; b1.vy += ty * tanDot * friction * 0.5; }
+                                    if (b2 !== gachaState.draggedBall) { b2.vx -= tx * tanDot * friction * 0.5; b2.vy -= ty * tanDot * friction * 0.5; }
+                                    
+                                    if (!isHiddenOrMin && Math.abs(velAlongNormal) > 3.0 && overlap < 2.0) {
+                                        playMarbleClack(Math.abs(velAlongNormal), true);
+                                    }
                                 }
                             }
                         }
@@ -1729,17 +1740,17 @@
                 if (b.y > floorY) {
                     b.y = floorY; 
                     if (iter === 0 && b.vy > 0) {
-                        let bounce = b.vy > 1.5 ? b.restitution : 0.0;
-                        if (!isMinimized && b.vy > 1.5) playMarbleClack(b.vy * 2, false);
+                        let bounce = b.vy > 0.5 ? b.restitution * 0.85 : 0.0;
+                        if (!isHiddenOrMin && b.vy > 3.0) playMarbleClack(b.vy * 2, false);
                         b.vy *= -bounce; 
-                        b.vx *= 0.98; 
+                        b.vx *= 0.95; 
                     }
                 }
                 if (b.y < bR) {
                     b.y = bR;
                     if (iter === 0 && b.vy < 0) {
-                        let bounce = Math.abs(b.vy) > 1.5 ? b.restitution : 0.0;
-                        if (!isMinimized && Math.abs(b.vy) > 1.5) playMarbleClack(Math.abs(b.vy) * 2, false);
+                        let bounce = Math.abs(b.vy) > 0.5 ? b.restitution * 0.85 : 0.0;
+                        if (!isHiddenOrMin && Math.abs(b.vy) > 3.0) playMarbleClack(Math.abs(b.vy) * 2, false);
                         b.vy *= -bounce;
                     }
                 }
@@ -1747,29 +1758,27 @@
                 if (b.x > maxTrayX) { 
                     b.x = maxTrayX; 
                     if (iter === 0 && b.vx > 0) {
-                        let bounce = Math.abs(b.vx) > 1.5 ? b.restitution : 0.0;
-                        if (!isMinimized && Math.abs(b.vx) > 1.5) playMarbleClack(Math.abs(b.vx) * 2, false);
+                        let bounce = Math.abs(b.vx) > 0.5 ? b.restitution * 0.85 : 0.0;
+                        if (!isHiddenOrMin && Math.abs(b.vx) > 3.0) playMarbleClack(Math.abs(b.vx) * 2, false);
                         b.vx *= -bounce; 
                     }
                 }
                 if (b.x < minTrayX) { 
                     b.x = minTrayX; 
                     if (iter === 0 && b.vx < 0) {
-                        let bounce = Math.abs(b.vx) > 1.5 ? b.restitution : 0.0;
-                        if (!isMinimized && Math.abs(b.vx) > 1.5) playMarbleClack(Math.abs(b.vx) * 2, false);
+                        let bounce = Math.abs(b.vx) > 0.5 ? b.restitution * 0.85 : 0.0;
+                        if (!isHiddenOrMin && Math.abs(b.vx) > 3.0) playMarbleClack(Math.abs(b.vx) * 2, false);
                         b.vx *= -bounce; 
                     }
                 }
 
-                let testX = b.x;
+                let testX = b.x; 
                 let testY = b.y;
-                if (b.x < baseLeft) testX = baseLeft;
-                else if (b.x > baseRight) testX = baseRight;
-                if (b.y < baseTop) testY = baseTop;
-                else if (b.y > baseBottom) testY = baseBottom;
+                if (b.x < baseLeft) testX = baseLeft; else if (b.x > baseRight) testX = baseRight;
+                if (b.y < baseTop) testY = baseTop; else if (b.y > baseBottom) testY = baseBottom;
 
-                let distX = b.x - testX;
-                let distY = b.y - testY;
+                let distX = b.x - testX; 
+                let distY = b.y - testY; 
                 let distance = Math.sqrt((distX*distX) + (distY*distY));
 
                 if (distance <= bR) {
@@ -1777,24 +1786,24 @@
                         b.y = baseTop - bR;
                         if (iter === 0 && b.vy > 0) b.vy *= -b.restitution;
                     } else {
-                        let nx = distX / distance;
+                        let nx = distX / distance; 
                         let ny = distY / distance;
-                        b.x = testX + nx * bR;
+                        b.x = testX + nx * bR; 
                         b.y = testY + ny * bR;
 
                         if (iter === 0) {
                             let dot = b.vx * nx + b.vy * ny;
                             if (dot < 0) {
-                                let bounce = Math.abs(dot) > 1.5 ? b.restitution : 0.0; 
-                                b.vx -= (1 + bounce) * dot * nx;
+                                let bounce = Math.abs(dot) > 0.5 ? b.restitution * 0.85 : 0.0; 
+                                b.vx -= (1 + bounce) * dot * nx; 
                                 b.vy -= (1 + bounce) * dot * ny;
                                 
-                                let tx = -ny, ty = nx;
+                                let tx = -ny, ty = nx; 
                                 let tanDot = b.vx * tx + b.vy * ty;
-                                b.vx -= tanDot * tx * 0.02;
-                                b.vy -= tanDot * ty * 0.02;
+                                b.vx -= tanDot * tx * 0.05; 
+                                b.vy -= tanDot * ty * 0.05;
 
-                                if (!isMinimized && Math.abs(dot) > 1.5) {
+                                if (!isHiddenOrMin && Math.abs(dot) > 3.0) {
                                     playMarbleClack(Math.abs(dot) * 2, false);
                                 }
                             }
@@ -1804,34 +1813,28 @@
             });
         }
         
+        // Kinetic settling friction
         dispensedBalls.forEach(b => {
             if (b === gachaState.draggedBall) return;
-            let speed = Math.hypot(b.vx, b.vy);
-            if (speed < 0.3) b.sleepFrames = (b.sleepFrames || 0) + 1;
-            else b.sleepFrames = 0;
-
-            if (b.sleepFrames > 15) {
-                b.vx = 0; b.vy = 0;
-                b.isSleeping = true;
-            } else {
-                b.isSleeping = false;
-            }
+            let speedSq = b.vx*b.vx + b.vy*b.vy;
+            if (speedSq < 0.05) { b.vx *= 0.8; b.vy *= 0.8; }
         });
     }
 
     function gachaLoop() {
         if (!document.getElementById('gachaCanvas')) return;
         const gachaModule = document.getElementById('gacha-module');
-        const isMinimized = gachaModule && gachaModule.classList.contains('minimized');
+        const isHiddenOrMin = gachaModule && (gachaModule.classList.contains('minimized') || gachaModule.style.display === 'none');
 
-        let now = performance.now(); const canvas = document.getElementById('gachaCanvas');
-        const ratio = window.devicePixelRatio || 1; const sizePx = canvas.width / ratio;
+        let now = performance.now(); 
+        const canvas = document.getElementById('gachaCanvas');
+        const ratio = window.devicePixelRatio || 1; 
+        const sizePx = canvas.width / ratio;
         if (sizePx <= 0) return;
         
-        const R = sizePx / 3.4, cx = sizePx / 2, domeCy = sizePx * 0.33, chuteY = domeCy + R * 1.5;
+        const R = sizePx / 3.4, cx = sizePx / 2, domeCy = sizePx * 0.33, chuteY = domeCy + R * 1.75;
 
-        // --- MINIMIZED CULLING (Skip Physics & Audio) ---
-        if (isMinimized) {
+        if (isHiddenOrMin) {
             if (isSpinning) {
                 if (gachaState.knobTarget !== null) {
                     gachaState.knobAngle = gachaState.knobTarget;
@@ -1846,37 +1849,59 @@
                     }
                     dispensingBall = {
                         prized: gachaState.targetItem.prized, 
-                        x: cx, y: sizePx - R/5, // instantly place at bottom
+                        x: cx, y: sizePx - R/5,
                         vx: 0, vy: 0, rotation: 0, starRotation: 0, scale: 1,
                         restitution: 0.72, bounceCount: 0, isSleeping: true, sleepFrames: 20
                     };
                     dispensedBalls.push(dispensingBall);
                     if (dispensedBalls.length > 10) dispensedBalls.shift();
                 }
-                requestAnimationFrame(gachaLoop); // Keep tracking spin time
+                requestAnimationFrame(gachaLoop); 
             } else {
-                gachaState.awake = false; // Freeze entirely
+                gachaState.awake = false; 
             }
-            return; // Skip O(N^2) Physics completely
+            return; 
         }
 
         if (!gachaState.isMachineGrabbed && (Math.abs(gachaState.machineX) > 0.1 || Math.abs(gachaState.machineY) > 0.1)) {
-            gachaState.machineX *= 0.8; gachaState.machineY *= 0.8; 
+            let springX = gachaState.machineX * -0.2; 
+            let springY = gachaState.machineY * -0.2;
+            
+            gachaState.machineX *= 0.8; 
+            gachaState.machineY *= 0.8; 
+            
+            if (window.cachedGacha) { 
+                window.cachedGacha.forEach(b => { 
+                    b.vx += springX * 0.1; b.vy += springY * 0.1;
+                }); 
+            }
+            if (dispensedBalls) { 
+                // Physically translate tray balls with the spring back
+                dispensedBalls.forEach(b => { 
+                    b.x += springX; b.y += springY; b.vx += springX * 0.1; b.vy += springY * 0.1;
+                }); 
+            }
         }
 
         if (isSpinning) {
             if (gachaState.knobTarget !== null && !gachaState.isKnobGrabbed) {
-                if (gachaState.knobAngle < gachaState.knobTarget) { gachaState.knobV = 0.25; } 
-                else { gachaState.knobAngle = gachaState.knobTarget; gachaState.knobTarget = null; gachaState.knobV = 0; }
+                if (gachaState.knobAngle < gachaState.knobTarget) { 
+                    gachaState.knobV = 0.25; 
+                } else { 
+                    gachaState.knobAngle = gachaState.knobTarget; gachaState.knobTarget = null; gachaState.knobV = 0; 
+                }
             }
 
-            const elapsed = now - gachaState.spinStartTime; const dropTimeMs = 2800; 
-            if (elapsed < dropTimeMs) { updateGachaPhysics(R, "chaos"); } 
-            else {
+            const elapsed = now - gachaState.spinStartTime; 
+            const dropTimeMs = 2800; 
+            
+            if (elapsed < dropTimeMs) { 
+                updateGachaPhysics(R, "chaos"); 
+            } else {
                 updateGachaPhysics(R, "settle");
                 if (!gachaState.hasDropped) {
-                    gachaState.hasDropped = true;
-                    if (!isMinimized) playDispense();
+                    gachaState.hasDropped = true; 
+                    if (!isHiddenOrMin) playDispense();
 
                     if (window.cachedGacha) {
                         let dBallIdx = window.cachedGacha.findIndex(b => b.isDispensing);
@@ -1899,33 +1924,33 @@
             updateGachaPhysics(R, "settle");
         }
 
-        gachaState.knobAngle += gachaState.knobV;
+        gachaState.knobAngle += gachaState.knobV; 
         gachaState.knobV *= 0.8; 
 
         let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5;
-        updateTrayBalls(sizePx, bR, isMinimized);
+        updateTrayBalls(sizePx, bR, isHiddenOrMin);
 
-        if (!isMinimized) drawGacha();
+        if (!isHiddenOrMin) drawGacha();
 
         let allSleeping = true;
-        let maxSpeed = 0;
         if (window.cachedGacha) {
             window.cachedGacha.forEach(b => {
-                if (!b.isSleeping) allSleeping = false;
-                let speed = Math.abs(b.vx) + Math.abs(b.vy);
-                if (speed > maxSpeed) maxSpeed = speed;
+                let speedSq = b.vx*b.vx + b.vy*b.vy;
+                if (speedSq > 0.01) allSleeping = false;
             });
         }
 
         let hasEffects = (gachaState.sparkles && gachaState.sparkles.length > 0) || (gachaState.prizeConfetti && gachaState.prizeConfetti.length > 0);
         let trayMoving = false;
+        
         dispensedBalls.forEach(b => {
-            if (!b.isSleeping) allSleeping = false;
-            if (Math.abs(b.vx) > 0.25 || Math.abs(b.vy) > 0.25 || gachaState.draggedBall === b) trayMoving = true;
+            let speedSq = b.vx*b.vx + b.vy*b.vy;
+            if (speedSq > 0.01) allSleeping = false;
+            if (speedSq > 0.05 || gachaState.draggedBall === b) trayMoving = true;
             if (b.prized) hasEffects = true;
         });
 
-        if (maxSpeed < 0.3 && !trayMoving && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasEffects) {
+        if (allSleeping && !trayMoving && !gachaState.draggedBall && !isSpinning && !gachaState.isMachineGrabbed && Math.abs(gachaState.machineX) < 0.5 && Math.abs(gachaState.knobV) < 0.01 && !hasEffects) {
             gachaState.idleFrames++;
             if (gachaState.idleFrames > 30) { 
                 if (window.cachedGacha) { window.cachedGacha.forEach(b => { b.vx = 0; b.vy = 0; b.vz = 0; }); }
@@ -1933,7 +1958,9 @@
                 gachaState.awake = false; 
                 return; 
             }
-        } else { gachaState.idleFrames = 0; }
+        } else {
+            gachaState.idleFrames = 0; 
+        }
         
         if (gachaState.awake || isSpinning || Math.abs(gachaState.machineX) > 0.5 || Math.abs(gachaState.knobV) > 0.01 || hasEffects || !allSleeping) { 
             requestAnimationFrame(gachaLoop); 
@@ -2012,59 +2039,14 @@
             }
         }
 
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        if(ctx.roundRect) ctx.roundRect(cx - R*0.75, domeCy + R*0.5, R*1.5, R*1.8, R*0.2);
-        else ctx.fillRect(cx - R*0.75, domeCy + R*0.5, R*1.5, R*1.8);
-        ctx.fill();
-        ctx.strokeStyle = '#b91c1c'; ctx.lineWidth = 4; ctx.stroke();
-
-        ctx.fillStyle = '#e2e8f0';
-        ctx.beginPath();
-        if(ctx.roundRect) ctx.roundRect(cx - R*0.4, domeCy + R*0.8, R*0.8, R*1.0, R*0.1);
-        else ctx.fillRect(cx - R*0.4, domeCy + R*0.8, R*0.8, R*1.0);
-        ctx.fill();
-        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2; ctx.stroke();
-        
-        ctx.fillStyle = '#94a3b8';
-        [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(pos => {
-            ctx.beginPath(); ctx.arc(cx + (pos[0]*R*0.3), domeCy + R*1.3 + (pos[1]*R*0.4), R*0.04, 0, Math.PI*2); ctx.fill();
-        });
-
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        if(ctx.roundRect) ctx.roundRect(cx - R*0.2, domeCy + R*1.45, R*0.4, R*0.25, R*0.05);
-        else ctx.fillRect(cx - R*0.2, domeCy + R*1.45, R*0.4, R*0.25);
-        ctx.fill();
-
-        let trayGrad = ctx.createLinearGradient(cx, domeCy + R * 2.1, cx, domeCy + R * 2.1 + R*0.15);
-        trayGrad.addColorStop(0, '#94a3b8'); trayGrad.addColorStop(1, '#475569');
-        ctx.fillStyle = trayGrad; 
-        ctx.beginPath();
-        if(ctx.roundRect) ctx.roundRect(cx - R*0.8, domeCy + R * 2.1, R*1.6, R*0.15, R*0.05);
-        else ctx.fillRect(cx - R*0.8, domeCy + R * 2.1, R*1.6, R*0.15);
-        ctx.fill(); ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1; ctx.stroke();
-
-        ctx.save();
-        ctx.translate(cx, domeCy + R * 1.1);
-        ctx.rotate(gachaState.knobAngle || 0);
-        ctx.fillStyle = '#64748b'; 
-        ctx.beginPath(); ctx.arc(0, 0, R*0.3, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#ef4444'; 
-        ctx.beginPath();
-        if(ctx.roundRect) ctx.roundRect(-R*0.35, -R*0.1, R*0.7, R*0.2, R*0.08);
-        else ctx.fillRect(-R*0.35, -R*0.1, R*0.7, R*0.2);
-        ctx.fill();
-        ctx.fillStyle = '#1e293b'; 
-        ctx.beginPath(); ctx.arc(0, 0, R*0.08, 0, Math.PI*2); ctx.fill();
-        ctx.restore();
-
+        // 1. DOME BACKGROUND
         ctx.beginPath(); ctx.arc(cx, domeCy, R, 0, Math.PI * 2);
         ctx.fillStyle = '#e2e8f0'; ctx.fill();
         let innerShadow = ctx.createRadialGradient(cx, domeCy, R*0.8, cx, domeCy, R);
         innerShadow.addColorStop(0, 'rgba(0,0,0,0)'); innerShadow.addColorStop(1, 'rgba(0,0,0,0.3)');
         ctx.fillStyle = innerShadow; ctx.fill();
 
+        // 2. BALLS (INSIDE DOME)
         if (window.cachedGacha) {
             let renderList = [...window.cachedGacha].sort((a,b) => (a.z || 0) - (b.z || 0));
             renderList.forEach(b => {
@@ -2094,8 +2076,8 @@
             });
         }
 
+        // 3. DOME FOREGROUND / SHINE
         ctx.beginPath(); ctx.arc(cx, domeCy, R, 0, Math.PI * 2);
-        
         if (gachaState.prizeDropTime) {
             let elapsed = performance.now() - gachaState.prizeDropTime;
             if (elapsed < 3000) {
@@ -2105,22 +2087,71 @@
                 ctx.strokeStyle = `rgba(254, 240, 138, ${intensity})`;
                 ctx.lineWidth = 2 + (2 * intensity);
             } else {
-                ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1; 
-                ctx.shadowBlur = 0;
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1; ctx.shadowBlur = 0;
             }
         } else {
             ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1; 
         }
         ctx.stroke();
         ctx.shadowBlur = 0; 
-        
         ctx.beginPath(); ctx.arc(cx, domeCy, R, Math.PI * 1.1, Math.PI * 1.9, false);
         ctx.arc(cx, domeCy - R*0.2, R*0.8, Math.PI * 1.9, Math.PI * 1.1, true);
         ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fill();
 
+        // 4. RED MACHINE BODY (COVERS BOTTOM OF DOME)
         ctx.fillStyle = '#ef4444';
         ctx.beginPath();
-        // Base structure
+        if(ctx.roundRect) ctx.roundRect(cx - R*0.75, domeCy + R*0.85, R*1.5, R*1.45, R*0.2);
+        else ctx.fillRect(cx - R*0.75, domeCy + R*0.85, R*1.5, R*1.45);
+        ctx.fill();
+        ctx.strokeStyle = '#b91c1c'; ctx.lineWidth = 4; ctx.stroke();
+
+        // 5. SILVER TRAY PANEL
+        ctx.fillStyle = '#e2e8f0';
+        ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(cx - R*0.4, domeCy + R*1.15, R*0.8, R*0.9, R*0.1);
+        else ctx.fillRect(cx - R*0.4, domeCy + R*1.15, R*0.8, R*0.9);
+        ctx.fill();
+        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2; ctx.stroke();
+        
+        ctx.fillStyle = '#94a3b8';
+        [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(pos => {
+            ctx.beginPath(); ctx.arc(cx + (pos[0]*R*0.3), domeCy + R*1.6 + (pos[1]*R*0.3), R*0.04, 0, Math.PI*2); ctx.fill();
+        });
+
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(cx - R*0.2, domeCy + R*1.75, R*0.4, R*0.25, R*0.05);
+        else ctx.fillRect(cx - R*0.2, domeCy + R*1.75, R*0.4, R*0.25);
+        ctx.fill();
+
+        // 6. KNOB
+        ctx.save();
+        ctx.translate(cx, domeCy + R * 1.35);
+        ctx.rotate(gachaState.knobAngle || 0);
+        ctx.fillStyle = '#64748b'; 
+        ctx.beginPath(); ctx.arc(0, 0, R*0.3, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#ef4444'; 
+        ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(-R*0.35, -R*0.1, R*0.7, R*0.2, R*0.08);
+        else ctx.fillRect(-R*0.35, -R*0.1, R*0.7, R*0.2);
+        ctx.fill();
+        ctx.fillStyle = '#1e293b'; 
+        ctx.beginPath(); ctx.arc(0, 0, R*0.08, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+
+        // 7. BOTTOM TRAY LIP
+        let trayGrad = ctx.createLinearGradient(cx, domeCy + R * 2.1, cx, domeCy + R * 2.1 + R*0.15);
+        trayGrad.addColorStop(0, '#94a3b8'); trayGrad.addColorStop(1, '#475569');
+        ctx.fillStyle = trayGrad; 
+        ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(cx - R*0.8, domeCy + R * 2.1, R*1.6, R*0.15, R*0.05);
+        else ctx.fillRect(cx - R*0.8, domeCy + R * 2.1, R*1.6, R*0.15);
+        ctx.fill(); ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1; ctx.stroke();
+
+        // 8. TOP CAP
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
         ctx.arc(cx, domeCy, R + 2, Math.PI * 1.333, Math.PI * 1.666);
         ctx.lineTo(cx + R*0.35, domeCy - R*1.15);
         ctx.lineTo(cx - R*0.35, domeCy - R*1.15);
@@ -2135,6 +2166,41 @@
         ctx.fill();
         ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; ctx.stroke();
         
+        ctx.restore(); // Restore machine translation here, BEFORE dispensed balls
+
+        // 9. DISPENSED BALLS
+        dispensedBalls.forEach(ballToDraw => {
+            ctx.save(); ctx.translate(ballToDraw.x, ballToDraw.y);
+            let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5; 
+            
+            if (ballToDraw.prized) {
+                ctx.shadowBlur = 18;
+                ctx.shadowColor = '#facc15';
+            }
+            
+            ctx.save(); ctx.rotate(ballToDraw.rotation || 0);
+            let bGrad = ctx.createRadialGradient(0, 0, bR*0.1, 0, 0, bR);
+            if (ballToDraw.prized) {
+                bGrad.addColorStop(0, '#fef08a'); bGrad.addColorStop(0.3, '#facc15'); bGrad.addColorStop(1, '#a16207');
+            } else {
+                bGrad.addColorStop(0, '#f1f5f9'); bGrad.addColorStop(0.3, '#94a3b8'); bGrad.addColorStop(1, '#334155');
+            }
+            ctx.beginPath(); ctx.arc(0, 0, bR, 0, Math.PI*2); ctx.fillStyle = bGrad; ctx.fill();
+            ctx.restore();
+
+            if (ballToDraw.prized) {
+                ctx.save(); ctx.rotate(ballToDraw.starRotation || 0);
+                ctx.fillStyle = '#713f12'; ctx.font = `bold ${Math.floor(bR * 1.2)}px Arial`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('★', 0, 1);
+                ctx.restore();
+            }
+
+            ctx.shadowBlur = 0; 
+            ctx.beginPath(); ctx.arc(-bR*0.25, -bR*0.35, bR*0.25, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
+            ctx.restore();
+        });
+        
+        // 10. EFFECTS
         if (gachaState.prizeConfetti && gachaState.prizeConfetti.length > 0) {
             for (let i = gachaState.prizeConfetti.length - 1; i >= 0; i--) {
                 let c = gachaState.prizeConfetti[i];
@@ -2170,39 +2236,6 @@
             }
             ctx.restore();
         }
-        
-        ctx.restore();
-
-        dispensedBalls.forEach(ballToDraw => {
-            ctx.save(); ctx.translate(ballToDraw.x, ballToDraw.y);
-            let bR = window.cachedGacha && window.cachedGacha[0] ? window.cachedGacha[0].r : R/5; 
-            
-            if (ballToDraw.prized) {
-                ctx.shadowBlur = 18;
-                ctx.shadowColor = '#facc15';
-            }
-            
-            ctx.save(); ctx.rotate(ballToDraw.rotation || 0);
-            let bGrad = ctx.createRadialGradient(0, 0, bR*0.1, 0, 0, bR);
-            if (ballToDraw.prized) {
-                bGrad.addColorStop(0, '#fef08a'); bGrad.addColorStop(0.3, '#facc15'); bGrad.addColorStop(1, '#a16207');
-            } else {
-                bGrad.addColorStop(0, '#f1f5f9'); bGrad.addColorStop(0.3, '#94a3b8'); bGrad.addColorStop(1, '#334155');
-            }
-            ctx.beginPath(); ctx.arc(0, 0, bR, 0, Math.PI*2); ctx.fillStyle = bGrad; ctx.fill();
-            ctx.restore();
-
-            if (ballToDraw.prized) {
-                ctx.save(); ctx.rotate(ballToDraw.starRotation || 0);
-                ctx.fillStyle = '#713f12'; ctx.font = `bold ${Math.floor(bR * 1.2)}px Arial`;
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('★', 0, 1);
-                ctx.restore();
-            }
-
-            ctx.shadowBlur = 0; 
-            ctx.beginPath(); ctx.arc(-bR*0.25, -bR*0.35, bR*0.25, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
-            ctx.restore();
-        });
     }
 
     function triggerGachaConfetti() {
@@ -2277,7 +2310,7 @@
         const content = canvas.parentElement; if (!content) return;
 
         const module = document.getElementById('wheel-module');
-        if (module && module.classList.contains('minimized')) return;
+        if (module && (module.classList.contains('minimized') || module.style.display === 'none')) return;
 
         let boxW = content.clientWidth, boxH = content.clientHeight;
         if (boxW === 0 || boxH === 0) { boxW = 320; boxH = 320; }
@@ -2290,7 +2323,6 @@
         const cx = sizePx / 2, cy = sizePx / 2, r = (sizePx / 2) - 4;
         ctx.clearRect(0, 0, sizePx, sizePx);
 
-        // AURA GLOW
         let isWheelGlowing = false;
         if (wheelWinTime) {
             let elapsed = performance.now() - wheelWinTime;
@@ -2331,7 +2363,6 @@
             ctx.fillStyle = isHovered ? "#3b82f6" : (s.prized ? "#ffc107" : (i % 2 === 0 ? "#f1f5f9" : "#ffffff"));
             ctx.fill(); ctx.strokeStyle = isHovered ? "#1d4ed8" : "#cbd5e1"; ctx.lineWidth = isHovered ? 2 : 1; ctx.stroke();
             
-            // Draw Peg
             ctx.beginPath();
             ctx.arc(cx + Math.cos(startAngle) * (r - 6), cy + Math.sin(startAngle) * (r - 6), 3, 0, Math.PI*2);
             ctx.fillStyle = '#e2e8f0'; ctx.fill();
@@ -2354,11 +2385,9 @@
             ctx.restore();
         });
 
-        // Center Nub
         ctx.beginPath(); ctx.arc(cx, cy, 9, 0, Math.PI * 2); ctx.fillStyle = "#1e293b"; ctx.fill();
         ctx.strokeStyle = "white"; ctx.lineWidth = 2.5; ctx.stroke();
 
-        // SPARKLES
         if (wheelSparkles && wheelSparkles.length > 0) {
             ctx.save();
             ctx.shadowBlur = 10; ctx.shadowColor = '#facc15';
@@ -2373,7 +2402,6 @@
             isWheelGlowing = true;
         }
 
-        // CONFETTI
         if (wheelConfetti && wheelConfetti.length > 0) {
             for (let i = wheelConfetti.length - 1; i >= 0; i--) {
                 let c = wheelConfetti[i];
@@ -2396,7 +2424,6 @@
             isWheelGlowing = true;
         }
 
-        // Flipper Spring Physics - Redesigned to strict physical pixel coordinates
         let wheelVel = currentRotationOffset - lastWheelRot;
         if (wheelVel > Math.PI) wheelVel -= Math.PI * 2;
         if (wheelVel < -Math.PI) wheelVel += Math.PI * 2;
@@ -2409,23 +2436,21 @@
         let forceDeflect = 0;
         let isForced = false;
         
-        // Exact pixel geometry of the flipper and pegs
-        let rPegs = Math.max(10, (sizePx / 2) - 10); // Safe peg radius track
-        let contactAngle = Math.min(2.5 / rPegs, step * 0.3); // Touches 2.5px before center
-        let slipOffset = contactAngle + Math.min(8 / rPegs, step * 0.5); // Slides 8px total before slipping
+        let rPegs = Math.max(10, (sizePx / 2) - 10); 
+        let contactAngle = Math.min(2.5 / rPegs, step * 0.3); 
+        let slipOffset = contactAngle + Math.min(8 / rPegs, step * 0.5); 
         
-        // Map nearest peg strictly to [-step/2, step/2]
         let localPeg = currentRotationOffset % step;
         if (localPeg < 0) localPeg += step;
         if (localPeg > step / 2) localPeg -= step;
 
-        if (smoothedVel >= 0) { // Clockwise
+        if (smoothedVel >= 0) { 
             if (localPeg >= -contactAngle && localPeg <= slipOffset) {
                 let progress = (localPeg + contactAngle) / (contactAngle + slipOffset);
                 forceDeflect = progress * -40; 
                 isForced = true;
             }
-        } else { // Anti-Clockwise
+        } else { 
             if (localPeg <= contactAngle && localPeg >= -slipOffset) {
                 let progress = (contactAngle - localPeg) / (contactAngle + slipOffset);
                 forceDeflect = progress * 40; 
@@ -2442,15 +2467,14 @@
             flipperAngle += flipperV;
         }
         
-        // Pure O(1) mathematical continuous slip tracking independent of framerate
         let absPeg = currentRotationOffset / step;
         let slipped = false;
         if (gachaState.lastAbsPeg !== undefined) {
             let vel = absPeg - gachaState.lastAbsPeg;
-            if (vel > 0) { // CW movement over frame
+            if (vel > 0) { 
                 let slipPoint = slipOffset / step;
                 if (Math.floor(gachaState.lastAbsPeg - slipPoint) < Math.floor(absPeg - slipPoint)) slipped = true;
-            } else if (vel < 0) { // ACW movement over frame
+            } else if (vel < 0) { 
                 let slipPoint = -slipOffset / step;
                 if (Math.ceil(gachaState.lastAbsPeg - slipPoint) > Math.ceil(absPeg - slipPoint)) slipped = true;
             }
@@ -2461,19 +2485,17 @@
             if (isSpinning || wheelDragState || Math.abs(smoothedVel) > 0.005) {
                 triggerHaptic();
                 playPegHit();
-                // Apply visual kick if it was spinning so fast it completely skipped the contact frame
                 if (!isForced && Math.abs(flipperAngle) < 15) {
                     flipperV = (smoothedVel >= 0) ? -45 : 45; 
                 }
             }
         }
 
-        // Draw physical flipper strictly mapped to canvas geometry to guarantee perfect touch alignment
         ctx.save();
-        ctx.translate(cx + rPegs + 12, cy); // Anchor point exactly 12px right of peg circle
+        ctx.translate(cx + rPegs + 12, cy); 
         ctx.rotate(flipperAngle * Math.PI / 180);
         ctx.beginPath();
-        ctx.moveTo(-14, 0); // Tip reaches exactly to `rPegs - 2`, perfectly intercepting 3px peg radius
+        ctx.moveTo(-14, 0); 
         ctx.lineTo(10, -6);
         ctx.lineTo(10, 6);
         ctx.closePath();
@@ -2483,7 +2505,6 @@
         ctx.strokeStyle = '#1e293b';
         ctx.stroke();
         
-        // Flipper pivot dot
         ctx.beginPath();
         ctx.arc(6, 0, 2.5, 0, Math.PI * 2);
         ctx.fillStyle = '#1e293b';
@@ -2660,23 +2681,39 @@
     let currentSpinId = 0;
     
     async function recordSpin(id, isUser) {
-        const item = inventory[id];
+        const item = inventory.find(i => i.id === id); 
         if (!item || item.remaining <= 0) return;
         
-        let mySpinId = ++currentSpinId;
-        isSpinning = true; hoveredSegmentIndex = -1;
+        let mySpinId = ++currentSpinId; 
+        isSpinning = true; 
+        hoveredSegmentIndex = -1; 
+        hidePreview();
         
         try {
-            prepareScrollerSpin(item); prepareGachaSpin(item); prepareWheelSpin(item);
+            prepareScrollerSpin(item); 
+            prepareGachaSpin(item); 
+            prepareWheelSpin(item);
             
             const bid = parseFloat(document.getElementById('bid-input').value || 0);
-            if (isUser) { sessionStats.spent += bid; sessionStats.won += item.value; }
-            history.unshift({ label: item.label, hitValue: item.value, bidValue: bid, isUser, time: new Date().toLocaleTimeString() });
+            
+            if (isUser) { 
+                sessionStats.spent += bid; 
+                sessionStats.won += item.value; 
+            }
+            
+            history.unshift({ 
+                label: item.label, 
+                hitValue: item.value, 
+                bidValue: bid, 
+                isUser, 
+                time: new Date().toLocaleTimeString() 
+            });
+            
             item.remaining--;
             
             rebuildDOMFromInventory(); 
             updateHistoryUI(); 
-            updateOddsTable();
+            updateOddsTable(); 
             syncAndUI(); 
 
             await new Promise(r => setTimeout(r, 4000));
@@ -2685,14 +2722,17 @@
             isSpinning = false;
             
             if (item.prized) {
-                playWin();
-                gachaState.prizeDropTime = performance.now();
-                triggerGachaConfetti();
+                playWin(); 
+                gachaState.prizeDropTime = performance.now(); 
+                triggerGachaConfetti(); 
                 triggerWheelWinGlow();
+                
                 const wrapper = document.getElementById('main-scroller-wrapper');
-                if (wrapper && !wrapper.closest('.card').classList.contains('minimized')) {
-                    wrapper.classList.add('prize-glow');
-                    setTimeout(() => { if (wrapper) wrapper.classList.remove('prize-glow'); }, 3000);
+                if (wrapper && !wrapper.closest('.card').classList.contains('minimized') && wrapper.closest('.card').style.display !== 'none') { 
+                    wrapper.classList.add('prize-glow'); 
+                    setTimeout(() => { 
+                        if (wrapper) wrapper.classList.remove('prize-glow'); 
+                    }, 3000); 
                 }
                 await new Promise(r => setTimeout(r, 3000));
             }
@@ -2700,20 +2740,208 @@
         } finally {
             if (currentSpinId === mySpinId) {
                 isSpinning = false; 
-                if (isNaN(wheelSpinAngle)) wheelSpinAngle = 0; wheelSpinAngle = wheelSpinAngle % (Math.PI * 2); 
-                rebuildDOMFromInventory(); syncAndUI();
+                if (isNaN(wheelSpinAngle)) wheelSpinAngle = 0; 
+                wheelSpinAngle = wheelSpinAngle % (Math.PI * 2); 
+                
+                if (window.cachedGacha) window.cachedGacha.hash = inventory.map(i => i.remaining).join('-'); // Prevent Gacha Teleport
+                
+                rebuildDOMFromInventory(); 
+                syncAndUI();
                 
                 const autoRollCb = document.getElementById('auto-roll-checkbox');
                 if (autoRollCb && autoRollCb.checked) {
                     const totalLeft = inventory.reduce((sum, i) => sum + i.remaining, 0);
-                    if (totalLeft > 0) {
-                        setTimeout(simulateResult, 200);
-                    } else {
-                        autoRollCb.checked = false;
+                    if (totalLeft > 0) { 
+                        setTimeout(simulateResult, 200); 
+                    } else { 
+                        autoRollCb.checked = false; 
                     }
                 }
             }
         }
+    }
+
+    function updateStatsUI(inv, stats, isPreview = false) {
+        let totalSlots = 0, sumValues = 0, prizeVal = 0, prizeQty = 0;
+        const bid = parseFloat(document.getElementById('bid-input').value || 0);
+        
+        inv.forEach(item => {
+            totalSlots += item.remaining; sumValues += (item.value * item.remaining);
+            if (item.prized) { prizeQty += item.remaining; prizeVal += (item.value * item.remaining); }
+        });
+        
+        const ev = totalSlots > 0 ? sumValues / totalSlots : 0;
+
+        safeSet('stat-ev', `£${ev.toFixed(2)}`); 
+        safeSet('stat-slots', totalSlots);
+        safeSet('stat-prize-prob', `${totalSlots > 0 ? (prizeQty / totalSlots * 100).toFixed(0) : 0}%`);
+        safeSet('stat-avg-prize', `£${prizeQty > 0 ? (prizeVal / prizeQty).toFixed(2) : '0.00'}`);
+        safeSet('setup-total-slots-info', `Total Slots: ${totalSlots}`);
+        
+        let diffPerc = 0;
+        if (appMode === 'buyer') { diffPerc = bid > 0 ? ((ev - bid) / bid * 100) : 0; } 
+        else { diffPerc = ev > 0 ? ((bid - ev) / ev * 100) : 0; }
+        safeSet('stat-diff-perc', `${diffPerc.toFixed(2)}%`);
+        
+        const cardEv = document.getElementById('card-ev');
+        if (cardEv && !isPreview) {
+            if (appMode === 'buyer') { cardEv.style.borderLeft = `10px solid ${ev >= bid * 1.1 ? 'var(--success)' : (ev >= bid ? 'var(--warning)' : 'var(--danger)')}`; } 
+            else { cardEv.style.borderLeft = `10px solid ${bid >= ev * 1.1 ? 'var(--success)' : (bid >= ev ? 'var(--warning)' : 'var(--danger)')}`; }
+        }
+
+        const profit = stats.won - stats.spent;
+        safeSet('total-spent', `£${stats.spent.toFixed(2)}`); 
+        safeSet('total-won', `£${stats.won.toFixed(2)}`);
+        const net = document.getElementById('total-net'); 
+        if (net) { net.innerText = `£${profit.toFixed(2)}`; net.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)'; }
+
+        const probBar = document.getElementById('prob-bar-container');
+        if (probBar) {
+            probBar.innerHTML = '';
+            if (totalSlots > 0) {
+                inv.forEach(item => {
+                    if (item.remaining > 0) {
+                        const perc = (item.remaining / totalSlots) * 100;
+                        const block = document.createElement('div'); block.className = 'prob-segment'; block.style.width = `${perc}%`;
+                        block.style.backgroundColor = item.prized ? 'var(--prize-color)' : '#94a3b8';
+                        block.title = `${item.label}: ${perc.toFixed(1)}%`; probBar.appendChild(block);
+                    }
+                });
+            }
+        }
+    }
+
+    function showPreview(id, isUser) {
+        if (isSpinning) return;
+        const simInv = JSON.parse(JSON.stringify(inventory));
+        const simStats = JSON.parse(JSON.stringify(sessionStats));
+        const item = simInv.find(i => i.id === id);
+        if (!item || item.remaining <= 0) return;
+        
+        item.remaining--;
+        const bid = parseFloat(document.getElementById('bid-input').value || 0);
+        if (isUser) { simStats.spent += bid; simStats.won += item.value; }
+        
+        document.body.classList.add('is-previewing');
+        updateStatsUI(simInv, simStats, true);
+    }
+
+    function hidePreview() {
+        if (isSpinning) return;
+        document.body.classList.remove('is-previewing');
+        updateStatsUI(inventory, sessionStats, false);
+    }
+
+    function syncAndUI() {
+        const rows = document.querySelectorAll('.slot-row');
+        inventory = Array.from(rows).map((row, i) => ({
+            id: i, 
+            label: row.querySelector('.label-input').value || `Res ${i+1}`,
+            value: parseFloat(row.querySelector('.val-input').value || 0),
+            remaining: parseInt(row.querySelector('.slot-input').value || 0),
+            prized: row.querySelector('.prize-toggle').classList.contains('active')
+        }));
+        
+        updateStatsUI(inventory, sessionStats, false);
+        
+        const container = document.getElementById('spin-buttons'); 
+        container.innerHTML = '';
+        
+        inventory.forEach(item => {
+            if (item.remaining > 0) {
+                const group = document.createElement('div'); 
+                group.className = 'hit-group';
+                
+                let itemColor = 'var(--primary)'; 
+                const tMatch = templates.find(t => t.label === item.label); 
+                if (tMatch) itemColor = tMatch.color;
+                
+                const starHTML = item.prized ? '<span style="color:var(--prize-color); text-shadow: 0 0 2px rgba(255,193,7,0.5);">★</span> ' : '';
+                
+                let totalSlots = 0, sumValues = 0;
+                inventory.forEach(i => { totalSlots += i.remaining; sumValues += (i.value * i.remaining); });
+                
+                const ev = totalSlots > 0 ? sumValues / totalSlots : 0;
+                let nextEv = totalSlots > 1 ? (sumValues - item.value) / (totalSlots - 1) : 0;
+                let evDiff = nextEv - ev;
+                let evColor = evDiff > 0.01 ? 'var(--success)' : (evDiff < -0.01 ? 'var(--danger)' : '#64748b');
+                let evIcon = evDiff > 0.01 ? '▲' : (evDiff < -0.01 ? '▼' : '-');
+
+                const boughtBtnHTML = appMode === 'buyer' ? `<button class="btn-hit-me" style="background:${itemColor}">BOUGHT</button>` : '';
+                
+                let prob = totalSlots > 0 ? ((item.remaining / totalSlots) * 100).toFixed(1) : 0;
+
+                group.innerHTML = `<b style="font-size:0.75rem">${starHTML}${item.label}</b><br><span style="font-size:0.6rem; color:#64748b">${item.remaining} left (${prob}%)</span><div style="font-size:0.55rem; color:${evColor}; margin: 4px 0; font-weight: 800; background: #f8fafc; padding: 2px 0; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05);">Next EV: £${nextEv.toFixed(2)} <span style="font-size:0.5rem">${evIcon}</span></div>${boughtBtnHTML}<button class="btn-hit-other">ROLLED</button>`;
+                
+                let clickStartX = 0, clickStartY = 0;
+                group.onmousedown = (e) => { clickStartX = e.clientX; clickStartY = e.clientY; };
+                
+                group.onmouseover = (e) => {
+                    if (isSpinning) return;
+                    let isBought = e.target.classList.contains('btn-hit-me');
+                    showPreview(item.id, isBought);
+                };
+                
+                group.onmouseout = (e) => {
+                    if (!group.contains(e.relatedTarget)) hidePreview();
+                };
+                
+                group.onclick = (e) => {
+                    if (Math.abs(e.clientX - clickStartX) > 5 || Math.abs(e.clientY - clickStartY) > 5) return;
+                    if (window.getSelection().toString().length > 0) return;
+                    if (e.target.tagName.toLowerCase() === 'input') return;
+                    
+                    let isBought = e.target.classList.contains('btn-hit-me');
+                    hidePreview(); 
+                    recordSpin(item.id, isBought);
+                };
+
+                container.appendChild(group);
+            }
+        });
+        
+        if (container.innerHTML === '') {
+            container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; font-size: 0.75rem; color: #94a3b8; padding: 12px; font-style: italic;">Empty</div>';
+        }
+
+        if (!isSpinning) {
+            const slots = getDistributedSlots();
+            document.querySelectorAll('.vis-slots-count').forEach(el => el.innerText = slots.length > 0 ? `${slots.length} slots` : '0 slots');
+            
+            const MAX_BALLS = 200; 
+            const expectedCap = Math.min(slots.length, MAX_BALLS);
+            const invHash = inventory.map(i => i.remaining).join('-');
+            
+            if (!window.cachedGacha || window.cachedGacha.hash !== invHash) { 
+                window.cachedGacha = null; 
+            }
+            
+            const track = document.getElementById('scroller-track'); 
+            const windowEl = document.getElementById('scroller-window');
+            
+            if (track && windowEl) {
+                let html = '';
+                if (slots.length > 0) {
+                    let baseItems = []; 
+                    for(let i=0; i<100; i++) {
+                        baseItems.push(slots[Math.floor(Math.random() * slots.length)]);
+                    }
+                    baseItems.forEach(item => { 
+                        html += `<div class="scroller-item ${item.prized ? 'prized' : ''}">${item.prized ? '★ ' : ''}${item.label}</div>`; 
+                    });
+                    track.innerHTML = html.repeat(5); 
+                    windowEl.scrollLeft = (2 * 100 * 166);
+                } else { 
+                    track.innerHTML = '<div class="scroller-item" style="color:#94a3b8;">NO ITEMS</div>'.repeat(20); 
+                }
+            }
+            wakeUpGacha(); 
+            safeDrawWheel();
+        }
+        
+        updateHistoryUI(); 
+        updateOddsTable(); 
+        updateHeatmap();
     }
 
     function initCustomCardDrag() {
@@ -2832,8 +3060,11 @@
                         if (lastClientX !== undefined && (dragCard.id === 'gacha-module' || dragCard.querySelector('#gachaCanvas'))) {
                             let dx = clientX - lastClientX; let dy = clientY - lastClientY;
                             if (window.cachedGacha && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
-                                window.cachedGacha.forEach(b => { b.vx -= dx * 0.2; b.vy -= dy * 0.2; });
+                                window.cachedGacha.forEach(b => { b.vx += dx * 0.6; b.vy += dy * 0.6; b.isSleeping = false; b.sleepFrames = 0; });
                                 wakeUpGacha();
+                            }
+                            if (dispensedBalls && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
+                                dispensedBalls.forEach(b => { b.vx += dx * 0.6; b.vy += dy * 0.6; b.isSleeping = false; b.sleepFrames = 0; });
                             }
                         }
                         lastClientX = clientX; lastClientY = clientY;
@@ -2894,228 +3125,60 @@
         setTimeout(() => { el.style.opacity = '0'; }, 1000);
     }
 
-    let aiStatusHistory = [];
-    function updateAIStatus(msg) {
-        const statusBox = document.getElementById('ai-verbose-status');
-        if(!statusBox) return;
-        if(msg === "CLEAR") { aiStatusHistory = []; statusBox.innerHTML = ""; return; }
-        const time = new Date().toLocaleTimeString([], {hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit'});
-        aiStatusHistory.push(`[${time}] ${msg}`);
-        if (aiStatusHistory.length > 4) aiStatusHistory.shift();
-        statusBox.innerHTML = aiStatusHistory.join('<br>');
+    function closeDynamicIOModal() { document.getElementById('dynamic-io-modal').classList.remove('active'); }
+
+    function openSetupExportModal() {
+        document.getElementById('io-modal-title').innerText = "Export Wheel Setup";
+        document.getElementById('io-modal-desc').innerText = "Generate a short code to share your wheel, or copy the raw local code.";
+        document.getElementById('io-modal-textarea').value = generateSetupCode();
+        document.getElementById('io-modal-textarea').readOnly = true;
+        document.getElementById('io-modal-btn-row').innerHTML = `
+            <button onclick="copyIOTextarea()" class="btn-hit-me" style="margin:0; background:#94a3b8; flex:1;">COPY LOCAL CODE</button>
+            <button onclick="saveSetupToCloud()" class="btn-hit-me" style="margin:0; background:#3b82f6; flex:1;">GENERATE SHORT CODE</button>
+        `;
+        document.getElementById('dynamic-io-modal').classList.add('active');
     }
 
-    async function callGemini(prompt) {
-        let model = "gemini-2.5-flash-preview-09-2025";
-        for (let attempt = 0; attempt < 5; attempt++) {
-            updateAIStatus(`Querying Model... (Attempt ${attempt + 1})`);
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-            try {
-                const response = await fetch(url, { 
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: `Concise Strategy consultant. Mode is ${appMode.toUpperCase()}` }] } }) 
-                });
-                if (response.ok) { 
-                    updateAIStatus(`Success! Reading response...`);
-                    const result = await response.json(); 
-                    return { text: result.candidates?.[0]?.content?.parts?.[0]?.text.trim() }; 
-                } else {
-                    const errStatus = response.status;
-                    updateAIStatus(`Failed (HTTP ${errStatus}).`);
-                    if (errStatus === 400 || errStatus === 403) return { error: `API Key Validation Error (${errStatus}).` };
-                }
-            } catch (e) { updateAIStatus(`Network Error detected. Retrying...`); }
-            
-            const delay = Math.pow(2, attempt); 
-            updateAIStatus(`Retrying in ${delay}s...`); 
-            await new Promise(r => setTimeout(r, delay * 1000));
-        }
-        return { error: "AI Service failed after 5 retries." };
+    function openSetupImportModal() {
+        document.getElementById('io-modal-title').innerText = "Import Wheel Setup";
+        document.getElementById('io-modal-desc').innerText = "Paste a 6-character short code or a full local code to restore a wheel layout.";
+        document.getElementById('io-modal-textarea').value = "";
+        document.getElementById('io-modal-textarea').readOnly = false;
+        document.getElementById('io-modal-btn-row').innerHTML = `
+            <button onclick="handleUniversalImport(document.getElementById('io-modal-textarea').value)" class="btn-hit-me" style="margin:0; background:var(--success); width:100%;">IMPORT SETUP</button>
+        `;
+        document.getElementById('dynamic-io-modal').classList.add('active');
     }
 
-    async function getAIGuidance() {
-        const box = document.getElementById('ai-coaching');
-        box.innerHTML = `<span class="loading-spinner"></span>`;
-        updateAIStatus("CLEAR"); updateAIStatus("Initializing strategy calculation...");
-        const snap = { ev: document.getElementById('stat-ev').innerText, bid: document.getElementById('bid-input').value, roi: document.getElementById('stat-diff-perc').innerText };
-        const res = await callGemini(`Mode: ${appMode.toUpperCase()}, EV: ${snap.ev}, Target Price: £${snap.bid}, ROI: ${snap.roi}. Concise tip?`);
-        if (res.error) { box.innerText = res.error; updateAIStatus(res.error); } 
-        else { lastAdvice = res.text; box.innerText = res.text; updateAIStatus("Advice successfully rendered."); setTimeout(() => updateAIStatus("CLEAR"), 6000); }
+    function openMainExportModal() {
+        document.getElementById('io-modal-title').innerText = "Export Session";
+        document.getElementById('io-modal-desc').innerText = "Generate a short code to save your entire session (layout, stats, setup).";
+        document.getElementById('io-modal-textarea').value = generateMainCode();
+        document.getElementById('io-modal-textarea').readOnly = true;
+        document.getElementById('io-modal-btn-row').innerHTML = `
+            <button onclick="copyIOTextarea()" class="btn-hit-me" style="margin:0; background:#94a3b8; flex:1;">COPY LOCAL CODE</button>
+            <button onclick="saveSessionToCloud()" class="btn-hit-me" style="margin:0; background:#3b82f6; flex:1;">GENERATE SHORT CODE</button>
+        `;
+        document.getElementById('dynamic-io-modal').classList.add('active');
     }
 
-    async function speakAdvice() {
-        if (!lastAdvice) {
-            updateAIStatus("No advice to read. Generate advice first.");
-            return;
-        }
-        const btn = document.getElementById('btn-listen');
-        const origText = btn.innerText;
-        btn.innerText = '⏳';
-        updateAIStatus("Generating audio with TTS Model...");
-
-        try {
-            const payload = {
-                contents: [{ parts: [{ text: "Say naturally: " + lastAdvice }] }],
-                generationConfig: {
-                    responseModalities: ["AUDIO"],
-                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } }
-                },
-                model: "gemini-2.5-flash-preview-tts"
-            };
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
-            
-            const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
-            if (!res.ok) throw new Error("TTS generation failed");
-            
-            const data = await res.json();
-            const audioBase64 = data.candidates[0].content.parts[0].inlineData.data;
-            const mimeType = data.candidates[0].content.parts[0].inlineData.mimeType;
-            
-            // Extract sample rate from mimetype, or default to 24000
-            const rateMatch = mimeType.match(/rate=(\d+)/);
-            const sampleRate = rateMatch ? parseInt(rateMatch[1]) : 24000;
-            
-            const binaryString = atob(audioBase64);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            
-            const wavBytes = pcmToWav(bytes.buffer, sampleRate);
-            const blob = new Blob([wavBytes], { type: 'audio/wav' });
-            const audioUrl = URL.createObjectURL(blob);
-            
-            const audio = new Audio(audioUrl);
-            audio.play();
-            updateAIStatus("Playing audio response...");
-        } catch (e) {
-            updateAIStatus("Audio generation error.");
-        } finally {
-            btn.innerText = origText;
-            setTimeout(() => updateAIStatus("CLEAR"), 4000);
-        }
-    }
-
-    function syncAndUI() {
-        const rows = document.querySelectorAll('.slot-row');
-        inventory = Array.from(rows).map((row, i) => ({
-            id: i, label: row.querySelector('.label-input').value || `Res ${i+1}`,
-            value: parseFloat(row.querySelector('.val-input').value || 0),
-            remaining: parseInt(row.querySelector('.slot-input').value || 0),
-            prized: row.querySelector('.prize-toggle').classList.contains('active')
-        }));
-        
-        let totalSlots = 0, sumValues = 0, prizeVal = 0, prizeQty = 0;
-        const bid = parseFloat(document.getElementById('bid-input').value || 0);
-        const container = document.getElementById('spin-buttons'); container.innerHTML = '';
-        
-        // Pass 1: Calculate totals
-        inventory.forEach(item => {
-            totalSlots += item.remaining; sumValues += (item.value * item.remaining);
-            if (item.prized) { prizeQty += item.remaining; prizeVal += (item.value * item.remaining); }
-        });
-        
-        const ev = totalSlots > 0 ? sumValues / totalSlots : 0;
-
-        // Pass 2: Generate UI elements with Next EV Prediction
-        inventory.forEach(item => {
-            if (item.remaining > 0) {
-                const group = document.createElement('div'); group.className = 'hit-group';
-                
-                let itemColor = 'var(--primary)';
-                const tMatch = templates.find(t => t.label === item.label);
-                if (tMatch) itemColor = tMatch.color;
-                
-                const starHTML = item.prized ? '<span style="color:var(--prize-color); text-shadow: 0 0 2px rgba(255,193,7,0.5);">★</span> ' : '';
-                
-                const boughtBtnHTML = appMode === 'buyer' ? `<button class="btn-hit-me" style="background:${itemColor}" onclick="event.stopPropagation(); recordSpin(${item.id}, true)">BOUGHT</button>` : '';
-                
-                let nextEv = totalSlots > 1 ? (sumValues - item.value) / (totalSlots - 1) : 0;
-                let evDiff = nextEv - ev;
-                let evColor = evDiff > 0.01 ? 'var(--success)' : (evDiff < -0.01 ? 'var(--danger)' : '#64748b');
-                let evIcon = evDiff > 0.01 ? '▲' : (evDiff < -0.01 ? '▼' : '-');
-                
-                group.onclick = () => recordSpin(item.id, false);
-                group.innerHTML = `<b style="font-size:0.75rem">${starHTML}${item.label}</b><br><span style="font-size:0.6rem; color:#64748b">${item.remaining} left</span><div style="font-size:0.55rem; color:${evColor}; margin: 4px 0; font-weight: 800; background: #f8fafc; padding: 2px 0; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05);">Next EV: £${nextEv.toFixed(2)} <span style="font-size:0.5rem">${evIcon}</span></div>${boughtBtnHTML}<button class="btn-hit-other" onclick="event.stopPropagation(); recordSpin(${item.id}, false)">ROLLED</button>`;
-                container.appendChild(group);
-            }
-        });
-        
-        if (container.innerHTML === '') container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; font-size: 0.75rem; color: #94a3b8; padding: 12px; font-style: italic;">Empty</div>';
-
-        safeSet('stat-ev', `£${ev.toFixed(2)}`); safeSet('stat-slots', totalSlots);
-        safeSet('stat-prize-prob', `${totalSlots > 0 ? (prizeQty / totalSlots * 100).toFixed(0) : 0}%`);
-        safeSet('stat-avg-prize', `£${prizeQty > 0 ? (prizeVal / prizeQty).toFixed(2) : '0.00'}`);
-        safeSet('setup-total-slots-info', `Total Slots: ${totalSlots}`);
-        
-        let diffPerc = 0;
-        if (appMode === 'buyer') {
-            diffPerc = bid > 0 ? ((ev - bid) / bid * 100) : 0;
-        } else {
-            diffPerc = ev > 0 ? ((bid - ev) / ev * 100) : 0;
-        }
-        safeSet('stat-diff-perc', `${diffPerc.toFixed(2)}%`);
-        
-        const card = document.getElementById('card-ev');
-        if (card) {
-            if (appMode === 'buyer') {
-                card.style.borderLeft = `10px solid ${ev >= bid * 1.1 ? 'var(--success)' : (ev >= bid ? 'var(--warning)' : 'var(--danger)')}`;
-            } else {
-                card.style.borderLeft = `10px solid ${bid >= ev * 1.1 ? 'var(--success)' : (bid >= ev ? 'var(--warning)' : 'var(--danger)')}`;
-            }
-        }
-
-        if(!isSpinning) {
-            const slots = getDistributedSlots();
-            document.querySelectorAll('.vis-slots-count').forEach(el => el.innerText = slots.length > 0 ? `${totalSlots} slots` : '0 slots');
-            
-            const MAX_BALLS = 200; const expectedCap = Math.min(slots.length, MAX_BALLS);
-            const invHash = inventory.map(i=>i.remaining).join('-');
-            if (!window.cachedGacha || window.cachedGacha.hash !== invHash) { window.cachedGacha = null; }
-            
-            const probBar = document.getElementById('prob-bar-container');
-            if (probBar) {
-                probBar.innerHTML = '';
-                if (totalSlots > 0) {
-                    inventory.forEach(item => {
-                        if (item.remaining > 0) {
-                            const perc = (item.remaining / totalSlots) * 100;
-                            const block = document.createElement('div'); block.className = 'prob-segment'; block.style.width = `${perc}%`;
-                            block.style.backgroundColor = item.prized ? 'var(--prize-color)' : '#94a3b8';
-                            block.title = `${item.label}: ${perc.toFixed(1)}%`; probBar.appendChild(block);
-                        }
-                    });
-                }
-            }
-            const track = document.getElementById('scroller-track'); const windowEl = document.getElementById('scroller-window');
-            if (track && windowEl) {
-                let html = '';
-                if (slots.length > 0) {
-                    let baseItems = [];
-                    for(let i=0; i<100; i++) baseItems.push(slots[Math.floor(Math.random() * slots.length)]);
-                    baseItems.forEach(item => { html += `<div class="scroller-item ${item.prized ? 'prized' : ''}">${item.prized ? '★ ' : ''}${item.label}</div>`; });
-                    track.innerHTML = html.repeat(5); windowEl.scrollLeft = (2 * 100 * 166);
-                } else {
-                    track.innerHTML = '<div class="scroller-item" style="color:#94a3b8;">NO ITEMS</div>'.repeat(20);
-                }
-            }
-            
-            wakeUpGacha(); safeDrawWheel();
-        }
-
-        updateHistoryUI(); updateOddsTable(); updateHeatmap();
+    function openMainImportModal() {
+        document.getElementById('io-modal-title').innerText = "Import Session";
+        document.getElementById('io-modal-desc').innerText = "Paste a 6-character short code or full local code to restore a session.";
+        document.getElementById('io-modal-textarea').value = "";
+        document.getElementById('io-modal-textarea').readOnly = false;
+        document.getElementById('io-modal-btn-row').innerHTML = `
+            <button onclick="handleUniversalImport(document.getElementById('io-modal-textarea').value)" class="btn-hit-me" style="margin:0; background:var(--success); width:100%;">IMPORT SESSION</button>
+        `;
+        document.getElementById('dynamic-io-modal').classList.add('active');
     }
     
-    function openIOModal() {
-        document.getElementById('io-textarea').value = '';
-        document.getElementById('io-modal').classList.add('active');
+    function copyIOTextarea() {
+        const txt = document.getElementById('io-modal-textarea');
+        txt.select(); document.execCommand('copy');
+        showCustomAlert('Code copied to clipboard!');
     }
-    
-    function closeIOModal() {
-        document.getElementById('io-modal').classList.remove('active');
-    }
-    
+
     function getLayoutData() {
         const layout = { columns: {}, cards: {} };
         ['col-1', 'col-2', 'col-3'].forEach(colId => {
@@ -3138,7 +3201,7 @@
         return layout;
     }
 
-    function generateExportCode() {
+    function generateMainCode() {
         try {
             const packedData = {
                 i: inventory.map(item => [item.label, item.value, item.remaining, item.prized ? 1 : 0]),
@@ -3146,237 +3209,111 @@
                 s: [sessionStats.spent, sessionStats.won],
                 l: getLayoutData()
             };
-            
-            const json = JSON.stringify(packedData);
-            const compressed = LZString.compressToBase64(json);
-            
-            const txt = document.getElementById('io-textarea');
-            txt.value = compressed;
-            txt.select();
-            document.execCommand('copy');
-            showHeaderStatus("CODE COPIED", "var(--success)");
-        } catch(e) {
-            showHeaderStatus("EXPORT FAILED", "var(--danger)");
-        }
+            return LZString.compressToBase64(JSON.stringify(packedData));
+        } catch(e) { return ""; }
     }
 
     async function saveSessionToCloud() {
-        if (!currentUser || !db) {
-            showCustomAlert("Cloud storage is currently connecting or unavailable.");
-            return;
-        }
+        if (!currentUser || !db) { showCustomAlert("Cloud storage is currently connecting or unavailable."); return; }
         try {
             const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
             const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let shortCode = '';
-            for(let i=0; i<6; i++) shortCode += chars.charAt(Math.floor(Math.random() * chars.length));
+            let shortCode = ''; for(let i=0; i<6; i++) shortCode += chars.charAt(Math.floor(Math.random() * chars.length));
 
             const packedData = {
                 i: inventory.map(item => [item.label, item.value, item.remaining, item.prized ? 1 : 0]),
                 h: history.map(h => [h.label, h.hitValue, h.bidValue, h.isUser ? 1 : 0, h.time]),
-                s: [sessionStats.spent, sessionStats.won],
-                l: getLayoutData()
+                s: [sessionStats.spent, sessionStats.won], l: getLayoutData()
             };
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sessions', shortCode);
             await setDoc(docRef, { data: JSON.stringify(packedData), createdAt: new Date().toISOString() });
 
-            const txt = document.getElementById('io-textarea');
-            txt.value = shortCode;
-            txt.select();
-            document.execCommand('copy');
-            showStatus("CLOUD SAVED", "var(--success)");
-        } catch (e) {
-            console.error(e);
-            showStatus("SAVE FAILED", "var(--danger)");
-        }
+            const txt = document.getElementById('io-modal-textarea');
+            txt.value = shortCode; txt.select(); document.execCommand('copy');
+            showStatus("CLOUD SAVED", "var(--success)"); showCustomAlert(`Code ${shortCode} generated & copied!`);
+        } catch (e) { console.error(e); showStatus("SAVE FAILED", "var(--danger)"); }
     }
 
-    async function smartImportSession() {
-        const txt = document.getElementById('io-textarea').value.trim();
-        if (!txt) return;
-
-        if (txt.length <= 10) {
-            if (!currentUser || !db) {
-                showCustomAlert("Cloud storage is currently connecting or unavailable.");
-                return;
-            }
-            try {
-                const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sessions', txt.toUpperCase());
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    let rawData = docSnap.data().data;
-                    let parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-                    
-                    if (parsed.i !== undefined) {
-                        inventory = parsed.i.map((arr, idx) => ({ id: idx, label: arr[0], value: arr[1], remaining: arr[2], prized: arr[3] === 1 }));
-                        history = parsed.h.map(arr => ({ label: arr[0], hitValue: arr[1], bidValue: arr[2], isUser: arr[3] === 1, time: arr[4] }));
-                        sessionStats = { spent: parsed.s[0], won: parsed.s[1] };
-                        if (parsed.l) {
-                            localStorage.setItem('wheel_dashboard_layout', JSON.stringify(parsed.l));
-                            loadDashboardLayout();
-                        }
-                        rebuildDOMFromInventory(); updateHistoryUI(); syncAndUI();
-                        closeIOModal();
-                        showStatus("CLOUD LOADED", "var(--success)");
-                    }
-                } else {
-                    showCustomAlert("Session code not found in cloud database.");
-                }
-            } catch (e) {
-                console.error(e);
-                showStatus("LOAD FAILED", "var(--danger)");
-            }
-        } else {
-            applyImportCode();
-        }
-    }
-
-    function applyImportCode() {
-        const txt = document.getElementById('io-textarea').value.trim();
-        if (!txt) return;
-        try {
-            let json = LZString.decompressFromBase64(txt);
-            if (!json) json = decodeURIComponent(atob(txt)); 
-            
-            const parsed = JSON.parse(json);
-            
-            if (parsed.i !== undefined) {
-                inventory = parsed.i.map((arr, idx) => ({ id: idx, label: arr[0], value: arr[1], remaining: arr[2], prized: arr[3] === 1 }));
-                history = parsed.h.map(arr => ({ label: arr[0], hitValue: arr[1], bidValue: arr[2], isUser: arr[3] === 1, time: arr[4] }));
-                sessionStats = { spent: parsed.s[0], won: parsed.s[1] };
-                if (parsed.l) {
-                    localStorage.setItem('wheel_dashboard_layout', JSON.stringify(parsed.l));
-                    loadDashboardLayout();
-                }
-            } else {
-                if (parsed.inventory) inventory = parsed.inventory;
-                if (parsed.history) history = parsed.history;
-                if (parsed.sessionStats) sessionStats = parsed.sessionStats;
-                if (parsed.layout) {
-                    localStorage.setItem('wheel_dashboard_layout', JSON.stringify(parsed.layout));
-                    loadDashboardLayout();
-                }
-            }
-            
-            rebuildDOMFromInventory(); updateHistoryUI(); syncAndUI();
-            
-            closeIOModal();
-            showHeaderStatus("IMPORTED", "var(--success)");
-        } catch (e) {
-            showCustomAlert("Invalid save code. Please make sure you copied the entire text string.");
-        }
-    }
-
-    function openSetupIOModal() {
-        document.getElementById('setup-io-textarea').value = '';
-        document.getElementById('setup-io-modal').classList.add('active');
-    }
-    
-    function closeSetupIOModal() {
-        document.getElementById('setup-io-modal').classList.remove('active');
-    }
-
-    function generateSetupExportCode() {
+    function generateSetupCode() {
         try {
             const packed = inventory.map(i => [i.label, i.value, i.remaining, i.prized ? 1 : 0]);
-            const code = LZString.compressToBase64(JSON.stringify(packed));
-            const txt = document.getElementById('setup-io-textarea');
-            txt.value = code;
-            txt.select();
-            document.execCommand('copy');
-            showStatus("CODE COPIED", "var(--success)");
-        } catch(e) {
-            showStatus("EXPORT FAILED", "var(--danger)");
-        }
+            return LZString.compressToBase64(JSON.stringify(packed));
+        } catch(e) { return ""; }
     }
 
     async function saveSetupToCloud() {
-        if (!currentUser || !db) {
-            showCustomAlert("Cloud storage is currently connecting or unavailable.");
-            return;
-        }
+        if (!currentUser || !db) { showCustomAlert("Cloud storage is currently connecting or unavailable."); return; }
         try {
             const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
             const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let shortCode = '';
-            for(let i=0; i<6; i++) shortCode += chars.charAt(Math.floor(Math.random() * chars.length));
+            let shortCode = ''; for(let i=0; i<6; i++) shortCode += chars.charAt(Math.floor(Math.random() * chars.length));
 
             const packed = inventory.map(i => [i.label, i.value, i.remaining, i.prized ? 1 : 0]);
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'setups', shortCode);
 
             await setDoc(docRef, { data: JSON.stringify(packed), createdAt: new Date().toISOString() });
 
-            const txt = document.getElementById('setup-io-textarea');
-            txt.value = shortCode;
-            txt.select();
-            document.execCommand('copy');
-            showStatus("CLOUD SAVED", "var(--success)");
-        } catch (e) {
-            console.error(e);
-            showStatus("SAVE FAILED", "var(--danger)");
-        }
+            const txt = document.getElementById('io-modal-textarea');
+            txt.value = shortCode; txt.select(); document.execCommand('copy');
+            showStatus("CLOUD SAVED", "var(--success)"); showCustomAlert(`Code ${shortCode} generated & copied!`);
+        } catch (e) { console.error(e); showStatus("SAVE FAILED", "var(--danger)"); }
     }
 
-    async function smartImportSetup() {
-        const txt = document.getElementById('setup-io-textarea').value.trim();
+    async function handleUniversalImport(txt) {
         if (!txt) return;
+        txt = txt.trim();
+        let parsed = null;
 
-        if (txt.length <= 10) {
-            // Fetch Short Code from Cloud
-            if (!currentUser || !db) {
-                showCustomAlert("Cloud storage is currently connecting or unavailable.");
-                return;
-            }
+        if (txt.length > 10) {
+            try {
+                let json = LZString.decompressFromBase64(txt);
+                if (!json) json = decodeURIComponent(atob(txt));
+                parsed = JSON.parse(json);
+            } catch (e) { showCustomAlert("Invalid local code. Please make sure you copied the entire text string."); return; }
+        } else {
+            if (!currentUser || !db) { showCustomAlert("Cloud storage is currently connecting or unavailable."); return; }
             try {
                 const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'setups', txt.toUpperCase());
-                const docSnap = await getDoc(docRef);
-
+                let docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sessions', txt.toUpperCase());
+                let docSnap = await getDoc(docRef);
+                
                 if (docSnap.exists()) {
                     let rawData = docSnap.data().data;
-                    let parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-                    if (Array.isArray(parsed)) {
-                        inventory = parsed.map((arr, idx) => ({ id: idx, label: arr[0], value: arr[1], remaining: arr[2], prized: arr[3] === 1 }));
-                        rebuildDOMFromInventory(); syncAndUI();
-                        closeSetupIOModal();
-                        showStatus("CLOUD LOADED", "var(--success)");
-                    }
+                    parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
                 } else {
-                    showCustomAlert("Save code not found in cloud database.");
+                    docRef = doc(db, 'artifacts', appId, 'public', 'data', 'setups', txt.toUpperCase());
+                    docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        let rawData = docSnap.data().data;
+                        parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+                    } else { showCustomAlert("Save code not found in cloud database."); return; }
                 }
-            } catch (e) {
-                console.error(e);
-                showStatus("LOAD FAILED", "var(--danger)");
-            }
-        } else {
-            // Apply Local Fallback Code
-            applySetupImportCode();
+            } catch (e) { console.error(e); showCustomAlert("Failed to load from cloud database."); return; }
         }
-    }
 
-    function applySetupImportCode() {
-        const txt = document.getElementById('setup-io-textarea').value.trim();
-        if (!txt) return;
-        try {
-            let json = LZString.decompressFromBase64(txt);
-            if (!json) json = decodeURIComponent(atob(txt));
-            const parsed = JSON.parse(json);
-            
+        if (!parsed) return;
+
+        if (parsed.h !== undefined || parsed.history !== undefined) {
+            if (parsed.i !== undefined) {
+                inventory = parsed.i.map((arr, idx) => ({ id: idx, label: arr[0], value: arr[1], remaining: arr[2], prized: arr[3] === 1 }));
+                history = parsed.h.map(arr => ({ label: arr[0], hitValue: arr[1], bidValue: arr[2], isUser: arr[3] === 1, time: arr[4] }));
+                sessionStats = { spent: parsed.s[0], won: parsed.s[1] };
+                if (parsed.l) { localStorage.setItem('wheel_dashboard_layout', JSON.stringify(parsed.l)); loadDashboardLayout(); }
+            } else {
+                if (parsed.inventory) inventory = parsed.inventory;
+                if (parsed.history) history = parsed.history;
+                if (parsed.sessionStats) sessionStats = parsed.sessionStats;
+                if (parsed.layout) { localStorage.setItem('wheel_dashboard_layout', JSON.stringify(parsed.layout)); loadDashboardLayout(); }
+            }
+            rebuildDOMFromInventory(); updateHistoryUI(); syncAndUI();
+            closeDynamicIOModal(); showStatus("SESSION IMPORTED", "var(--success)");
+        } else {
             if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
                 inventory = parsed.map((arr, idx) => ({ id: idx, label: arr[0], value: arr[1], remaining: arr[2], prized: arr[3] === 1 }));
-            } else if (parsed.inventory) {
-                inventory = parsed.inventory; 
-            } else if (Array.isArray(parsed)) {
-                inventory = parsed;
-            }
-            
+            } else if (parsed.inventory) { inventory = parsed.inventory; } 
+            else if (Array.isArray(parsed)) { inventory = parsed; }
             rebuildDOMFromInventory(); syncAndUI();
-            closeSetupIOModal();
-            showStatus("IMPORTED", "var(--success)");
-        } catch (e) {
-            showCustomAlert("Invalid local setup code.");
+            closeDynamicIOModal(); showStatus("SETUP IMPORTED", "var(--success)");
         }
     }
 
@@ -3403,22 +3340,14 @@
                 grid.appendChild(row); if (roi > 28) break;
             }
         } else {
-            let startPrice = Math.max(1, Math.floor(ev * 0.5));
-            let endPrice = Math.ceil(ev * 1.5);
+            let startPrice = Math.max(1, Math.floor(ev * 0.5)); let endPrice = Math.ceil(ev * 1.5);
             for (let price = startPrice; price <= endPrice; price += step) {
                 if (price === 0) continue;
                 const roi = ev > 0 ? ((price - ev) / ev * 100) : 0; 
                 if (roi < -20.5 || roi > 20.5) continue; 
-                
                 const row = document.createElement('div'); row.className = 'heatmap-row heatmap-grid-layout';
-                let bg = '#fffbeb';
-                if (roi >= 10) bg = '#dcfce7';
-                else if (roi >= 0) bg = '#f0fdf4';
-                else if (roi <= -10) bg = '#fee2e2';
-                else if (roi < 0) bg = '#fef2f2';
-                
-                row.style.background = bg;
-                row.onclick = () => { document.getElementById('bid-input').value = price; syncAndUI(); };
+                let bg = '#fffbeb'; if (roi >= 10) bg = '#dcfce7'; else if (roi >= 0) bg = '#f0fdf4'; else if (roi <= -10) bg = '#fee2e2'; else if (roi < 0) bg = '#fef2f2';
+                row.style.background = bg; row.onclick = () => { document.getElementById('bid-input').value = price; syncAndUI(); };
                 row.innerHTML = `<div style="text-align:center; font-size:0.7rem; font-weight:800;">£${price}</div><div style="text-align:center; font-size:0.7rem; font-weight:800;">${roi.toFixed(1)}%</div><div style="text-align:center; font-size:0.7rem; font-weight:800;">£${(price-ev).toFixed(2)}</div>`;
                 grid.appendChild(row); 
             }
@@ -3434,7 +3363,7 @@
         else { cont.prepend(createRowElement(label, value, 1, prized)); }
         syncAndUI();
     }
-    function createRowElement(label = "", val = 0, slots = 1, prized = false) {
+    function createRowElement(label = "", val = 0, slots = 1, prized = true) {
         const div = document.createElement('div'); div.className = 'slot-row inventory-grid-config';
         div.innerHTML = `<button class="prize-toggle ${prized ? 'active' : ''}" onclick="togglePrize(this)" style="cursor:pointer; border:none; background:transparent;">★</button>
             <input type="text" class="label-input" value="${label}" oninput="syncAndUI()">
@@ -3453,9 +3382,7 @@
             { label: "Charizard X UPC", value: 140, remaining: 1, prized: true },
             { label: "Energy", value: 0, remaining: 9, prized: false }
         ];
-        rebuildDOMFromInventory();
-        syncAndUI();
-        showStatus("RESET", "var(--danger)");
+        rebuildDOMFromInventory(); syncAndUI(); showStatus("RESET", "var(--danger)");
     }
     function clearHistory() { history = []; sessionStats = { spent: 0, won: 0 }; syncAndUI(); }
     
@@ -3467,33 +3394,19 @@
     }
     
     function initializeSession() { 
-        history = []; 
-        sessionStats = { spent: 0, won: 0 }; 
-        try {
-            localStorage.setItem('wheel_init_snapshot', JSON.stringify(inventory));
-            showStatus("SESSION INIT", "var(--success)");
-        } catch(e) {
-            showStatus("ERROR", "var(--danger)");
-        }
-        syncAndUI();
+        history = []; sessionStats = { spent: 0, won: 0 }; 
+        try { localStorage.setItem('wheel_init_snapshot', JSON.stringify(inventory)); showStatus("SESSION INIT", "var(--success)"); } 
+        catch(e) { showStatus("ERROR", "var(--danger)"); } syncAndUI();
     }
 
     function resetSession() {
         const snap = localStorage.getItem('wheel_init_snapshot');
         if (snap) {
             try {
-                inventory = JSON.parse(snap);
-                history = []; 
-                sessionStats = { spent: 0, won: 0 }; 
-                rebuildDOMFromInventory();
-                syncAndUI();
-                showStatus("SESSION RESET", "var(--warning)");
-            } catch(e) {
-                showStatus("ERROR", "var(--danger)");
-            }
-        } else {
-            showStatus("NO SESSION", "var(--danger)");
-        }
+                inventory = JSON.parse(snap); history = []; sessionStats = { spent: 0, won: 0 }; 
+                rebuildDOMFromInventory(); syncAndUI(); showStatus("SESSION RESET", "var(--warning)");
+            } catch(e) { showStatus("ERROR", "var(--danger)"); }
+        } else { showStatus("NO SESSION", "var(--danger)"); }
     }
     
     function pcmToWav(b, s) { const l = b.byteLength, f = new ArrayBuffer(44 + l), v = new DataView(f); v.setUint32(0, 0x52494646, false); v.setUint32(4, 36 + l, true); v.setUint32(8, 0x57415645, false); v.setUint32(12, 0x666d7420, false); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, s, true); v.setUint32(28, s * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); v.setUint32(36, 0x64617461, false); v.setUint32(40, l, true); new Uint8Array(f, 44).set(new Uint8Array(b)); return f; }
@@ -3505,84 +3418,50 @@
         const undo = document.getElementById('btn-undo'); undo.style.display = history.length > 0 ? "block" : "none";
         if (roiChart) { roiChart.data.labels = history.map((_, i) => i); roiChart.data.datasets[0].data = history.map(h => h.hitValue).reverse(); roiChart.update(); }
         
-        if (history.length === 0) {
-            list.innerHTML = `<li class="history-item" style="text-align:center; font-style:italic; color:#94a3b8; padding: 16px;">Empty</li>`;
-        } else {
-            list.innerHTML = history.slice(0, 10).map(h => `<li class="history-item"><b>${h.label}</b> (£${h.hitValue}) | ${h.time}</li>`).join('');
-        }
+        if (history.length === 0) { list.innerHTML = `<li class="history-item" style="text-align:center; font-style:italic; color:#94a3b8; padding: 16px;">Empty</li>`; } 
+        else { list.innerHTML = history.slice(0, 10).map(h => `<li class="history-item"><b>${h.label}</b> (£${h.hitValue}) | ${h.time}</li>`).join(''); }
     }
     
     function saveInventory() { 
-        try {
-            localStorage.setItem('wheel_inventory_setup', JSON.stringify(inventory)); 
-            showStatus("SAVED", "var(--success)"); 
-        } catch (e) {
-            console.error(e);
-            showStatus("ERROR", "var(--danger)");
-        }
+        try { localStorage.setItem('wheel_inventory_setup', JSON.stringify(inventory)); showStatus("SAVED", "var(--success)"); } 
+        catch (e) { console.error(e); showStatus("ERROR", "var(--danger)"); }
     }
     
     function loadInventory() { 
         try {
             let d = localStorage.getItem('wheel_inventory_setup');
             if (!d) {
-                // Fallback to legacy save
                 let legacyD = localStorage.getItem('wheel_layout');
                 if (legacyD) {
                     const parsed = JSON.parse(legacyD);
                     inventory = parsed.inventory ? parsed.inventory : (Array.isArray(parsed) ? parsed : inventory);
-                    rebuildDOMFromInventory(); 
-                    syncAndUI(); 
-                    showStatus("LOADED (LEG)", "var(--primary)"); 
+                    rebuildDOMFromInventory(); syncAndUI(); showStatus("LOADED (LEG)", "var(--primary)"); 
                     return;
                 }
                 return; 
             }
             const parsed = JSON.parse(d);
             inventory = Array.isArray(parsed) ? parsed : (parsed.inventory || parsed);
-            rebuildDOMFromInventory(); 
-            syncAndUI(); 
-            showStatus("LOADED", "var(--primary)"); 
-        } catch (e) {
-            console.error(e);
-            showStatus("ERROR", "var(--danger)");
-        }
+            rebuildDOMFromInventory(); syncAndUI(); showStatus("LOADED", "var(--primary)"); 
+        } catch (e) { console.error(e); showStatus("ERROR", "var(--danger)"); }
     }
 
     function saveDashboardLayout() {
         try {
-            const layout = {
-                columns: {},
-                cards: {}
-            };
+            const layout = { columns: {}, cards: {} };
             ['col-1', 'col-2', 'col-3'].forEach(colId => {
                 const col = document.getElementById(colId);
                 if (col) {
-                    const cardIds = Array.from(col.querySelectorAll('.card'))
-                        .filter(c => !c.classList.contains('placeholder') && c.id)
-                        .map(c => c.id);
-                    layout.columns[colId] = {
-                        flex: col.style.flex,
-                        cardIds: cardIds
-                    };
+                    const cardIds = Array.from(col.querySelectorAll('.card')).filter(c => !c.classList.contains('placeholder') && c.id).map(c => c.id);
+                    layout.columns[colId] = { flex: col.style.flex, cardIds: cardIds };
                 }
             });
             document.querySelectorAll('.card').forEach(card => {
                 if (!card.id || card.classList.contains('placeholder')) return;
-                layout.cards[card.id] = {
-                    width: card.style.width,
-                    height: card.style.height,
-                    flex: card.style.flex,
-                    aspectRatio: card.style.aspectRatio,
-                    minimized: card.classList.contains('minimized')
-                };
+                layout.cards[card.id] = { width: card.style.width, height: card.style.height, flex: card.style.flex, aspectRatio: card.style.aspectRatio, minimized: card.classList.contains('minimized') };
             });
-            localStorage.setItem('wheel_dashboard_layout', JSON.stringify(layout)); 
-            showHeaderStatus("UI SAVED", "var(--success)"); 
-        } catch(e) {
-            console.error(e);
-            showHeaderStatus("ERROR SAVING", "var(--danger)"); 
-        }
+            localStorage.setItem('wheel_dashboard_layout', JSON.stringify(layout)); showHeaderStatus("UI SAVED", "var(--success)"); 
+        } catch(e) { console.error(e); showHeaderStatus("ERROR SAVING", "var(--danger)"); }
     }
 
     function loadDashboardLayout() {
@@ -3595,42 +3474,23 @@
                         const col = document.getElementById(colId);
                         if (layout.columns[colId] && col) {
                             col.style.flex = layout.columns[colId].flex || '';
-                            layout.columns[colId].cardIds.forEach(cardId => {
-                                const card = document.getElementById(cardId);
-                                if (card) col.appendChild(card);
-                            });
+                            layout.columns[colId].cardIds.forEach(cardId => { const card = document.getElementById(cardId); if (card) col.appendChild(card); });
                         }
                     });
                 }
                 if (layout.cards) {
                     Object.keys(layout.cards).forEach(cardId => {
-                        const card = document.getElementById(cardId);
-                        const state = layout.cards[cardId];
+                        const card = document.getElementById(cardId); const state = layout.cards[cardId];
                         if (card && state) {
-                            card.style.width = state.width || '';
-                            card.style.height = state.height || '';
-                            card.style.flex = state.flex || '';
-                            card.style.aspectRatio = state.aspectRatio || '';
-                            if (state.minimized) {
-                                card.classList.add('minimized');
-                                const btn = card.querySelector('.card-btn');
-                                if (btn && btn.innerText === '-') btn.innerText = '+';
-                            } else {
-                                card.classList.remove('minimized');
-                                const btn = card.querySelector('.card-btn');
-                                if (btn && btn.innerText === '+') btn.innerText = '-';
-                            }
+                            card.style.width = state.width || ''; card.style.height = state.height || ''; card.style.flex = state.flex || ''; card.style.aspectRatio = state.aspectRatio || '';
+                            if (state.minimized) { card.classList.add('minimized'); const btn = card.querySelector('.card-btn'); if (btn && btn.innerText === '-') btn.innerText = '+'; } 
+                            else { card.classList.remove('minimized'); const btn = card.querySelector('.card-btn'); if (btn && btn.innerText === '+') btn.innerText = '-'; }
                         }
                     });
                 }
-                showHeaderStatus("UI LOADED", "var(--primary)"); 
-                safeDrawWheel();
-                requestAnimationFrame(drawGacha);
+                showHeaderStatus("UI LOADED", "var(--primary)"); safeDrawWheel(); requestAnimationFrame(drawGacha);
             }
-        } catch (e) {
-            console.error(e);
-            showHeaderStatus("ERROR LOADING", "var(--danger)"); 
-        }
+        } catch (e) { console.error(e); showHeaderStatus("ERROR LOADING", "var(--danger)"); }
     }
 
     function exportCSV() { const csv = "Time,Label,Value\n" + history.map(h => `${h.time},${h.label},${h.hitValue}`).join('\n'); const b = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'wheel_log.csv'; a.click(); }
